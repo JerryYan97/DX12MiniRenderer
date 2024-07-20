@@ -1,0 +1,7 @@
+https://github.com/microsoft/DirectXTK12/wiki/Getting-Started
+
+https://github.com/Microsoft/DirectX-Graphics-Samples
+
+https://microsoft.github.io/DirectX-Specs/
+
+https://devblogs.microsoft.com/pix/
