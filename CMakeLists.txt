@@ -5,20 +5,24 @@ set(DearImGUIPath ./ThirdParty/imgui)
 include_directories(${DearImGUIPath})
 include_directories(${DearImGUIPath}/backends)
 
-source_group(ImGUI FILES ${DearImGUIPath}/imgui.cpp 
-                         ${DearImGUIPath}/imgui_draw.cpp
-                         ${DearImGUIPath}/imgui_demo.cpp
-                         ${DearImGUIPath}/imgui_tables.cpp
-                         ${DearImGUIPath}/imgui_widgets.cpp)
+set(IMGUI_FILES_LIST ${DearImGUIPath}/imgui.cpp 
+                     ${DearImGUIPath}/imgui_draw.cpp
+                     ${DearImGUIPath}/imgui_demo.cpp
+                     ${DearImGUIPath}/imgui_tables.cpp
+                     ${DearImGUIPath}/imgui_widgets.cpp
+                     ${DearImGUIPath}/backends/imgui_impl_win32.cpp 
+                     ${DearImGUIPath}/backends/imgui_impl_dx12.cpp)
 
-add_executable(DX12MiniRenderer "main.cpp" 
-                                ${DearImGUIPath}/imgui.cpp 
-                                ${DearImGUIPath}/imgui_draw.cpp
-                                ${DearImGUIPath}/imgui_demo.cpp
-                                ${DearImGUIPath}/imgui_tables.cpp
-                                ${DearImGUIPath}/imgui_widgets.cpp
-                                ${DearImGUIPath}/backends/imgui_impl_win32.cpp 
-                                ${DearImGUIPath}/backends/imgui_impl_dx12.cpp)
+# Category the source files
+source_group(ImGUI FILES ${IMGUI_FILES_LIST})
+
+add_executable(DX12MiniRenderer "main.cpp"
+                                "MiniRendererApp.h"
+                                "MiniRendererApp.cpp"
+                                ${IMGUI_FILES_LIST})
+
+add_subdirectory(./Objects)
+add_subdirectory(./Objects)
 
 target_compile_features(DX12MiniRenderer PRIVATE cxx_std_17)
 
