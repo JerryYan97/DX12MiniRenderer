@@ -7,7 +7,15 @@ Muti-Renderer Backends -- Forward+, HW-RT, Deferred...
 Muti-Format Model load -- GLTF, OpenUSD.
 Simple ImGUI based loading logic. (It's just to show that I know this API and if I want to show that I have DCC experience, I should just investigate Blender.)
 
+Static Scene Switching, Loading and Rendering Feature. No Level Manipulation. Maybe good to have 
 
 Forward(I don't feel like that I should use the Forward because it cannot work when there are too much lights.), Forward+, Deferred Rendering: https://www.3dgep.com/forward-plus/
 
+Some graphics technique experiments -- Raytracing, Hair Rendering, Volumetric Rendering, Real-time Physics...
+
+Milestone 1:
 - Integrate DX12 memory allocator.
+- Simple ImGUI Layout -- Top Bar, Scene Hierarchy.
+
+
+Milestone 2:

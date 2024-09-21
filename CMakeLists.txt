@@ -21,8 +21,8 @@ add_executable(DX12MiniRenderer "main.cpp"
                                 "MiniRendererApp.cpp"
                                 ${IMGUI_FILES_LIST})
 
-add_subdirectory(./Objects)
-add_subdirectory(./Objects)
+add_subdirectory(./Scene)
+add_subdirectory(./UI)
 
 target_compile_features(DX12MiniRenderer PRIVATE cxx_std_17)
 
