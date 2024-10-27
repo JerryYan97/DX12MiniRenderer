@@ -6,6 +6,7 @@ Design Goal:
 Muti-Renderer Backends -- Forward+, HW-RT, Deferred...
 Muti-Format Model load -- GLTF, OpenUSD.
 Simple ImGUI based loading logic. (It's just to show that I know this API and if I want to show that I have DCC experience, I should just investigate Blender.)
+Images Dump. Camera Movement with Animation Dump.
 
 Static Scene Switching, Loading and Rendering Feature. No Level Manipulation. Maybe good to have 
 
@@ -13,9 +14,22 @@ Forward(I don't feel like that I should use the Forward because it cannot work w
 
 Some graphics technique experiments -- Raytracing, Hair Rendering, Volumetric Rendering, Real-time Physics...
 
+We can do the abstraction along the way instead of spending too much time on the software architecture.
+
 Milestone 1:
 - Integrate DX12 memory allocator.
 - Simple ImGUI Layout -- Top Bar, Scene Hierarchy.
-
+- Make a cornell box (GLTF) in Blender.
+- Integrate Input Handler, which reuses the Vulkan project's input handler.
+- Render out a Triangle/Basic GLTF model in rasterization.
 
 Milestone 2:
+- Cornell box GLTF Render.
+
+
+Refs:
+https://github.com/microsoft/DirectXTK12/wiki/Getting-Started
+https://github.com/Microsoft/DirectX-Graphics-Samples
+https://microsoft.github.io/DirectX-Specs/
+https://devblogs.microsoft.com/pix/
+Swapchain Front Buffer v.s. Back Buffer: https://learn.microsoft.com/en-us/windows/win32/direct3d9/what-is-a-swap-chain-

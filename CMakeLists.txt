@@ -23,6 +23,9 @@ add_executable(DX12MiniRenderer "main.cpp"
 
 add_subdirectory(./Scene)
 add_subdirectory(./UI)
+add_subdirectory(./EventSystem)
+add_subdirectory(./RenderBackend)
+add_subdirectory(./Utils)
 
 target_compile_features(DX12MiniRenderer PRIVATE cxx_std_17)
 
