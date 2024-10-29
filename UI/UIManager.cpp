@@ -4,18 +4,21 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 
+UIManager* UIManager::m_pThis = nullptr;
+
 UIManager::UIManager(ID3D12Device*  i_pD3dDevice,
                      HEventManager* i_pEventManager)
     : m_pD3dDevice(i_pD3dDevice),
-      m_pEventManager(i_pEventManager)
+      m_pEventManager(i_pEventManager),
+      m_pCustomImGUIGenFunc(nullptr)
 {
-    m_pInstance = this;
+    m_pThis = this;
     m_windowTitle = L"DX12MiniRenderer Default Scene";
 }
 
 UIManager::~UIManager()
 {
-    m_pInstance = nullptr;
+    m_pThis = nullptr;
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
@@ -36,7 +39,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
         {
-            UIManager::m_pInstance->WindowResize(lParam);
+            UIManager::m_pThis->WindowResize(lParam);
         }
         return 0;
     case WM_SYSCOMMAND:
@@ -57,15 +60,13 @@ void UIManager::WindowResize(LPARAM lParam)
     HEvent WaitGpuIdleEvent(args, "WaitGpuIdle");
     m_pEventManager->SendEvent(WaitGpuIdleEvent);
 
-
-    WaitForLastSubmittedFrame();
-    CleanupRenderTarget();
-    HRESULT result = g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
+    CleanupSwapchainRenderTargets();
+    HRESULT result = m_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
     assert(SUCCEEDED(result) && "Failed to resize swapchain.");
-    CreateRenderTarget();
+    CreateSwapchainRenderTargets();
 }
 
-void UIManager::Init()
+void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
 {
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
@@ -91,21 +92,12 @@ void UIManager::Init()
         sd.Stereo = FALSE;
     }
 
-    // Create a temp command queue to create the swap chain.
-    ID3D12CommandQueue* pD3dSwapchainCommandQueue = nullptr;
-    {
-        D3D12_COMMAND_QUEUE_DESC desc = {};
-        desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-        desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        desc.NodeMask = 1;
-        m_pD3dDevice->CreateCommandQueue(&desc, IID_PPV_ARGS(&pD3dSwapchainCommandQueue));
-    }
-
     {
         IDXGIFactory4* dxgiFactory = nullptr;
         IDXGISwapChain1* swapChain1 = nullptr;
         CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
-        dxgiFactory->CreateSwapChainForHwnd(pD3dSwapchainCommandQueue, m_hWnd, &sd, nullptr, nullptr, &swapChain1);
+        // The command queue for swapchain back buffer rendering must be same as the command queue used to create the swapchain.
+        dxgiFactory->CreateSwapChainForHwnd(iCmdQueue, m_hWnd, &sd, nullptr, nullptr, &swapChain1);
         swapChain1->QueryInterface(IID_PPV_ARGS(&m_pSwapChain));
         swapChain1->Release();
         dxgiFactory->Release();
@@ -174,9 +166,27 @@ void UIManager::FrameStart()
     ImGui::NewFrame();
 }
 
+void UIManager::RecordDrawData(ID3D12GraphicsCommandList* iCmdList)
+{
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), iCmdList);
+}
+
 void UIManager::Tick(float deltaTime)
 {
     FrameStart();
+
+    // UIManager can serve to execute custom ImGUI generation functions.
+    // It will be called until the served renderer component reset it to nullptr.
+    if (m_pCustomImGUIGenFunc)
+    {
+        m_pCustomImGUIGenFunc();
+    }
+
+    // Rendering
+    ImGui::Render();
+
+    // Wait for Swapchain to be writable.
+    WaitForSingleObject(m_hSwapChainWaitableObject, INFINITE);
 }
 
 void UIManager::CreateSwapchainRenderTargets()
@@ -185,6 +195,12 @@ void UIManager::CreateSwapchainRenderTargets()
     {
         ID3D12Resource* pBackBuffer = nullptr;
         m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackBuffer));
+
+        //
+        std::wstring bufferName = L"Swapchain Buffer " + std::to_wstring(i);
+        pBackBuffer->SetName(bufferName.c_str());
+        //
+
         m_pD3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, m_mainRenderTargetDescriptors[i]);
         m_mainRenderTargetResources.push_back(pBackBuffer); // Note that we need to set the vector size to zero when we destroy Swapchain render targets.
     }
@@ -222,10 +238,19 @@ void UIManager::CleanupSwapchainRenderTargets()
 
 void UIManager::Finalize()
 {
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
     ::DestroyWindow(m_hWnd);
     ::UnregisterClassW(m_wc.lpszClassName, m_wc.hInstance);
     CleanupSwapchainRenderTargets();
-    if (m_pSwapChain) { m_pSwapChain->SetFullscreenState(false, nullptr); m_pSwapChain->Release(); m_pSwapChain = nullptr; }
+    if (m_pSwapChain)
+    { 
+        m_pSwapChain->SetFullscreenState(false, nullptr);
+        m_pSwapChain->Release();
+        m_pSwapChain = nullptr;
+    }
     if (m_hSwapChainWaitableObject != nullptr) { CloseHandle(m_hSwapChainWaitableObject); }
     if (m_pD3dSwapchainRtvDescHeap) { m_pD3dSwapchainRtvDescHeap->Release(); m_pD3dSwapchainRtvDescHeap = nullptr; }
     if (m_pD3dImGUISrvDescHeap) { m_pD3dImGUISrvDescHeap->Release(); m_pD3dImGUISrvDescHeap = nullptr; }

@@ -3,8 +3,11 @@
 #include <dxgi1_4.h>
 #include <string>
 #include <vector>
+#include "imgui.h"
 
 class HEventManager;
+
+typedef void(*ImGUIGenFuncPtr) ();
 
 // User Input Handling.
 // ImGUI Render Commands Generation. (GUI Data Generation and State Control)
@@ -17,11 +20,26 @@ public:
     /*
     * Create UIManager.
     */
-    void Init();
+    void Init(ID3D12CommandQueue* iCmdQueue);
 
     bool ContinueRunning();
+
+    // Record UI data (ImGUI Command List).
+    // Wait for the Swapchain to be writable.
     void Tick(float deltaTime);
 
+    // Present with vsync
+    void Present() { m_pSwapChain->Present(1, 0); }
+
+    void SetCustomImGUIFunc(ImGUIGenFuncPtr i_pCustomImGUIFunc) { m_pCustomImGUIGenFunc = i_pCustomImGUIFunc; }
+    void CleanupCustomImGUIFunc() { m_pCustomImGUIGenFunc = nullptr; }
+
+    void RecordDrawData(ID3D12GraphicsCommandList* iCmdList);
+
+    UINT GetCurrentBackBufferIndex() { return m_pSwapChain->GetCurrentBackBufferIndex(); }
+    ID3D12Resource* GetCurrentMainRTResource() { return m_mainRenderTargetResources[GetCurrentBackBufferIndex()]; }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentMainRTDescriptor() { return m_mainRenderTargetDescriptors[GetCurrentBackBufferIndex()]; }
+    ID3D12DescriptorHeap* GetImGUISrvDescHeap() { return m_pD3dImGUISrvDescHeap; }
     /*
     * Free all resources.
     */
@@ -52,9 +70,10 @@ private:
     std::vector<ID3D12Resource*>             m_mainRenderTargetResources;
 
     // Other members.
-    std::wstring m_windowTitle;
-    HWND         m_hWnd;
+    std::wstring    m_windowTitle;
+    HWND            m_hWnd;
+    ImGUIGenFuncPtr m_pCustomImGUIGenFunc;
 
     // Self Reference
-    static UIManager* m_pInstance;
+    static UIManager* m_pThis;
 };
