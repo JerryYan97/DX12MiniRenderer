@@ -44,17 +44,15 @@ void DX12MiniRenderer::InitDevice()
 
 void DX12MiniRenderer::TempRendererWaitGpuIdle()
 {
-    std::vector<HANDLE> waitableObjects;
-    for (const auto& frameCtx : m_pThis->m_frameContexts)
-    {
-        if (frameCtx.Fence->GetCompletedValue() == 1)
-        {
-            continue;
-        }
-        frameCtx.Fence->SetEventOnCompletion(1, frameCtx.FenceEvent);
-        waitableObjects.push_back(frameCtx.FenceEvent);
-    }
-    WaitForMultipleObjects(waitableObjects.size(), waitableObjects.data(), TRUE, INFINITE);
+    ID3D12Fence* tmpCmdQueuefence = nullptr;
+    m_pThis->m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tmpCmdQueuefence));
+
+    m_pThis->m_pD3dCommandQueue->Signal(tmpCmdQueuefence, 1);
+
+    // If hEvent is a null handle, then this API will not return until the specified fence value(s) have been reached.
+    tmpCmdQueuefence->SetEventOnCompletion(1, nullptr);
+
+    tmpCmdQueuefence->Release();
 }
 
 void DX12MiniRenderer::WaitGpuIdle()
@@ -214,8 +212,6 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->Close();
 
         m_pD3dCommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&m_pD3dCommandList);
-
-        UINT fenceValue = frameCtx->Fence->GetCompletedValue();
 
         m_pD3dCommandQueue->Signal(frameCtx->Fence, 1);
 

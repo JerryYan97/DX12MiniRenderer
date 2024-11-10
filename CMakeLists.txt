@@ -27,6 +27,13 @@ add_subdirectory(./EventSystem)
 add_subdirectory(./RenderBackend)
 add_subdirectory(./Utils)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/YamlCpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/build/yaml)
+set_target_properties(yaml-cpp PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp-parse PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp-read PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp-sandbox PROPERTIES FOLDER "YamlCpp")
+
 target_compile_features(DX12MiniRenderer PRIVATE cxx_std_17)
 
 target_link_libraries(DX12MiniRenderer d3d12 dxgi d3dcompiler)
