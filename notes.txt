@@ -41,3 +41,9 @@ https://microsoft.github.io/DirectX-Specs/
 https://devblogs.microsoft.com/pix/
 Swapchain Front Buffer v.s. Back Buffer: https://learn.microsoft.com/en-us/windows/win32/direct3d9/what-is-a-swap-chain-
 Explain Fence: https://learn.microsoft.com/en-us/windows/win32/direct3d12/user-mode-heap-synchronization
+
+USD Assets: https://github.com/usd-wg/assets.git
+
+Nice Monte Carlo Explain: https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html#overview
+
+VMA Vulkan v.s. D3D12: https://asawicki.info/articles/memory_management_vulkan_direct3d_12.php5

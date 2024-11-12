@@ -1,5 +1,6 @@
 #include "MiniRendererApp.h"
 #include "UI/UIManager.h"
+#include "Scene/Level.h"
 #include <dxgidebug.h>
 #pragma comment(lib, "dxguid.lib")
 
@@ -169,6 +170,10 @@ void DX12MiniRenderer::Init()
     m_pUIManager->Init(m_pD3dCommandQueue);
     m_pUIManager->SetCustomImGUIFunc(GenerateImGUIStates);
 
+    // Tmp Load Test Triangle Level
+    m_pLevel = new Level();
+    m_sceneLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\Triangle\\TriangleTest.yaml", m_pLevel);
+
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 }
 
@@ -241,4 +246,6 @@ void DX12MiniRenderer::Finalize()
         pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
         pDebug->Release();
     }
+
+    delete m_pLevel;
 }

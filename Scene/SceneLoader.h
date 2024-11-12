@@ -2,6 +2,7 @@
 #include <string>
 
 class Level;
+class Camera;
 
 class SceneLoader
 {
@@ -16,4 +17,10 @@ public:
     void LoadInLevel(Level* i_pLevel, Level* o_pSubLevel) {}
 
 private:
+    std::string m_currentScenePath;
+
+    // Load gltf
+    void LoadGltf(const std::string& fileNamePath, Level* o_pLevel);
+
+    void LoadCamera(Level* o_pLevel);
 };

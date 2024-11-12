@@ -2,20 +2,20 @@ SceneName: TriangleTest
 SceneType: GLTF
 SceneGraph:
   TriangleInst:
-    Type: Mesh
+    Type: StaticMesh
     Position: [0, 0, 0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
-    AssetPath: ./Triangle.gltf
+    AssetPath: Triangle.gltf
   AmbientLightInst:
     Type: AmbientLight
     Radiance: [1.0, 1.0, 1.0]
   CameraInst:
     Type: Camera
-    View: [-0.919259131, -0.275637269, -0.281045794]
-    Up: [-0.263593137, 0.961261749, -0.0805885717]
+    Position: [0.0, 0.0, -1.0]
+    View: [0.0, 0.0, 1.0]
+    Up: [0.0, 1.0, 0.0]
     fov: 0.820304751
-    aspect: 1.41176474
     far: 100
-    near: 0.100000001
+    near: 0.1
     isActive: true
