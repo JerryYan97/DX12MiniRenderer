@@ -12,16 +12,14 @@ StaticMesh::StaticMesh()
     m_objectType = "StaticMesh";
 }
 
-Object* StaticMesh::Deseralize(const YAML::Node& i_node)
+Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_node)
 {
-    std::pair<std::string, YAML::Node> mshNode = i_node.as<std::pair<std::string, YAML::Node>>();
-    std::string name = mshNode.first;
-    const YAML::Node& node = mshNode.second;
+    std::string name = objName;
 
-    std::vector<float> pos = node["Position"].as<std::vector<float>>();
-    std::vector<float> scale = node["Scale"].as<std::vector<float>>();
-    std::vector<float> rotation = node["Rotation"].as<std::vector<float>>();
-    std::string assetPath = node["AssetPath"].as<std::string>();
+    std::vector<float> pos = i_node["Position"].as<std::vector<float>>();
+    std::vector<float> scale = i_node["Scale"].as<std::vector<float>>();
+    std::vector<float> rotation = i_node["Rotation"].as<std::vector<float>>();
+    std::string assetPath = i_node["AssetPath"].as<std::string>();
 
     StaticMesh* mesh = new StaticMesh();
     mesh->m_objectName = name;

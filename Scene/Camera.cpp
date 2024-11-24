@@ -1,20 +1,15 @@
 #include "Camera.h"
 #include "yaml-cpp/yaml.h"
 
-Object* Camera::Deseralize(const YAML::Node& i_node)
+Object* Camera::Deseralize(const std::string& objName, const YAML::Node& i_node)
 {
-    std::pair<std::string, YAML::Node> cameraNode = i_node.as<std::pair<std::string, YAML::Node>>();
-    std::string name = cameraNode.first;
-    
-    const YAML::Node& node = cameraNode.second;
-
-    std::vector<float> pos = node["Position"].as<std::vector<float>>();
-    std::vector<float> view = node["View"].as<std::vector<float>>();
-    std::vector<float> up = node["Up"].as<std::vector<float>>();
-    float fov = node["fov"].as<float>();
-    float far = node["far"].as<float>();
-    float near = node["near"].as<float>();
-    bool isActive = node["isActive"].as<bool>();
+    std::vector<float> pos = i_node["Position"].as<std::vector<float>>();
+    std::vector<float> view = i_node["View"].as<std::vector<float>>();
+    std::vector<float> up = i_node["Up"].as<std::vector<float>>();
+    float fov = i_node["fov"].as<float>();
+    float far = i_node["far"].as<float>();
+    float near = i_node["near"].as<float>();
+    bool isActive = i_node["isActive"].as<bool>();
 
     Camera* pCamera = new Camera(pos.data(),
                                  view.data(),
@@ -22,7 +17,7 @@ Object* Camera::Deseralize(const YAML::Node& i_node)
                                  fov, near, far);
 
     pCamera->m_active = isActive;
-    pCamera->m_objectName = name;
+    pCamera->m_objectName = objName;
 
     return pCamera;
 }

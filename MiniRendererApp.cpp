@@ -1,6 +1,7 @@
 #include "MiniRendererApp.h"
 #include "UI/UIManager.h"
 #include "Scene/Level.h"
+#include "RenderBackend/HWRTRenderBackend.h"
 #include <dxgidebug.h>
 #pragma comment(lib, "dxguid.lib")
 
@@ -14,6 +15,7 @@ DX12MiniRenderer::DX12MiniRenderer()
       m_pUIManager(nullptr)
 {
     m_pThis = this;
+    m_pRendererBackend = new HWRTRenderBackend();
 }
 
 DX12MiniRenderer::~DX12MiniRenderer()
@@ -172,9 +174,11 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\Triangle\\TriangleTest.yaml", m_pLevel);
+    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\Triangle\\TriangleTest.yaml", m_pLevel);
 
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
+
+    
 }
 
 void DX12MiniRenderer::Run()
@@ -201,6 +205,9 @@ void DX12MiniRenderer::Run()
 
         m_pD3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
         m_pD3dCommandList->ResourceBarrier(1, &barrier);
+
+        // Render Scene
+
 
         // Render Dear ImGui graphics
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);

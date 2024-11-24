@@ -36,7 +36,7 @@ public:
         m_aspect = width / height;
     }
 
-    static Object* Deseralize(const YAML::Node& i_node);
+    static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
 
     float m_pos[3];
     float m_view[3];

@@ -2,10 +2,11 @@
 
 #include <d3d12.h>
 #include "EventSystem/EventManager.h"
-#include "Scene/SceneLoader.h"
+#include "Scene/SceneAssetLoader.h"
 
 class UIManager;
 class Level;
+class RendererBackend;
 
 // It's possible to just use one fence like the ImGUI example but I prefer to use multiple fences for readability, which is more similar to Vulkan Fence.
 // The custom rule for sync is that the fence value = 0 means the fence is not signaled and is waiting for something or is ready to be used.
@@ -45,11 +46,11 @@ private:
     static void WaitGpuIdle();
     static void GenerateImGUIStates();
 
-    ID3D12Device*  m_pD3dDevice = nullptr;
-    ID3D12Debug*   m_pDx12Debug = nullptr;
-    UIManager*     m_pUIManager = nullptr;
-    HEventManager  m_eventManager;
-    SceneLoader    m_sceneLoader;
+    ID3D12Device*    m_pD3dDevice = nullptr;
+    ID3D12Debug*     m_pDx12Debug = nullptr;
+    UIManager*       m_pUIManager = nullptr;
+    HEventManager    m_eventManager;
+    SceneAssetLoader m_sceneAssetLoader;
 
     static DX12MiniRenderer* m_pThis;
 
@@ -64,6 +65,8 @@ private:
     // ID3D12Fence*               m_fence = nullptr;
     // HANDLE                     m_fenceEvent = nullptr;
     std::vector<FrameContext>  m_frameContexts;
+
+    RendererBackend* m_pRendererBackend = nullptr;
 
     // Temp Root Level
     Level* m_pLevel = nullptr;

@@ -13,7 +13,7 @@ public:
     StaticMesh();
     ~StaticMesh() {}
 
-    static Object* Deseralize(const YAML::Node& i_node);
+    static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
 
 private:
     float m_position[3];

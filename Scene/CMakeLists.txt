@@ -4,8 +4,8 @@ target_sources(
     Level.h
     Camera.cpp
     Camera.h
-    SceneLoader.cpp
-    SceneLoader.h
+    SceneAssetLoader.cpp
+    SceneAssetLoader.h
     LevelManager.cpp
     LevelManager.h
     Mesh.cpp

@@ -19,19 +19,23 @@ We can do the abstraction along the way instead of spending too much time on the
 Note that I was always using the coupled swapchain-FrameContext structure for simplicity. It is equivalent that we only have two buffers in the swapchain instead of 3, which can be harmful for the performance.
 
 Milestone 0:
-- Integrate YamlCpp
+- Integrate YamlCpp (Done)
 - Setup Yaml + GLTF based scene structure.
-- Render out a Triangle/Basic GLTF model in rasterization.
-- Integrate DX12 memory allocator.
-- Simple ImGUI Layout -- Top Bar, Scene Hierarchy.
+- Render out a Triangle/Basic GLTF model in no bounce RT. (Load from fixed path)
+- Integrate DX12 memory allocator. (NO Need)
+- Simple ImGUI Layout -- Overlay ImGUI window, Scene Hierarchy (Print on Load).
 
 Milestone 1:
 - Make a cornell box (GLTF) in Blender.
 - Integrate Input Handler, which reuses the Vulkan project's input handler.
-
+- Cornell box GLTF Render with no bounce RT.
 
 Milestone 2:
-- Cornell box GLTF Render.
+- Cornell box fully work path tracer rendering.
+
+Milestone 3:
+- Sponza/Nv unreal Restir scene rendering.
+- FSR integration.
 
 
 Refs:
