@@ -178,7 +178,13 @@ void DX12MiniRenderer::Init()
 
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 
-    
+    RendererBackendInitStruct initStruct;
+    initStruct.pD3dDevice = m_pD3dDevice;
+    initStruct.pDx12Debug = m_pDx12Debug;
+    initStruct.pUIManager = m_pUIManager;
+    initStruct.pEventManager = &m_eventManager;
+    initStruct.pSceneAssetLoader = &m_sceneAssetLoader;
+    m_pRendererBackend->Init(initStruct);
 }
 
 void DX12MiniRenderer::Run()

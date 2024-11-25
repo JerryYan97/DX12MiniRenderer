@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include "yaml-cpp/yaml.h"
+#include "SceneAssetLoader.h"
 
 StaticMesh::StaticMesh()
     : m_loadedInRAM(false),
@@ -26,6 +27,8 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     memcpy(mesh->m_position, pos.data(), sizeof(float) * 3);
     memcpy(mesh->m_scale, scale.data(), sizeof(float) * 3);
     memcpy(mesh->m_rotation, rotation.data(), sizeof(float) * 3);
+
+    SceneAssetLoader::LoadStaticMesh(assetPath, mesh);
 
     return mesh;
 }

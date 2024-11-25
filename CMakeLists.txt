@@ -3,7 +3,8 @@ project(DX12MiniRenderer VERSION 0.1 LANGUAGES CXX)
 
 set(DearImGUIPath ./ThirdParty/imgui)
 include_directories(${DearImGUIPath}
-                    ${DearImGUIPath}/backends)
+                    ${DearImGUIPath}/backends
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/TinyGltf)
 
 set(IMGUI_FILES_LIST ${DearImGUIPath}/imgui.cpp 
                      ${DearImGUIPath}/imgui_draw.cpp

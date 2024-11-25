@@ -32,6 +32,8 @@ public:
     void Init(RendererBackendInitStruct initStruct);
 
 protected:
+    virtual void CustomInit() {}
+
     ID3D12Device*  m_pD3dDevice = nullptr;
     ID3D12Debug*   m_pDx12Debug = nullptr;
     UIManager*     m_pUIManager = nullptr;

@@ -7,4 +7,6 @@ void RendererBackend::Init(RendererBackendInitStruct initStruct)
     m_pUIManager = initStruct.pUIManager;
     m_pEventManager = initStruct.pEventManager;
     m_pSceneAssetLoader = initStruct.pSceneAssetLoader;
+
+    CustomInit();
 }

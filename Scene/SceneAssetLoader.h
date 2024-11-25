@@ -4,6 +4,7 @@
 
 class Level;
 class Camera;
+class StaticMesh;
 
 typedef void(*PFN_SerializeAndCreate)(const std::string& i_fileNamePath);
 
@@ -31,9 +32,11 @@ public:
     // Load a scene file into the input level
     void LoadInLevel(Level* i_pLevel, Level* o_pSubLevel) {}
 
-    void LoadGltf(const std::string& fileNamePath, Level* o_pLevel);
-
+    static void LoadStaticMesh(const std::string& fileNamePath, StaticMesh* pStaticMesh);
 
 private:
+    static void LoadGltf(const std::string& fileNamePath, StaticMesh* pStaticMesh);
+
+    static SceneAssetLoader* m_pThis;
     std::string m_currentScenePath;
 };
