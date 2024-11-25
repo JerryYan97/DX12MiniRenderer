@@ -5,4 +5,6 @@ target_sources(
     GltfUtils.h
     StrPathUtils.cpp
     StrPathUtils.h
+    MathUtils.cpp
+    MathUtils.h
 )

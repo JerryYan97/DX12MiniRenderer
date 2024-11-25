@@ -20,10 +20,10 @@ Note that I was always using the coupled swapchain-FrameContext structure for si
 
 Milestone 0:
 - Integrate YamlCpp (Done)
-- Setup Yaml + GLTF based scene structure.
+- Setup Yaml + GLTF based scene structure. (Done)
 - Render out a Triangle/Basic GLTF model in no bounce RT. (Load from fixed path)
 - Integrate DX12 memory allocator. (NO Need)
-- Simple ImGUI Layout -- Overlay ImGUI window, Scene Hierarchy (Print on Load).
+- Simple ImGUI Layout -- Overlay ImGUI window, Scene Hierarchy (Print on Load). (No Need)
 
 Milestone 1:
 - Make a cornell box (GLTF) in Blender.

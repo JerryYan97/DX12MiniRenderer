@@ -35,7 +35,7 @@ public:
     static void LoadStaticMesh(const std::string& fileNamePath, StaticMesh* pStaticMesh);
 
 private:
-    static void LoadGltf(const std::string& fileNamePath, StaticMesh* pStaticMesh);
+    static void LoadTinyGltf(const std::string& fileNamePath, StaticMesh* pStaticMesh);
 
     static SceneAssetLoader* m_pThis;
     std::string m_currentScenePath;

@@ -3,6 +3,13 @@
 #include <filesystem>
 #include <algorithm>
 
+std::string GetFileDir(
+    const std::string& pathName)
+{
+    size_t pos = pathName.rfind("\\");
+    return pathName.substr(0, pos);
+}
+
 bool IsFile(const std::string& pathName)
 {
     size_t found = pathName.find_last_of(".");
