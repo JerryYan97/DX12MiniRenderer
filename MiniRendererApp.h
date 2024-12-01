@@ -43,7 +43,7 @@ public:
 
 private:
     void InitDevice();
-    static void WaitGpuIdle();
+    static void WaitGpuIdle(HEventArguments args);
     static void GenerateImGUIStates();
 
     ID3D12Device*    m_pD3dDevice = nullptr;

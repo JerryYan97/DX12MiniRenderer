@@ -6,4 +6,8 @@ target_sources(
     HWRTRenderBackend.cpp
     ForwardRenderBackend.h
     ForwardRenderBackend.cpp
+    GpuPipeline.h
+    GpuPipeline.cpp
 )
+
+add_subdirectory(./RTShaders)

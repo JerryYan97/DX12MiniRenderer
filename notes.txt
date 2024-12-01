@@ -33,9 +33,13 @@ Milestone 1:
 Milestone 2:
 - Cornell box fully work path tracer rendering.
 
-Milestone 3:
+Milestone 3+:
 - Sponza/Nv unreal Restir scene rendering.
 - FSR integration.
+- Refactorization...
+- Better GUI
+- Volumetric Rendering...
+- Hair Rendering...
 
 
 Refs:

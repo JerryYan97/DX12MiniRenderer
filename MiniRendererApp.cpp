@@ -58,7 +58,7 @@ void DX12MiniRenderer::TempRendererWaitGpuIdle()
     tmpCmdQueuefence->Release();
 }
 
-void DX12MiniRenderer::WaitGpuIdle()
+void DX12MiniRenderer::WaitGpuIdle(HEventArguments args)
 {
     TempRendererWaitGpuIdle();
 }
@@ -178,13 +178,22 @@ void DX12MiniRenderer::Init()
 
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 
+    uint32_t width = 0;
+    uint32_t height = 0;
+    m_pUIManager->GetWindowSize(width, height);
+
     RendererBackendInitStruct initStruct;
     initStruct.pD3dDevice = m_pD3dDevice;
     initStruct.pDx12Debug = m_pDx12Debug;
     initStruct.pUIManager = m_pUIManager;
     initStruct.pEventManager = &m_eventManager;
     initStruct.pSceneAssetLoader = &m_sceneAssetLoader;
+    initStruct.pLevel = m_pLevel;
+    initStruct.startWidth = width;
+    initStruct.startHeight = height;
     m_pRendererBackend->Init(initStruct);
+
+    m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);
 }
 
 void DX12MiniRenderer::Run()
@@ -213,7 +222,60 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->ResourceBarrier(1, &barrier);
 
         // Render Scene
+        m_pRendererBackend->RenderTick(m_pD3dCommandList);
 
+        if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)
+        {
+            HWRTRenderBackend* pPathTracingBackend = dynamic_cast<HWRTRenderBackend*>(m_pRendererBackend);
+            ID3D12Resource* raytracingOutput = pPathTracingBackend->GetRaytracingOutput();
+
+            D3D12_RESOURCE_BARRIER waitRTOutputAndStateTransBarriers[3] = {};
+            {
+                // Wait for the raytracing output to be ready.
+                waitRTOutputAndStateTransBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+                waitRTOutputAndStateTransBarriers[0].UAV.pResource = raytracingOutput;
+
+                // Transition the raytracing output to the copy src.
+                waitRTOutputAndStateTransBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                waitRTOutputAndStateTransBarriers[1].Transition.pResource = raytracingOutput;
+                waitRTOutputAndStateTransBarriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                waitRTOutputAndStateTransBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+                waitRTOutputAndStateTransBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+
+                // Transition the backbuffer to the copy dest.
+                waitRTOutputAndStateTransBarriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                waitRTOutputAndStateTransBarriers[2].Transition.pResource = frameCRT;
+                waitRTOutputAndStateTransBarriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                waitRTOutputAndStateTransBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                waitRTOutputAndStateTransBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+            }
+            m_pD3dCommandList->ResourceBarrier(3, waitRTOutputAndStateTransBarriers);
+
+            // Copy the raytracing output to the backbuffer.
+            m_pD3dCommandList->CopyResource(frameCRT, raytracingOutput);
+
+            D3D12_RESOURCE_BARRIER waitCopyFinishTransBackBarriers[3] = {};
+            {
+                // Wait for the copy to finish.
+                waitCopyFinishTransBackBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+                waitCopyFinishTransBackBarriers[0].Transition.pResource = frameCRT;
+
+                // Transition the backbuffer to the RT state.
+                waitCopyFinishTransBackBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                waitCopyFinishTransBackBarriers[1].Transition.pResource = frameCRT;
+                waitCopyFinishTransBackBarriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                waitCopyFinishTransBackBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+                waitCopyFinishTransBackBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+                // Transition the raytracing output to the UAV state.
+                waitCopyFinishTransBackBarriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                waitCopyFinishTransBackBarriers[2].Transition.pResource = raytracingOutput;
+                waitCopyFinishTransBackBarriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                waitCopyFinishTransBackBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+                waitCopyFinishTransBackBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+            }
+            m_pD3dCommandList->ResourceBarrier(3, waitCopyFinishTransBackBarriers);
+        }
 
         // Render Dear ImGui graphics
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -244,7 +306,8 @@ void DX12MiniRenderer::Run()
     m_pD3dCommandQueue->Signal(frameCtx->Fence, 1);
     frameCtx->Fence->SetEventOnCompletion(1, nullptr);
 
-    WaitGpuIdle();
+    HEventArguments dummyArgs;
+    WaitGpuIdle(dummyArgs);
 }
 
 void DX12MiniRenderer::Finalize()

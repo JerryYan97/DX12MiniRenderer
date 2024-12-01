@@ -47,6 +47,8 @@ public:
 
     friend LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+    void GetWindowSize(uint32_t& oWidth, uint32_t& oHeight) { oWidth = m_windowWidth; oHeight = m_windowHeight; }
+
     // Member Variables
     const static unsigned int NUM_BACK_BUFFERS = 3;
 
@@ -76,4 +78,7 @@ private:
 
     // Self Reference
     static UIManager* m_pThis;
+
+    uint32_t m_windowWidth;
+    uint32_t m_windowHeight;
 };

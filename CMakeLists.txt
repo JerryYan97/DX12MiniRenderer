@@ -41,3 +41,8 @@ set_target_properties(yaml-cpp-sandbox PROPERTIES FOLDER "YamlCpp")
 target_compile_features(DX12MiniRenderer PRIVATE cxx_std_17)
 
 target_link_libraries(DX12MiniRenderer d3d12 dxgi d3dcompiler yaml-cpp)
+
+
+# DXC command:
+# All raytracing shaders must be compiled as library using lib_6_3/lib_6_4 profile option.
+# C:\JiaruiYan\DXCOffical\dxc_2024_07_31\bin\x64>dxc.exe -T lib_6_3 -Fh "C:\JiaruiYan\Projects\DX12MiniRenderer\RenderBackend\RTShaders\RaytracingShader.h" -Fo "C:\JiaruiYan\Projects\DX12MiniRenderer\RenderBackend\RTShaders\RaytracingShader.o" "C:\JiaruiYan\Projects\DX12MiniRenderer\RenderBackend\RTShaders\Raytracing.hlsl"

@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
+#include "../Utils/crc32.h"
 
 UIManager* UIManager::m_pThis = nullptr;
 
@@ -55,10 +56,20 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void UIManager::WindowResize(LPARAM lParam)
 {
+    m_windowWidth = (UINT)LOWORD(lParam);
+    m_windowHeight = (UINT)HIWORD(lParam);
+
     // Inform other systems that we are waiting for the GPU to be idle before resizing the swapchain.
     HEventArguments args;
     HEvent WaitGpuIdleEvent(args, "WaitGpuIdle");
     m_pEventManager->SendEvent(WaitGpuIdleEvent);
+
+    HEventArguments resizeArgs;
+    resizeArgs[crc32("Width")] = (UINT)LOWORD(lParam);
+    resizeArgs[crc32("Height")] = (UINT)HIWORD(lParam);
+
+    HEvent ResizeEvent(resizeArgs, "ResizeSwapchain");
+    m_pEventManager->SendEvent(ResizeEvent);
 
     CleanupSwapchainRenderTargets();
     HRESULT result = m_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
@@ -73,6 +84,8 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
     m_wc = { sizeof(m_wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"DX12MiniRenderer", nullptr };
     ::RegisterClassExW(&m_wc);
     m_hWnd = ::CreateWindowW(m_wc.lpszClassName, m_windowTitle.c_str(), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, m_wc.hInstance, nullptr);
+    m_windowWidth = 1280;
+    m_windowHeight = 800;
 
     // Setup swap chain
     DXGI_SWAP_CHAIN_DESC1 sd;

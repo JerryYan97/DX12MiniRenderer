@@ -1,6 +1,15 @@
 #include "Mesh.h"
 #include "yaml-cpp/yaml.h"
 #include "SceneAssetLoader.h"
+#include "../Utils/crc32.h"
+
+MeshPrimitive::~MeshPrimitive()
+{
+    for (auto& itr : m_gpuRsrcMap)
+    {
+        itr.second->Release();
+    }
+}
 
 StaticMesh::StaticMesh()
     : m_loadedInRAM(false),
@@ -11,6 +20,7 @@ StaticMesh::StaticMesh()
     memset(m_rotation, 0, sizeof(float) * 3);
 
     m_objectType = "StaticMesh";
+    m_objectTypeHash = crc32(m_objectType.c_str());
 }
 
 Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_node)

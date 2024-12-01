@@ -366,3 +366,11 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
         }
     }
 }
+
+void SceneAssetLoader::LoadShaderObject(const std::string& fileNamePath, std::vector<unsigned char>& oShaderByteCode)
+{
+    std::ifstream inputShader(fileNamePath.c_str(), std::ios::binary | std::ios::in);
+    std::vector<unsigned char> inputShaderStr(std::istreambuf_iterator<char>(inputShader), {});
+    inputShader.close();
+    oShaderByteCode = inputShaderStr;
+}

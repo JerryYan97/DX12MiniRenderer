@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <d3d12.h>
 #include "Object.h"
 
 namespace YAML
@@ -21,7 +23,7 @@ class MeshPrimitive
 {
 public:
     MeshPrimitive() {}
-    ~MeshPrimitive() {}
+    ~MeshPrimitive();
 
     // float m_position[3];
     std::vector<float>    m_vertData;
@@ -38,6 +40,8 @@ public:
     ImgInfo m_normalTex;            // R32G32B32_SFLOAT
     ImgInfo m_occlusionTex;         // R32_SFLOAT
     ImgInfo m_emissiveTex;          // Currently don't support.
+
+    std::unordered_map<std::string, ID3D12Resource*> m_gpuRsrcMap;
 
     /*
     void InitGpuRsrc(VkDevice device, VmaAllocator* pAllocator, VkCommandBuffer cmdBuffer, VkQueue queue);

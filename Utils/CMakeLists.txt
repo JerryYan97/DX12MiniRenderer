@@ -7,4 +7,6 @@ target_sources(
     StrPathUtils.h
     MathUtils.cpp
     MathUtils.h
+    DX12Utils.cpp
+    DX12Utils.h
 )

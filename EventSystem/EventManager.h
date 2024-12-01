@@ -30,7 +30,7 @@ public:
 };
 */
 
-typedef void(*NoParameterEventFuncPtr) ();
+typedef void(*EventCallbackFuncPtr) (HEventArguments args);
 
 // Manage interested objects listening and registration.
 class HEventManager
@@ -41,10 +41,10 @@ public:
     {};
     ~HEventManager() {};
 
-    void RegisterListener(const std::string& type, NoParameterEventFuncPtr listenFunc);
-    void UnregisterListener(const std::string& type, NoParameterEventFuncPtr listenFunc) {}
+    void RegisterListener(const std::string& type, EventCallbackFuncPtr listenFunc);
+    void UnregisterListener(const std::string& type, EventCallbackFuncPtr listenFunc) {}
     void SendEvent(HEvent& hEvent);
 
 private:
-    std::unordered_map<size_t, std::list<NoParameterEventFuncPtr>> m_eventListenerMap; // Event type -- Linked list of registered function to execute when the event happens.
+    std::unordered_map<size_t, std::list<EventCallbackFuncPtr>> m_eventListenerMap; // Event type -- Linked list of registered function to execute when the event happens.
 };

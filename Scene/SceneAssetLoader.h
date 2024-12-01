@@ -33,6 +33,7 @@ public:
     void LoadInLevel(Level* i_pLevel, Level* o_pSubLevel) {}
 
     static void LoadStaticMesh(const std::string& fileNamePath, StaticMesh* pStaticMesh);
+    static void LoadShaderObject(const std::string& fileNamePath, std::vector<unsigned char>& oShaderByteCode);
 
 private:
     static void LoadTinyGltf(const std::string& fileNamePath, StaticMesh* pStaticMesh);
