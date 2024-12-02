@@ -61,6 +61,7 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
         {
             uavDescriptorRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
             uavDescriptorRange.NumDescriptors = 1;
+            uavDescriptorRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
         }
 
         // The maximum size of a root signature is 64 DWORDs.
@@ -79,7 +80,7 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
 
             rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
             rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-            rootParameters[1].Descriptor.ShaderRegister = 1;
+            rootParameters[1].Descriptor.ShaderRegister = 0;
             rootParameters[1].Descriptor.RegisterSpace = 0;
         }
 
