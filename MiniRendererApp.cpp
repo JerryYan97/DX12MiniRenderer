@@ -254,27 +254,27 @@ void DX12MiniRenderer::Run()
             // Copy the raytracing output to the backbuffer.
             m_pD3dCommandList->CopyResource(frameCRT, raytracingOutput);
 
-            D3D12_RESOURCE_BARRIER waitCopyFinishTransBackBarriers[3] = {};
+            D3D12_RESOURCE_BARRIER waitCopyFinishTransBackBarriers[2] = {};
             {
                 // Wait for the copy to finish.
-                waitCopyFinishTransBackBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-                waitCopyFinishTransBackBarriers[0].Transition.pResource = frameCRT;
+                // waitCopyFinishTransBackBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+                // waitCopyFinishTransBackBarriers[0].Transition.pResource = frameCRT;
 
                 // Transition the backbuffer to the RT state.
-                waitCopyFinishTransBackBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                waitCopyFinishTransBackBarriers[1].Transition.pResource = frameCRT;
-                waitCopyFinishTransBackBarriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                waitCopyFinishTransBackBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-                waitCopyFinishTransBackBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                waitCopyFinishTransBackBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                waitCopyFinishTransBackBarriers[0].Transition.pResource = frameCRT;
+                waitCopyFinishTransBackBarriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                waitCopyFinishTransBackBarriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+                waitCopyFinishTransBackBarriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
                 // Transition the raytracing output to the UAV state.
-                waitCopyFinishTransBackBarriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                waitCopyFinishTransBackBarriers[2].Transition.pResource = raytracingOutput;
-                waitCopyFinishTransBackBarriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                waitCopyFinishTransBackBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
-                waitCopyFinishTransBackBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+                waitCopyFinishTransBackBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                waitCopyFinishTransBackBarriers[1].Transition.pResource = raytracingOutput;
+                waitCopyFinishTransBackBarriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                waitCopyFinishTransBackBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+                waitCopyFinishTransBackBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
             }
-            m_pD3dCommandList->ResourceBarrier(3, waitCopyFinishTransBackBarriers);
+            m_pD3dCommandList->ResourceBarrier(2, waitCopyFinishTransBackBarriers);
         }
 
         // Render Dear ImGui graphics
