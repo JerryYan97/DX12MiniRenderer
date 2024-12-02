@@ -3,6 +3,7 @@
 #include "../Scene/Level.h"
 #include "../Scene/Mesh.h"
 #include "../Utils/DX12Utils.h"
+#include "RTShaders/Raytracing.hlsl.h"
 #include <d3d12.h>
 
 static const wchar_t* c_hitGroupName         = L"MyHitGroup";
@@ -116,58 +117,86 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
     }
 }
 
+// NOTE that the local/global root signatures need to be the pointer of the pointer -- In the DX12 example, it uses `GetAddressOf` to get the pointer of the pointer.
 void HWRTRenderBackend::InitPipelineStates() // PSOs
 {
     //  CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
     D3D12_STATE_OBJECT_DESC raytracingPipelineStateObjectDesc{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
+    D3D12_STATE_SUBOBJECT subobjects[7]{};
+
     // Setup Shader Libraries
     D3D12_DXIL_LIBRARY_DESC libDesc{};
-    D3D12_STATE_SUBOBJECT libSubobject{D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &libDesc};
-    std::vector<unsigned char> raytracingShadersByteCode;
-    std::string rtShaderObjectPath = std::string(SOURCE_PATH) + "/RenderBackend/RTShaders/RaytracingShader.o";
-    SceneAssetLoader::LoadShaderObject(rtShaderObjectPath, raytracingShadersByteCode);
+    // D3D12_STATE_SUBOBJECT libSubobject{D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &libDesc};
+    subobjects[0].Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
+    subobjects[0].pDesc = &libDesc;
 
-    D3D12_SHADER_BYTECODE libdxil{ rtShaderObjectPath.data(), rtShaderObjectPath.size() };
+    // std::vector<unsigned char> raytracingShadersByteCode;
+    std::string rtShaderObjectPath = std::string(SOURCE_PATH) + "/RenderBackend/RTShaders/RaytracingShader.o";
+    // SceneAssetLoader::LoadShaderObject(rtShaderObjectPath, raytracingShadersByteCode);
+
+    D3D12_SHADER_BYTECODE libdxil{ g_pRaytracing, ARRAYSIZE(g_pRaytracing)};
 
     D3D12_EXPORT_DESC rayGenShaderExport{c_raygenShaderName, nullptr, D3D12_EXPORT_FLAG_NONE};
     D3D12_EXPORT_DESC closestHitShaderExport{c_closestHitShaderName, nullptr, D3D12_EXPORT_FLAG_NONE};
     D3D12_EXPORT_DESC missShaderExport{c_missShaderName, nullptr, D3D12_EXPORT_FLAG_NONE};
-    D3D12_EXPORT_DESC* exports[3]{&rayGenShaderExport, &closestHitShaderExport, &missShaderExport};
+    D3D12_EXPORT_DESC exports[3]{rayGenShaderExport, closestHitShaderExport, missShaderExport};
 
     libDesc.DXILLibrary = libdxil;
     libDesc.NumExports = 3;
-    libDesc.pExports = *exports;
+    libDesc.pExports = exports;
 
     // Setup Hit Groups
-    D3D12_HIT_GROUP_DESC hitGroupDesc{c_hitGroupName, D3D12_HIT_GROUP_TYPE_TRIANGLES, c_closestHitShaderName, nullptr, nullptr};
-    D3D12_STATE_SUBOBJECT hitGroupSubobject{D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &hitGroupDesc};
+    D3D12_HIT_GROUP_DESC hitGroupDesc{c_hitGroupName, D3D12_HIT_GROUP_TYPE_TRIANGLES, nullptr, c_closestHitShaderName, nullptr};
+    // D3D12_STATE_SUBOBJECT hitGroupSubobject{D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &hitGroupDesc};
+    subobjects[1].Type = D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;
+    subobjects[1].pDesc = &hitGroupDesc;
 
     // Setup Shader Config
     UINT payloadSize = 4 * sizeof(float);   // float4 color
     UINT attributeSize = 2 * sizeof(float); // float2 barycentrics
     D3D12_RAYTRACING_SHADER_CONFIG shaderConfig{payloadSize, attributeSize};
-    D3D12_STATE_SUBOBJECT shaderConfigSubobject{D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &shaderConfig};
+    // D3D12_STATE_SUBOBJECT shaderConfigSubobject{D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &shaderConfig};
+    subobjects[2].Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG;
+    subobjects[2].pDesc = &shaderConfig;
 
     // Local root signature and shader association state subobjects
-    D3D12_STATE_SUBOBJECT localRootSignatureSubobject{D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, m_raytracingLocalRootSignature};
+    // D3D12_STATE_SUBOBJECT localRootSignatureSubobject{D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, m_raytracingLocalRootSignature};
+    subobjects[3].Type = D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE;
+    subobjects[3].pDesc = &m_raytracingLocalRootSignature;
 
-    D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION localRootSignatureAssociation{&localRootSignatureSubobject, 1, &c_raygenShaderName};
-    D3D12_STATE_SUBOBJECT localRootSignatureAssociationSubobject{D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &localRootSignatureAssociation};
+    D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION localRootSignatureAssociation{&subobjects[3], 1, &c_raygenShaderName};
+    // D3D12_STATE_SUBOBJECT localRootSignatureAssociationSubobject{D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &localRootSignatureAssociation};
+    subobjects[4].Type = D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
+    subobjects[4].pDesc = &localRootSignatureAssociation;
 
     // Global root signature
-    D3D12_STATE_SUBOBJECT globalRootSignatureSubobject{D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, m_raytracingGlobalRootSignature};
+    // D3D12_STATE_SUBOBJECT globalRootSignatureSubobject{D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, m_raytracingGlobalRootSignature};
+    subobjects[5].Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
+    subobjects[5].pDesc = &m_raytracingGlobalRootSignature;
 
     // Ray tracing pipeline config
     D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfigDesc{1}; // Max recursion depth
-    D3D12_STATE_SUBOBJECT pipelineConfigSubobject{D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &pipelineConfigDesc};
+    // D3D12_STATE_SUBOBJECT pipelineConfigSubobject{D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &pipelineConfigDesc};
+    subobjects[6].Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG;
+    subobjects[6].pDesc = &pipelineConfigDesc;
 
     // Create the state object
+    /*
     D3D12_STATE_SUBOBJECT subobjects[7]{libSubobject, hitGroupSubobject, shaderConfigSubobject, localRootSignatureSubobject, 
                                         localRootSignatureAssociationSubobject, globalRootSignatureSubobject, pipelineConfigSubobject};
+    */  
     raytracingPipelineStateObjectDesc.NumSubobjects = 7;
     raytracingPipelineStateObjectDesc.pSubobjects = subobjects;
+
+#if _DEBUG
+    PrintStateObjectDesc(&raytracingPipelineStateObjectDesc);
+#endif
+
     ThrowIfFailed(m_dxrDevice->CreateStateObject(&raytracingPipelineStateObjectDesc, IID_PPV_ARGS(&m_rtPipelineStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
+
+
+
 }
 
 void HWRTRenderBackend::InitDescriptorHeaps() // Descriptor Heaps
