@@ -221,6 +221,10 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
         m_pD3dCommandList->ResourceBarrier(1, &barrier);
 
+        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+        const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+        m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
+
         // Render Scene
         m_pRendererBackend->RenderTick(m_pD3dCommandList);
 
@@ -278,9 +282,6 @@ void DX12MiniRenderer::Run()
         }
 
         // Render Dear ImGui graphics
-        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-        const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
         m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);
 
