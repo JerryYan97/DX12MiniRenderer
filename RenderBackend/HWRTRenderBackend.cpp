@@ -217,8 +217,27 @@ void HWRTRenderBackend::BuildGeometry() // Build Scene Geometry
 {
     std::vector<StaticMesh*> staticMeshes;
     m_pLevel->RetriveStaticMeshes(staticMeshes);
+    Index indices[] =
+    {
+        0, 1, 2
+    };
 
+    float depthValue = 1.0;
+    float offset = 0.7f;
+    Vertex vertices[] =
+    {
+        // The sample raytraces in screen space coordinates.
+        // Since DirectX screen space coordinates are right handed (i.e. Y axis points down).
+        // Define the vertices in counter clockwise order ~ clockwise in left handed.
+        { 0, -offset, depthValue },
+        { -offset, offset, depthValue },
+        { offset, offset, depthValue }
+    };
+
+    AllocateUploadBuffer(m_pD3dDevice, vertices, sizeof(vertices), &m_vertexBuffer);
+    AllocateUploadBuffer(m_pD3dDevice, indices, sizeof(indices), &m_indexBuffer);
     // Loop through all primitives and create gpu resources map
+    /*
     for (StaticMesh* staticMesh : staticMeshes)
     {
         for (int i = 0; i < staticMesh->m_meshPrimitives.size(); ++i)
@@ -239,6 +258,7 @@ void HWRTRenderBackend::BuildGeometry() // Build Scene Geometry
                                  L"Index Buffer");
         }
     }
+    */
 }
 
 void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleration Structures
@@ -264,6 +284,7 @@ void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleratio
     m_pD3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, pCommandAllocator, nullptr, IID_PPV_ARGS(&pD3dCommandList));
 
     // We only have one mesh primitive for now
+    /*
     std::vector<StaticMesh*> staticMeshes;
     m_pLevel->RetriveStaticMeshes(staticMeshes);
     MeshPrimitive* meshPrimitive = &staticMeshes[0]->m_meshPrimitives[0];
@@ -279,6 +300,20 @@ void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleratio
         geometryDesc.Triangles.VertexCount = meshPrimitive->m_posData.size() / 3;
         geometryDesc.Triangles.VertexBuffer.StartAddress = meshPrimitive->m_gpuRsrcMap["Position Buffer"]->GetGPUVirtualAddress();
         geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(float) * 3;
+        geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+    }
+    */
+    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
+    {
+        geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+        geometryDesc.Triangles.IndexBuffer = m_indexBuffer->GetGPUVirtualAddress();
+        geometryDesc.Triangles.IndexCount = static_cast<UINT>(m_indexBuffer->GetDesc().Width) / sizeof(Index);
+        geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
+        geometryDesc.Triangles.Transform3x4 = 0;
+        geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+        geometryDesc.Triangles.VertexCount = static_cast<UINT>(m_vertexBuffer->GetDesc().Width) / sizeof(Vertex);
+        geometryDesc.Triangles.VertexBuffer.StartAddress = m_vertexBuffer->GetGPUVirtualAddress();
+        geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
         geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
     }
 

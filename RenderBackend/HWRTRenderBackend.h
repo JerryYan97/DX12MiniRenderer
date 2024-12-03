@@ -3,6 +3,7 @@
 #include "RendererBackend.h"
 #include "RTShaders\RaytracingHlslCompat.h"
 
+
 class HWRTRenderBackend : public RendererBackend
 {
     public:
@@ -66,4 +67,10 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_rayGenShaderTable;
         ID3D12Resource* m_missShaderTable;
         ID3D12Resource* m_hitGroupShaderTable;
+
+        ID3D12Resource* m_indexBuffer;
+        ID3D12Resource* m_vertexBuffer;
+
+        typedef UINT16 Index;
+        struct Vertex { float v1, v2, v3; };
 };

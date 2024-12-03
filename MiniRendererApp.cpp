@@ -316,6 +316,7 @@ void DX12MiniRenderer::Finalize()
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
     CleanupTempRendererInfarstructure();
     if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
+    if (m_pRendererBackend) { m_pRendererBackend->Deinit(); delete m_pRendererBackend; m_pRendererBackend = nullptr; }
 
     IDXGIDebug1* pDebug = nullptr;
     if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
