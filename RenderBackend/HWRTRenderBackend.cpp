@@ -95,6 +95,7 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
         ID3DBlob* pError = nullptr;
         ThrowIfFailed(D3D12SerializeRootSignature(&globalRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pBlob, &pError), pError ? static_cast<wchar_t*>(pError->GetBufferPointer()) : nullptr);
         ThrowIfFailed(m_pD3dDevice->CreateRootSignature(1, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&m_raytracingGlobalRootSignature)));
+        SetName(m_raytracingGlobalRootSignature, L"Global Root Signature");
     }
     
     // Local Root Signature
@@ -115,6 +116,7 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
         ID3DBlob* pError = nullptr;
         ThrowIfFailed(D3D12SerializeRootSignature(&localRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pBlob, &pError), pError ? static_cast<wchar_t*>(pError->GetBufferPointer()) : nullptr);
         ThrowIfFailed(m_pD3dDevice->CreateRootSignature(1, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&m_raytracingLocalRootSignature)));
+        SetName(m_raytracingLocalRootSignature, L"Local Root Signature");
     }
 }
 
@@ -539,7 +541,7 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList)
     pCommandList->SetComputeRootSignature(m_raytracingGlobalRootSignature);
     pCommandList->SetDescriptorHeaps(1, &m_descriptorHeap);
     pCommandList->SetComputeRootDescriptorTable(0, m_raytracingOutputResourceUAVGpuDescriptor);
-    pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
+    // pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pDxrCommandList->SetPipelineState1(m_rtPipelineStateObject);
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
