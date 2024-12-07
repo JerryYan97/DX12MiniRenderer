@@ -25,7 +25,7 @@ class HWRTRenderBackend : public RendererBackend
         
         ~HWRTRenderBackend() {}
 
-        virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList) override;
+        virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) override;
 
         ID3D12Resource* GetRaytracingOutput() { return m_raytracingOutput; }
 

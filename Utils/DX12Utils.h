@@ -263,3 +263,18 @@ inline UINT Align(UINT size, UINT alignment)
 {
     return (size + (alignment - 1)) & ~(alignment - 1);
 }
+
+inline void SendDataToBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes);
+
+inline void GpuQueueWaitIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pCmdQueue)
+{
+    ID3D12Fence* tmpCmdQueuefence = nullptr;
+    pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tmpCmdQueuefence));
+
+    pCmdQueue->Signal(tmpCmdQueuefence, 1);
+
+    // If hEvent is a null handle, then this API will not return until the specified fence value(s) have been reached.
+    tmpCmdQueuefence->SetEventOnCompletion(1, nullptr);
+
+    tmpCmdQueuefence->Release();
+}

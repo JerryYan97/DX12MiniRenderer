@@ -1,7 +1,8 @@
 #include "MiniRendererApp.h"
 #include "UI/UIManager.h"
 #include "Scene/Level.h"
-#include "RenderBackend/HWRTRenderBackend.h"
+// #include "RenderBackend/HWRTRenderBackend.h"
+#include "RenderBackend/ForwardRenderBackend.h"
 #include <dxgidebug.h>
 #pragma comment(lib, "dxguid.lib")
 
@@ -15,7 +16,8 @@ DX12MiniRenderer::DX12MiniRenderer()
       m_pUIManager(nullptr)
 {
     m_pThis = this;
-    m_pRendererBackend = new HWRTRenderBackend();
+    // m_pRendererBackend = new HWRTRenderBackend();
+    m_pRendererBackend = new ForwardRenderer();
 }
 
 DX12MiniRenderer::~DX12MiniRenderer()
@@ -40,6 +42,8 @@ void DX12MiniRenderer::InitDevice()
         pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
         pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
         pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+        // pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, true);
+        // pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_MESSAGE, true);
         pInfoQueue->Release();
         m_pDx12Debug->Release();
     }
@@ -182,16 +186,17 @@ void DX12MiniRenderer::Init()
     uint32_t height = 0;
     m_pUIManager->GetWindowSize(width, height);
 
+    /**/
     RendererBackendInitStruct initStruct;
     initStruct.pD3dDevice = m_pD3dDevice;
+    initStruct.pMainCmdQueue = m_pD3dCommandQueue;
     initStruct.pDx12Debug = m_pDx12Debug;
     initStruct.pUIManager = m_pUIManager;
     initStruct.pEventManager = &m_eventManager;
     initStruct.pSceneAssetLoader = &m_sceneAssetLoader;
     initStruct.pLevel = m_pLevel;
-    initStruct.startWidth = width;
-    initStruct.startHeight = height;
     m_pRendererBackend->Init(initStruct);
+    
 
     m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);
 }
@@ -226,8 +231,9 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
 
         // Render Scene
-        m_pRendererBackend->RenderTick(m_pD3dCommandList);
-
+        RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor};
+        m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
+        /*
         if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)
         {
             HWRTRenderBackend* pPathTracingBackend = dynamic_cast<HWRTRenderBackend*>(m_pRendererBackend);
@@ -280,7 +286,7 @@ void DX12MiniRenderer::Run()
             }
             m_pD3dCommandList->ResourceBarrier(2, waitCopyFinishTransBackBarriers);
         }
-
+        */
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
         m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);
@@ -302,7 +308,7 @@ void DX12MiniRenderer::Run()
         // It looks like the Present() put works on the command queue, which means we need to use the command queue signal to wait for GPU to finish the work.
         m_pUIManager->Present();
     }
-
+    
     FrameContext* frameCtx = WaitForCurrentFrameResources();
     m_pD3dCommandQueue->Signal(frameCtx->Fence, 1);
     frameCtx->Fence->SetEventOnCompletion(1, nullptr);
