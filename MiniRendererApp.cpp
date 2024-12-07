@@ -195,8 +195,6 @@ void DX12MiniRenderer::Init()
     initStruct.pEventManager = &m_eventManager;
     initStruct.pSceneAssetLoader = &m_sceneAssetLoader;
     initStruct.pLevel = m_pLevel;
-    initStruct.startWidth = width;
-    initStruct.startHeight = height;
     m_pRendererBackend->Init(initStruct);
     
 
@@ -233,7 +231,8 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
 
         // Render Scene
-        m_pRendererBackend->RenderTick(m_pD3dCommandList);
+        RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor};
+        m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
         /*
         if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)
         {

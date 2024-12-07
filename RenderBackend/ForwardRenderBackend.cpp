@@ -1,12 +1,16 @@
 #include "ForwardRenderBackend.h"
 #include "../Utils/DX12Utils.h"
+#include "../UI/UIManager.h"
 #include <d3dcompiler.h>
 
 ForwardRenderer::ForwardRenderer() :
     RendererBackend(RendererBackendType::Forward),
     m_pRootSignature(nullptr),
     m_pPipelineState(nullptr),
-    m_vertexBuffer(nullptr)
+    m_vertexBuffer(nullptr),
+    m_vertexBufferView(),
+    m_viewport(),
+    m_scissorRect()
 {
 }
 
@@ -176,17 +180,7 @@ void ForwardRenderer::CreateVertexBuffer()
     m_vertexBufferView.StrideInBytes = sizeof(Vertex);
     m_vertexBufferView.SizeInBytes = vertexBufferSize;
 
-    {
-        ID3D12Fence* tmpCmdQueuefence = nullptr;
-        m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tmpCmdQueuefence));
-
-        m_pMainCommandQueue->Signal(tmpCmdQueuefence, 1);
-
-        // If hEvent is a null handle, then this API will not return until the specified fence value(s) have been reached.
-        tmpCmdQueuefence->SetEventOnCompletion(1, nullptr);
-
-        tmpCmdQueuefence->Release();
-    }
+    GpuQueueWaitIdle(m_pD3dDevice, m_pMainCommandQueue);
 }
 
 void ForwardRenderer::CustomInit()
@@ -194,11 +188,40 @@ void ForwardRenderer::CustomInit()
     CreateRootSignature();
     CreatePipelineStateObject();
     CreateVertexBuffer();
+
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    m_viewport = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
+    m_scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
 }
 
-void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D12_CPU_DESCRIPTOR_HANDLE* pRT)
+void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo)
 {
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    m_viewport = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
+    m_scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
 
+    pCommandList->SetPipelineState(m_pPipelineState);
+    pCommandList->SetGraphicsRootSignature(m_pRootSignature);
+    pCommandList->RSSetViewports(1, &m_viewport);
+    pCommandList->RSSetScissorRects(1, &m_scissorRect);
+    pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, nullptr);
+    pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    pCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    pCommandList->DrawInstanced(3, 1, 0, 0);
+
+    /*
+    * It looks like D3D auto sync RT: https://github.com/microsoft/DirectX-Graphics-Samples/issues/132#issuecomment-209052225
+    *
+    D3D12_RESOURCE_BARRIER barrier = {};
+    {
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.UAV.pResource = rtInfo.pResource;
+    }
+    pCommandList->ResourceBarrier(1, &barrier);
+    */
 }
 
 void ForwardRenderer::CustomDeinit()

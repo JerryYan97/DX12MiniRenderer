@@ -10,10 +10,7 @@ void RendererBackend::Init(RendererBackendInitStruct initStruct)
     m_pEventManager = initStruct.pEventManager;
     m_pSceneAssetLoader = initStruct.pSceneAssetLoader;
     m_pLevel = initStruct.pLevel;
-    m_windowWidth = initStruct.startWidth;
-    m_windowHeight = initStruct.startHeight;
     m_pMainCommandQueue = initStruct.pMainCmdQueue;
-    m_rtInfo = initStruct.rtInfo;
 
     CustomInit();
 }

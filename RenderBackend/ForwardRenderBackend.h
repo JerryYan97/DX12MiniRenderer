@@ -7,7 +7,7 @@ public:
     ForwardRenderer();
     ~ForwardRenderer();
 
-    virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D12_CPU_DESCRIPTOR_HANDLE* pRT = nullptr) override;
+    virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) override;
 
 protected:
     virtual void CustomInit();
@@ -23,4 +23,7 @@ private:
 
     ID3D12Resource*          m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+    D3D12_VIEWPORT m_viewport;
+    D3D12_RECT     m_scissorRect;
 };

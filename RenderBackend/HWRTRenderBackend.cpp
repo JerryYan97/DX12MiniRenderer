@@ -4,6 +4,7 @@
 #include "../Scene/Mesh.h"
 #include "../Utils/DX12Utils.h"
 #include "RTShaders/Raytracing.hlsl.h"
+#include "../UI/UIManager.h"
 #include <d3d12.h>
 
 static const wchar_t* c_hitGroupName         = L"MyHitGroup";
@@ -15,7 +16,10 @@ void HWRTRenderBackend::CustomInit()
 {
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
-    UpdateForSizeChange(m_windowWidth, m_windowHeight);
+
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    UpdateForSizeChange(winWidth, winHeight);
 
     InitRootSignatures();
     InitPipelineStates();
@@ -494,12 +498,16 @@ void HWRTRenderBackend::BuildShaderTables() // Build Shader Tables
 
 void HWRTRenderBackend::BuildRaytracingOutput() // Build Raytracing Output
 {
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    UpdateForSizeChange(winWidth, winHeight);
+
     D3D12_RESOURCE_DESC tex2DDesc = {};
     {
         tex2DDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         tex2DDesc.Alignment = 0;
-        tex2DDesc.Width = m_windowWidth;
-        tex2DDesc.Height = m_windowHeight;
+        tex2DDesc.Width = winWidth;
+        tex2DDesc.Height = winHeight;
         tex2DDesc.DepthOrArraySize = 1;
         tex2DDesc.MipLevels = 1;
         tex2DDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -539,7 +547,7 @@ void HWRTRenderBackend::BuildRaytracingOutput() // Build Raytracing Output
     m_raytracingOutputResourceUAVGpuDescriptor = m_descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
 
-void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D12_CPU_DESCRIPTOR_HANDLE* pRT)
+void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo)
 {
     ID3D12GraphicsCommandList4* pDxrCommandList = nullptr;
     ThrowIfFailed(pCommandList->QueryInterface(IID_PPV_ARGS(&pDxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");
@@ -549,6 +557,10 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D1
     pCommandList->SetComputeRootDescriptorTable(0, m_raytracingOutputResourceUAVGpuDescriptor);
     // pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pDxrCommandList->SetPipelineState1(m_rtPipelineStateObject);
+
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    UpdateForSizeChange(winWidth, winHeight);
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
     {
@@ -560,8 +572,8 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D1
         dispatchDesc.MissShaderTable.StrideInBytes = dispatchDesc.MissShaderTable.SizeInBytes;
         dispatchDesc.RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
-        dispatchDesc.Width = m_windowWidth;
-        dispatchDesc.Height = m_windowHeight;
+        dispatchDesc.Width = winWidth;
+        dispatchDesc.Height = winHeight;
         dispatchDesc.Depth = 1;
     }
     pDxrCommandList->DispatchRays(&dispatchDesc);
@@ -569,13 +581,15 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D1
 
 void HWRTRenderBackend::CustomResize()
 {
-    UpdateForSizeChange(m_windowWidth, m_windowHeight);
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    UpdateForSizeChange(winWidth, winHeight);
+
+    UpdateForSizeChange(winWidth, winHeight);
 }
 
 void HWRTRenderBackend::UpdateForSizeChange(UINT width, UINT height)
 {
-    m_windowWidth = width;
-    m_windowHeight = height;
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     float border = 0.1f;
     if (width <= height)
