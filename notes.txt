@@ -55,3 +55,13 @@ USD Assets: https://github.com/usd-wg/assets.git
 Nice Monte Carlo Explain: https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html#overview
 
 VMA Vulkan v.s. D3D12: https://asawicki.info/articles/memory_management_vulkan_direct3d_12.php5
+
+
+Refs:
+https://github.com/microsoft/DirectXTK12/wiki/Getting-Started
+
+https://github.com/Microsoft/DirectX-Graphics-Samples
+
+https://microsoft.github.io/DirectX-Specs/
+
+https://devblogs.microsoft.com/pix/
