@@ -189,6 +189,7 @@ void DX12MiniRenderer::Init()
     /**/
     RendererBackendInitStruct initStruct;
     initStruct.pD3dDevice = m_pD3dDevice;
+    initStruct.pMainCmdQueue = m_pD3dCommandQueue;
     initStruct.pDx12Debug = m_pDx12Debug;
     initStruct.pUIManager = m_pUIManager;
     initStruct.pEventManager = &m_eventManager;

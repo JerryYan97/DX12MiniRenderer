@@ -96,6 +96,9 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
         ThrowIfFailed(D3D12SerializeRootSignature(&globalRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pBlob, &pError), pError ? static_cast<wchar_t*>(pError->GetBufferPointer()) : nullptr);
         ThrowIfFailed(m_pD3dDevice->CreateRootSignature(1, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&m_raytracingGlobalRootSignature)));
         SetName(m_raytracingGlobalRootSignature, L"Global Root Signature");
+
+        pBlob->Release();
+        if (pError) { pError->Release(); }
     }
     
     // Local Root Signature
@@ -117,6 +120,9 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
         ThrowIfFailed(D3D12SerializeRootSignature(&localRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pBlob, &pError), pError ? static_cast<wchar_t*>(pError->GetBufferPointer()) : nullptr);
         ThrowIfFailed(m_pD3dDevice->CreateRootSignature(1, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&m_raytracingLocalRootSignature)));
         SetName(m_raytracingLocalRootSignature, L"Local Root Signature");
+
+        pBlob->Release();
+        if (pError) { pError->Release(); }
     }
 }
 
@@ -533,7 +539,7 @@ void HWRTRenderBackend::BuildRaytracingOutput() // Build Raytracing Output
     m_raytracingOutputResourceUAVGpuDescriptor = m_descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
 
-void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList)
+void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, D3D12_CPU_DESCRIPTOR_HANDLE* pRT)
 {
     ID3D12GraphicsCommandList4* pDxrCommandList = nullptr;
     ThrowIfFailed(pCommandList->QueryInterface(IID_PPV_ARGS(&pDxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");

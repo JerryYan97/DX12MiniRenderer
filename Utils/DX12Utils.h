@@ -263,3 +263,5 @@ inline UINT Align(UINT size, UINT alignment)
 {
     return (size + (alignment - 1)) & ~(alignment - 1);
 }
+
+inline void SendDataToBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes);
