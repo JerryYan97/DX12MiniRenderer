@@ -1,6 +1,8 @@
 #include "ForwardRenderBackend.h"
 #include "../Utils/DX12Utils.h"
 #include "../UI/UIManager.h"
+#include "../Scene/Mesh.h"
+#include "../Scene/Level.h"
 #include <d3dcompiler.h>
 
 ForwardRenderer::ForwardRenderer() :
@@ -69,7 +71,7 @@ void ForwardRenderer::CreatePipelineStateObject()
     {
         rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
         rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
-        rasterizerDesc.FrontCounterClockwise = FALSE;
+        rasterizerDesc.FrontCounterClockwise = TRUE;
         rasterizerDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
         rasterizerDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
         rasterizerDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
@@ -120,6 +122,10 @@ void ForwardRenderer::CreatePipelineStateObject()
 
 void ForwardRenderer::CreateVertexBuffer()
 {
+    std::vector<StaticMesh*> staticMeshes;
+    m_pLevel->RetriveStaticMeshes(staticMeshes);
+    std::vector<float>& posData = staticMeshes[0]->m_meshPrimitives[0].m_posData;
+
     struct Vertex
     {
         float position[3];
@@ -127,13 +133,22 @@ void ForwardRenderer::CreateVertexBuffer()
     };
 
     // Define the geometry for a triangle.
+    /*
     Vertex triangleVertices[] =
     {
         { { 0.0f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
         { { 0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
         { { -0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
-
+    */
+    /**/
+    Vertex triangleVertices[] =
+    {
+        { { posData[0], posData[1], posData[2]}, {1.0f, 0.0f, 0.0f, 1.0f}},
+        { { posData[3], posData[4], posData[5] }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        { { posData[6], posData[7], posData[8] }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+    };
+    
     const UINT vertexBufferSize = sizeof(triangleVertices);
 
     D3D12_HEAP_PROPERTIES heapProperties{};
@@ -208,6 +223,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     pCommandList->RSSetScissorRects(1, &m_scissorRect);
     pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, nullptr);
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // pCommandList->IASetIndexBuffer();
     pCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     pCommandList->DrawInstanced(3, 1, 0, 0);
 

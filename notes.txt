@@ -18,6 +18,7 @@ We can do the abstraction along the way instead of spending too much time on the
 
 Note that I was always using the coupled swapchain-FrameContext structure for simplicity. It is equivalent that we only have two buffers in the swapchain instead of 3, which can be harmful for the performance.
 
+[RT RoadMap needs to be put aside because of bugs -- Need to untangle the DXR example little by little. Won't be released.]
 Milestone 0:
 - Integrate YamlCpp (Done)
 - Setup Yaml + GLTF based scene structure. (Done)
@@ -40,6 +41,31 @@ Milestone 3+:
 - Better GUI
 - Volumetric Rendering...
 - Hair Rendering...
+
+
+[Forward RoadMap]
+Milestone 0: (Done)
+Fixed Triangle (Checked)
+
+Milestone 1:
+GLTF Triangle, Cube, Sphere.
+Basic Camera Model.
+Shader Load Infra (Using DXC API -- NO Need) 
+Basic Point Light Scene -- PBR.
+-------
+Specific Milestone 1 tasks:
+- Model and Materials RAM and DRAM Asset Manager: Only keep one copy.
+- Shader Prebuild infra setup.
+- PBR Shader migration.
+- 
+-------
+
+
+
+Milestone 2:
+Integrate IBL, Cubemap Background Rendering.
+GLTF PBR basic support.
+Spheres PBR scene.
 
 
 Refs:

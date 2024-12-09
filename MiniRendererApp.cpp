@@ -1,7 +1,7 @@
 #include "MiniRendererApp.h"
 #include "UI/UIManager.h"
 #include "Scene/Level.h"
-// #include "RenderBackend/HWRTRenderBackend.h"
+#include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
 #include <dxgidebug.h>
 #pragma comment(lib, "dxguid.lib")
@@ -233,7 +233,7 @@ void DX12MiniRenderer::Run()
         // Render Scene
         RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor};
         m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
-        /*
+        
         if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)
         {
             HWRTRenderBackend* pPathTracingBackend = dynamic_cast<HWRTRenderBackend*>(m_pRendererBackend);
@@ -286,7 +286,7 @@ void DX12MiniRenderer::Run()
             }
             m_pD3dCommandList->ResourceBarrier(2, waitCopyFinishTransBackBarriers);
         }
-        */
+        
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
         m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);

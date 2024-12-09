@@ -227,8 +227,8 @@ void HWRTRenderBackend::InitDescriptorHeaps() // Descriptor Heaps
 
 void HWRTRenderBackend::BuildGeometry() // Build Scene Geometry
 {
-    std::vector<StaticMesh*> staticMeshes;
-    m_pLevel->RetriveStaticMeshes(staticMeshes);
+    // std::vector<StaticMesh*> staticMeshes;
+    // m_pLevel->RetriveStaticMeshes(staticMeshes);
     Index indices[] =
     {
         0, 1, 2
@@ -281,6 +281,18 @@ void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleratio
     ID3D12GraphicsCommandList*  pD3dCommandList   = nullptr;
     ID3D12CommandQueue*         pCommandQueue     = nullptr;
     ID3D12GraphicsCommandList4* pDxrCommandList   = nullptr;
+
+    if (m_tlas)
+    {
+        m_tlas->Release();
+        m_tlas = nullptr;
+    }
+
+    if (m_blas)
+    {
+        m_blas->Release();
+        m_blas = nullptr;
+    }
 
     {
         D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -549,13 +561,15 @@ void HWRTRenderBackend::BuildRaytracingOutput() // Build Raytracing Output
 
 void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo)
 {
+    BuildAccelerationStructures();
+
     ID3D12GraphicsCommandList4* pDxrCommandList = nullptr;
     ThrowIfFailed(pCommandList->QueryInterface(IID_PPV_ARGS(&pDxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");
 
     pCommandList->SetComputeRootSignature(m_raytracingGlobalRootSignature);
     pCommandList->SetDescriptorHeaps(1, &m_descriptorHeap);
     pCommandList->SetComputeRootDescriptorTable(0, m_raytracingOutputResourceUAVGpuDescriptor);
-    // pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pDxrCommandList->SetPipelineState1(m_rtPipelineStateObject);
 
     uint32_t winWidth, winHeight;
