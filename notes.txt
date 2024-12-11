@@ -54,12 +54,13 @@ Shader Load Infra (Using DXC API -- NO Need)
 Basic Point Light Scene -- PBR.
 -------
 Specific Milestone 1 tasks:
-- Model and Materials RAM and DRAM Asset Manager: Only keep one copy.
-- Shader Prebuild infra setup.
+- Shader Prebuild infra setup -- PBR shader is relatively large -- Download DXC and put it as a prebuild step.
+- Model and Materials RAM and DRAM Asset Manager: Only keep one copy, default materials assign
 - PBR Shader migration.
-- 
+- Spheres' basic rendering
+- Point lights yaml setup.
+- Normal Map Integration (Possible migrate to all other vulkan examples)
 -------
-
 
 
 Milestone 2:
@@ -91,3 +92,10 @@ https://github.com/Microsoft/DirectX-Graphics-Samples
 https://microsoft.github.io/DirectX-Specs/
 
 https://devblogs.microsoft.com/pix/
+
+https://learnopengl.com/Advanced-Lighting/Normal-Mapping (Not This)
+https://learnopengl.com/Lighting/Basic-Lighting (In the One Last Thing Chapter -- Calculating World Space Geo Normal for TBN matrix transformation)
+
+non-uniform scaling:
+https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/geometry/transforming-normals.html
+

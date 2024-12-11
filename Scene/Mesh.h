@@ -19,10 +19,17 @@ struct ImgInfo
     uint32_t             componentType;
 };
 
+// By default, no occlusion, no emissive, standard geometry normal.
+struct ConstantMaterial
+{
+    float baseColorFactor[4];
+    float metallicRoughness[2];
+};
+
 class MeshPrimitive
 {
 public:
-    MeshPrimitive() {}
+    MeshPrimitive();
     ~MeshPrimitive();
 
     // float m_position[3];
@@ -35,6 +42,8 @@ public:
 
     std::vector<uint16_t> m_idxDataUint16;
 
+    ConstantMaterial m_constantMaterial;
+
     ImgInfo m_baseColorTex;         // TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE (5121), 4 components.
     ImgInfo m_metallicRoughnessTex; // R32G32_SFLOAT
     ImgInfo m_normalTex;            // R32G32B32_SFLOAT
@@ -42,6 +51,12 @@ public:
     ImgInfo m_emissiveTex;          // Currently don't support.
 
     std::unordered_map<std::string, ID3D12Resource*> m_gpuRsrcMap;
+
+    ID3D12Resource* m_gpuVertBuffer;
+    ID3D12Resource* m_gpuIndexBuffer;
+    ID3D12Resource* m_gpuConstantMaterialBuffer;
+
+    bool m_isConstantMaterial;
 
     /*
     void InitGpuRsrc(VkDevice device, VmaAllocator* pAllocator, VkCommandBuffer cmdBuffer, VkQueue queue);

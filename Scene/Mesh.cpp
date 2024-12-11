@@ -3,6 +3,15 @@
 #include "SceneAssetLoader.h"
 #include "../Utils/crc32.h"
 
+MeshPrimitive::MeshPrimitive()
+    : m_gpuVertBuffer(nullptr),
+      m_gpuIndexBuffer(nullptr),
+      m_gpuConstantMaterialBuffer(nullptr),
+      m_isConstantMaterial(false),
+      m_constantMaterial()
+{
+}
+
 MeshPrimitive::~MeshPrimitive()
 {
     for (auto& itr : m_gpuRsrcMap)
