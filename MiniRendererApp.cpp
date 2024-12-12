@@ -212,16 +212,43 @@ void DX12MiniRenderer::Run()
         FrameContext* frameCtx = WaitForCurrentFrameResources();
         ID3D12Resource* frameCRT = m_pUIManager->GetCurrentMainRTResource();
         D3D12_CPU_DESCRIPTOR_HANDLE frameCRTDescriptor = m_pUIManager->GetCurrentMainRTDescriptor();
+
+        ID3D12Resource* frameDSV = m_pUIManager->GetCurrentMainDSVResource();
+        D3D12_CPU_DESCRIPTOR_HANDLE frameDSVDescriptor = m_pUIManager->GetCurrentMainDSVDescriptor();
+
         ID3D12DescriptorHeap* imGUIDescriptorHeap = m_pUIManager->GetImGUISrvDescHeap();
         frameCtx->CommandAllocator->Reset();
 
+        /*
+        D3D12_RESOURCE_BARRIER barriers[2] = {};
+        {
+            // Color Render Target
+            barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            barriers[0].Transition.pResource = frameCRT;
+            barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+            // Depth Stencil Buffer
+            barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            barriers[1].Transition.pResource = m_pUIManager->GetCurrentMainDSVResource();
+            barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+            barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ;
+        }
+        */
         D3D12_RESOURCE_BARRIER barrier = {};
-        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.Transition.pResource = frameCRT;
-        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        {
+            // Color Render Target
+            barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            barrier.Transition.pResource = frameCRT;
+            barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        }
 
         m_pD3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
         m_pD3dCommandList->ResourceBarrier(1, &barrier);
@@ -229,6 +256,7 @@ void DX12MiniRenderer::Run()
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
         m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
+        m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
         // Render Scene
         RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor};

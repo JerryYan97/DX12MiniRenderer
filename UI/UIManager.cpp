@@ -4,6 +4,7 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include "../Utils/crc32.h"
+#include "../Utils/DX12Utils.h"
 
 UIManager* UIManager::m_pThis = nullptr;
 
@@ -136,6 +137,24 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
         }
     }
 
+    // Create Swapchain Depth Stencil View Descriptor Heap
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        desc.NumDescriptors = NUM_BACK_BUFFERS;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        desc.NodeMask = 1;
+        m_pD3dDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_pD3dSwapchainDsvDescHeap));
+
+        SIZE_T dsvDescriptorSize = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_pD3dSwapchainDsvDescHeap->GetCPUDescriptorHandleForHeapStart();
+        for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
+        {
+            m_mainDepthStencilDescriptors.push_back(dsvHandle);
+            dsvHandle.ptr += dsvDescriptorSize;
+        }
+    }
+
     // Create ImGUI Textures Descriptor Heap
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -204,6 +223,12 @@ void UIManager::Tick(float deltaTime)
 
 void UIManager::CreateSwapchainRenderTargets()
 {
+    D3D12_CLEAR_VALUE depthOptClearValue = {};
+    {
+        depthOptClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        depthOptClearValue.DepthStencil.Depth = 1.0f;
+    }
+
     for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
     {
         ID3D12Resource* pBackBuffer = nullptr;
@@ -216,6 +241,46 @@ void UIManager::CreateSwapchainRenderTargets()
 
         m_pD3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, m_mainRenderTargetDescriptors[i]);
         m_mainRenderTargetResources.push_back(pBackBuffer); // Note that we need to set the vector size to zero when we destroy Swapchain render targets.
+
+        D3D12_HEAP_PROPERTIES dsvHeapProperties{};
+        {
+            dsvHeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+            dsvHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            dsvHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            dsvHeapProperties.CreationNodeMask = 1;
+            dsvHeapProperties.VisibleNodeMask = 1;
+        }
+
+        D3D12_RESOURCE_DESC dsvRsrcDesc{};
+        {
+            dsvRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            dsvRsrcDesc.Alignment = 0;
+            dsvRsrcDesc.Width = m_windowWidth;
+            dsvRsrcDesc.Height = m_windowHeight;
+            dsvRsrcDesc.DepthOrArraySize = 1;
+            dsvRsrcDesc.MipLevels = 1;
+            dsvRsrcDesc.Format = DXGI_FORMAT_D32_FLOAT;
+            dsvRsrcDesc.SampleDesc.Count = 1;
+            dsvRsrcDesc.SampleDesc.Quality = 0;
+            dsvRsrcDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            dsvRsrcDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+        }
+
+        ID3D12Resource* pDsv = nullptr;
+        
+        ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
+            &dsvHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &dsvRsrcDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &depthOptClearValue,
+            IID_PPV_ARGS(&pDsv)));
+
+        std::wstring dsvName = L"Swapchain Depth Stencil " + std::to_wstring(i);
+        pDsv->SetName(dsvName.c_str());
+
+        m_pD3dDevice->CreateDepthStencilView(pDsv, nullptr, m_mainDepthStencilDescriptors[i]);
+        m_mainDepthStencilResources.push_back(pDsv);
     }
 }
 
@@ -245,8 +310,15 @@ void UIManager::CleanupSwapchainRenderTargets()
             m_mainRenderTargetResources[i]->Release();
             m_mainRenderTargetResources[i] = nullptr;
         }
+
+        if (m_mainDepthStencilResources[i])
+        {
+            m_mainDepthStencilResources[i]->Release();
+            m_mainDepthStencilResources[i] = nullptr;
+        }
     }
     m_mainRenderTargetResources.clear();
+    m_mainDepthStencilResources.clear();
 }
 
 void UIManager::Finalize()
@@ -266,5 +338,6 @@ void UIManager::Finalize()
     }
     if (m_hSwapChainWaitableObject != nullptr) { CloseHandle(m_hSwapChainWaitableObject); }
     if (m_pD3dSwapchainRtvDescHeap) { m_pD3dSwapchainRtvDescHeap->Release(); m_pD3dSwapchainRtvDescHeap = nullptr; }
+    if (m_pD3dSwapchainDsvDescHeap) { m_pD3dSwapchainDsvDescHeap->Release(); m_pD3dSwapchainDsvDescHeap = nullptr; }
     if (m_pD3dImGUISrvDescHeap) { m_pD3dImGUISrvDescHeap->Release(); m_pD3dImGUISrvDescHeap = nullptr; }
 }

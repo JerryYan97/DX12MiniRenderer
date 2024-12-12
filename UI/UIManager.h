@@ -40,6 +40,10 @@ public:
     ID3D12Resource* GetCurrentMainRTResource() { return m_mainRenderTargetResources[GetCurrentBackBufferIndex()]; }
     D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentMainRTDescriptor() { return m_mainRenderTargetDescriptors[GetCurrentBackBufferIndex()]; }
     ID3D12DescriptorHeap* GetImGUISrvDescHeap() { return m_pD3dImGUISrvDescHeap; }
+
+    ID3D12Resource* GetCurrentMainDSVResource() { return m_mainDepthStencilResources[GetCurrentBackBufferIndex()]; }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentMainDSVDescriptor() { return m_mainDepthStencilDescriptors[GetCurrentBackBufferIndex()]; }
+    
     /*
     * Free all resources.
     */
@@ -67,9 +71,12 @@ private:
     IDXGISwapChain3*                         m_pSwapChain = nullptr;
     ID3D12DescriptorHeap*                    m_pD3dSwapchainRtvDescHeap = nullptr;
     ID3D12DescriptorHeap*                    m_pD3dImGUISrvDescHeap = nullptr;
+    ID3D12DescriptorHeap*                    m_pD3dSwapchainDsvDescHeap = nullptr;
     HANDLE                                   m_hSwapChainWaitableObject = nullptr;
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_mainRenderTargetDescriptors;
     std::vector<ID3D12Resource*>             m_mainRenderTargetResources;
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_mainDepthStencilDescriptors;
+    std::vector<ID3D12Resource*>             m_mainDepthStencilResources;
 
     // Other members.
     std::wstring    m_windowTitle;

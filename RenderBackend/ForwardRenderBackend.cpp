@@ -60,6 +60,15 @@ void ForwardRenderer::CreatePipelineStateObject()
     ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
     // Define the vertex input layout.
+    /*
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "TANGENT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    };
+    */
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -133,21 +142,22 @@ void ForwardRenderer::CreateVertexBuffer()
     };
 
     // Define the geometry for a triangle.
-    /*
+    /**/
     Vertex triangleVertices[] =
     {
         { { 0.0f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
         { { 0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
         { { -0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
-    */
-    /**/
+    
+    /*
     Vertex triangleVertices[] =
     {
         { { posData[0], posData[1], posData[2]}, {1.0f, 0.0f, 0.0f, 1.0f}},
         { { posData[3], posData[4], posData[5] }, { 0.0f, 1.0f, 0.0f, 1.0f } },
         { { posData[6], posData[7], posData[8] }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
+    */
     
     const UINT vertexBufferSize = sizeof(triangleVertices);
 
