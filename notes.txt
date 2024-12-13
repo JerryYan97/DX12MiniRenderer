@@ -59,7 +59,7 @@ Specific Milestone 1 tasks:
 - PBR Shader migration.
 - Spheres' basic rendering
 - Point lights yaml setup.
-- Normal Map Integration (Possible migrate to all other vulkan examples)
+- Normal Map Integration (Possible migrate to all other vulkan examples. No Need. We will assume standard model without scaling)
 -------
 
 
