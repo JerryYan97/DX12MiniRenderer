@@ -347,6 +347,8 @@ void DX12MiniRenderer::Run()
 
 void DX12MiniRenderer::Finalize()
 {
+    delete m_pLevel;
+
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
     CleanupTempRendererInfarstructure();
     if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
@@ -358,6 +360,4 @@ void DX12MiniRenderer::Finalize()
         pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
         pDebug->Release();
     }
-
-    delete m_pLevel;
 }

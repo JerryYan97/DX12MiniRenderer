@@ -22,10 +22,27 @@ ForwardRenderer::~ForwardRenderer()
 
 void ForwardRenderer::CreateRootSignature()
 {
+    D3D12_DESCRIPTOR_RANGE cbvRange = {};
+    {
+        cbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        cbvRange.NumDescriptors = 1;
+        cbvRange.BaseShaderRegister = 0;
+        cbvRange.RegisterSpace = 0;
+        cbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+
+    D3D12_ROOT_PARAMETER rootParameters[1] = {};
+    {
+        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
+        rootParameters[0].DescriptorTable.pDescriptorRanges = &cbvRange;
+        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    }
+
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
-        rootSignatureDesc.NumParameters = 0;
-        rootSignatureDesc.pParameters = nullptr;
+        rootSignatureDesc.NumParameters = 1;
+        rootSignatureDesc.pParameters = rootParameters;
         rootSignatureDesc.NumStaticSamplers = 0;
         rootSignatureDesc.pStaticSamplers = nullptr;
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -141,7 +158,8 @@ void ForwardRenderer::CreateVertexBuffer()
 {
     std::vector<StaticMesh*> staticMeshes;
     m_pLevel->RetriveStaticMeshes(staticMeshes);
-    std::vector<float>& posData = staticMeshes[0]->m_meshPrimitives[0].m_posData;
+    std::vector<float>&    posData = staticMeshes[0]->m_meshPrimitives[0].m_posData;
+    std::vector<uint16_t>& idxData = staticMeshes[0]->m_meshPrimitives[0].m_idxDataUint16;
 
     struct Vertex
     {
@@ -153,10 +171,13 @@ void ForwardRenderer::CreateVertexBuffer()
     /**/
     Vertex triangleVertices[] =
     {
-        { { 0.0f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { { 0.25f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
         { { 0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { -0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+        { { -0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
+        { { -0.25f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }
     };
+    
+    uint16_t indices[] = { 0, 1, 3, 3, 1, 2 };
     
     /*
     Vertex triangleVertices[] =
@@ -193,6 +214,9 @@ void ForwardRenderer::CreateVertexBuffer()
         bufferRsrcDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
     }
 
+    D3D12_RESOURCE_DESC idxBufferRsrcDesc = bufferRsrcDesc;
+    idxBufferRsrcDesc.Width = sizeof(indices);
+
     ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
@@ -200,6 +224,15 @@ void ForwardRenderer::CreateVertexBuffer()
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_vertexBuffer)));
+
+    ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &idxBufferRsrcDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_idxBuffer)
+    ));
 
     // Copy the triangle data to the vertex buffer.
     void* pVertexDataBegin;
@@ -212,6 +245,18 @@ void ForwardRenderer::CreateVertexBuffer()
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
     m_vertexBufferView.StrideInBytes = sizeof(Vertex);
     m_vertexBufferView.SizeInBytes = vertexBufferSize;
+
+    // Copy the model idx data to the idx buffer.
+    void* pIdxDataBegin;
+    ThrowIfFailed(m_idxBuffer->Map(0, &readRange, &pIdxDataBegin));
+    memcpy(pIdxDataBegin, indices, sizeof(indices));
+    m_idxBuffer->Unmap(0, nullptr);
+
+    // Initialize the index buffer view.
+    m_idxBufferView.BufferLocation = m_idxBuffer->GetGPUVirtualAddress();
+    m_idxBufferView.Format = DXGI_FORMAT_R16_UINT;
+    m_idxBufferView.SizeInBytes = sizeof(indices);
+
 
     GpuQueueWaitIdle(m_pD3dDevice, m_pMainCommandQueue);
 }
@@ -243,9 +288,9 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     pCommandList->RSSetScissorRects(1, &m_scissorRect);
     pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    // pCommandList->IASetIndexBuffer();
+    pCommandList->IASetIndexBuffer(&m_idxBufferView);
     pCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    pCommandList->DrawInstanced(3, 1, 0, 0);
+    pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     /*
     * It looks like D3D auto sync RT: https://github.com/microsoft/DirectX-Graphics-Samples/issues/132#issuecomment-209052225
@@ -270,4 +315,7 @@ void ForwardRenderer::CustomDeinit()
 
     m_vertexBuffer->Release();
     m_vertexBuffer = nullptr;
+
+    m_idxBuffer->Release();
+    m_idxBuffer = nullptr;
 }

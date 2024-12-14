@@ -15,10 +15,19 @@ struct PSInput
     float4 color : COLOR;
 };
 
+cbuffer VsUboBuffer : register(b0)
+{
+    float4x4 modelMat;
+    float4x4 vpMat;
+};
+
 PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
     PSInput result;
 
+    float4x4 mvpMat = mul(modelMat, vpMat);
+    
+    // result.position = mul(mvpMat, position);
     result.position = position;
     result.color = color;
 

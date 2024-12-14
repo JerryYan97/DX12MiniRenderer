@@ -87,9 +87,10 @@ class StaticMesh : public Object
 {
 public:
     StaticMesh();
-    ~StaticMesh() {}
+    ~StaticMesh();
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
+    void GenModelMatrix(ID3D12Device* pDevice);
 
     std::string m_assetPath;
 
@@ -100,6 +101,8 @@ private:
     float m_rotation[3];
     float m_scale[3];
 
-    bool        m_loadedInRAM;
-    bool        m_loadedInVRAM;
+    bool m_loadedInRAM;
+    bool m_loadedInVRAM;
+    
+    ID3D12Resource* m_pModelMatrixBuffer;
 };

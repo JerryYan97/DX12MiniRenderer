@@ -9,4 +9,6 @@ target_sources(
     MathUtils.h
     DX12Utils.cpp
     DX12Utils.h
+    DescriptorManager.cpp
+    DescriptorManager.h
 )
