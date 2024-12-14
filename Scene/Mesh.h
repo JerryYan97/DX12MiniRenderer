@@ -52,9 +52,10 @@ public:
 
     std::unordered_map<std::string, ID3D12Resource*> m_gpuRsrcMap;
 
-    ID3D12Resource* m_gpuVertBuffer;
-    ID3D12Resource* m_gpuIndexBuffer;
-    ID3D12Resource* m_gpuConstantMaterialBuffer;
+    ID3D12Resource*       m_gpuVertBuffer;
+    ID3D12Resource*       m_gpuIndexBuffer;
+    ID3D12Resource*       m_gpuConstantMaterialBuffer;
+    // ID3D12DescriptorHeap* m_cbvDescHeap;
 
     bool m_isConstantMaterial;
 
@@ -96,6 +97,8 @@ public:
 
     std::vector<MeshPrimitive> m_meshPrimitives;
 
+    ID3D12DescriptorHeap* m_cbvDescHeap;
+
 private:
     float m_position[3];
     float m_rotation[3];
@@ -104,5 +107,6 @@ private:
     bool m_loadedInRAM;
     bool m_loadedInVRAM;
     
-    ID3D12Resource* m_pModelMatrixBuffer;
+    ID3D12Resource* m_pVsConstBuffer;
+    UINT8*          m_pVsConstBufferBegin;
 };

@@ -10,6 +10,7 @@ bool DX12MiniRenderer::show_demo_window = true;
 bool DX12MiniRenderer::show_another_window = true;
 bool DX12MiniRenderer::clear_color = true;
 DX12MiniRenderer* DX12MiniRenderer::m_pThis = nullptr;
+ID3D12Device* g_pD3dDevice = nullptr;
 
 DX12MiniRenderer::DX12MiniRenderer()
     : m_pD3dDevice(nullptr),
@@ -47,6 +48,8 @@ void DX12MiniRenderer::InitDevice()
         pInfoQueue->Release();
         m_pDx12Debug->Release();
     }
+
+    g_pD3dDevice = m_pD3dDevice;
 }
 
 void DX12MiniRenderer::TempRendererWaitGpuIdle()

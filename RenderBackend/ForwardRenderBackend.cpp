@@ -282,6 +282,12 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
 
     D3D12_CPU_DESCRIPTOR_HANDLE frameDSVDescriptor = m_pUIManager->GetCurrentMainDSVDescriptor();
 
+    std::vector<StaticMesh*> staticMeshes;
+    m_pLevel->RetriveStaticMeshes(staticMeshes);
+
+    ID3D12DescriptorHeap* ppHeaps[] = { staticMeshes[0]->m_cbvDescHeap };
+    pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
     pCommandList->SetPipelineState(m_pPipelineState);
     pCommandList->SetGraphicsRootSignature(m_pRootSignature);
     pCommandList->RSSetViewports(1, &m_viewport);
@@ -290,6 +296,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->IASetIndexBuffer(&m_idxBufferView);
     pCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    pCommandList->SetGraphicsRootDescriptorTable(0, staticMeshes[0]->m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
     pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     /*

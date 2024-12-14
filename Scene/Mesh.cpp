@@ -7,6 +7,8 @@
 #include <cassert>
 #include <array>
 
+extern ID3D12Device* g_pD3dDevice;
+
 MeshPrimitive::MeshPrimitive()
     : m_gpuVertBuffer(nullptr),
       m_gpuIndexBuffer(nullptr),
@@ -26,7 +28,9 @@ MeshPrimitive::~MeshPrimitive()
 
 StaticMesh::StaticMesh()
     : m_loadedInRAM(false),
-      m_loadedInVRAM(false)
+      m_loadedInVRAM(false),
+      m_pVsConstBuffer(nullptr),
+      m_cbvDescHeap(nullptr)
 {
     memset(m_position, 0, sizeof(float) * 3);
     memset(m_scale, 0, sizeof(float) * 3);
@@ -38,10 +42,16 @@ StaticMesh::StaticMesh()
 
 StaticMesh::~StaticMesh()
 {
-    if (m_pModelMatrixBuffer)
+    if (m_pVsConstBuffer)
     {
-        m_pModelMatrixBuffer->Release();
-        m_pModelMatrixBuffer = nullptr;
+        m_pVsConstBuffer->Release();
+        m_pVsConstBuffer = nullptr;
+    }
+
+    if (m_cbvDescHeap)
+    {
+        m_cbvDescHeap->Release();
+        m_cbvDescHeap = nullptr;
     }
 }
 
@@ -65,15 +75,25 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
 
     SceneAssetLoader::LoadStaticMesh(assetPath, mesh);
 
+    mesh->GenModelMatrix(g_pD3dDevice);
+
     return mesh;
 }
 
 void StaticMesh::GenModelMatrix(ID3D12Device* pDevice)
 {
-    std::array<float, 16> o_modelMat;
-    o_modelMat.fill(0.0f);
+    // Padding to 256 bytes for constant buffer
+    float vsConstantBuffer[64] = {};
+    float o_modelMat[16] = {};
 
-    GenModelMat(m_position, m_rotation[2], m_rotation[0], m_rotation[1], m_scale, o_modelMat.data());
+    float tmpVPMat[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+
+    GenModelMat(m_position, m_rotation[2], m_rotation[0], m_rotation[1], m_scale, o_modelMat);
 
     D3D12_HEAP_PROPERTIES heapProperties{};
     {
@@ -88,7 +108,7 @@ void StaticMesh::GenModelMatrix(ID3D12Device* pDevice)
     {
         bufferRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
         bufferRsrcDesc.Alignment = 0;
-        bufferRsrcDesc.Width = o_modelMat.size() * sizeof(float);
+        bufferRsrcDesc.Width = sizeof(vsConstantBuffer);
         bufferRsrcDesc.Height = 1;
         bufferRsrcDesc.DepthOrArraySize = 1;
         bufferRsrcDesc.MipLevels = 1;
@@ -105,5 +125,30 @@ void StaticMesh::GenModelMatrix(ID3D12Device* pDevice)
             &bufferRsrcDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(&m_pModelMatrixBuffer)));
+            IID_PPV_ARGS(&m_pVsConstBuffer)));
+
+    // Describe and create a constant buffer view (CBV) descriptor heap.
+    // Flags indicate that this descriptor heap can be bound to the pipeline 
+    // and that descriptors contained in it can be referenced by a root table.
+    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+    cbvHeapDesc.NumDescriptors = 1;
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    ThrowIfFailed(pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvDescHeap)));
+
+    // Describe and create a constant buffer view.
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+    cbvDesc.BufferLocation = m_pVsConstBuffer->GetGPUVirtualAddress();
+    cbvDesc.SizeInBytes = sizeof(vsConstantBuffer);
+    pDevice->CreateConstantBufferView(&cbvDesc, m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart());
+
+    memcpy(vsConstantBuffer, o_modelMat, sizeof(float) * 16);
+    memcpy(vsConstantBuffer + 16, tmpVPMat, sizeof(float) * 16);
+
+    // Map and initialize the constant buffer. We don't unmap this until the
+    // app closes. Keeping things mapped for the lifetime of the resource is okay.
+    D3D12_RANGE readRange{ 0, 0 };        // We do not intend to read from this resource on the CPU.
+    ThrowIfFailed(m_pVsConstBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pVsConstBufferBegin)));
+    memcpy(m_pVsConstBufferBegin, vsConstantBuffer, sizeof(vsConstantBuffer));
+    m_pVsConstBuffer->Unmap(0, nullptr);
 }

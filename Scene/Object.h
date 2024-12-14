@@ -5,7 +5,7 @@ class Object
 {
 public:
     Object() {}
-    ~Object() {}
+    virtual ~Object() {}
 
     virtual void Tick(float DeltaTime) {}
 
