@@ -91,13 +91,13 @@ public:
     ~StaticMesh();
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
-    void GenModelMatrix(ID3D12Device* pDevice);
+    void GenModelMatrix();
 
     std::string m_assetPath;
 
     std::vector<MeshPrimitive> m_meshPrimitives;
 
-    ID3D12DescriptorHeap* m_cbvDescHeap;
+    float m_modelMat[16];
 
 private:
     float m_position[3];
@@ -106,7 +106,4 @@ private:
 
     bool m_loadedInRAM;
     bool m_loadedInVRAM;
-    
-    ID3D12Resource* m_pVsConstBuffer;
-    UINT8*          m_pVsConstBufferBegin;
 };

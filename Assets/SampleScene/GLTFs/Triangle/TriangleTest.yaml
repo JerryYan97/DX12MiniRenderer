@@ -3,7 +3,7 @@ SceneType: GLTF
 SceneGraph:
   TriangleInst:
     Type: StaticMesh
-    Position: [0, 0, 2]
+    Position: [0.2, 0.2, 0.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
     AssetPath: Triangle.gltf
@@ -25,7 +25,7 @@ SceneGraph:
     Position: [-1.0, 0.0, 0.0]
   CameraInst:
     Type: Camera
-    Position: [0.0, 0.0, -1.0]
+    Position: [0.0, 0.0, -2.0]
     View: [0.0, 0.0, 1.0]
     Up: [0.0, 1.0, 0.0]
     fov: 0.820304751

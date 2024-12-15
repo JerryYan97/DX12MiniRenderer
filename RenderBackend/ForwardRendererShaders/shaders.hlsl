@@ -8,6 +8,7 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //*********************************************************
+#pragma pack_matrix(row_major)
 
 struct PSInput
 {
@@ -25,10 +26,12 @@ PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
     PSInput result;
 
-    float4x4 mvpMat = mul(modelMat, vpMat);
+    // float4x4 mvpMat = mul(vpMat, modelMat);
     
     // result.position = mul(mvpMat, position);
-    result.position = position;
+    // result.position = position;
+    result.position = float4(position.xyz, 1.0);
+    result.position = mul(vpMat, mul(modelMat, result.position));
     result.color = color;
 
     return result;

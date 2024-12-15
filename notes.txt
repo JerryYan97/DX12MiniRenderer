@@ -69,6 +69,10 @@ GLTF PBR basic support.
 Spheres PBR scene.
 
 
+Misc TODOs:
+- Use singlenton, global variables and static to simplify programming patterns.
+
+
 Refs:
 https://github.com/microsoft/DirectXTK12/wiki/Getting-Started
 https://github.com/Microsoft/DirectX-Graphics-Samples

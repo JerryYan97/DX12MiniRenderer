@@ -3,6 +3,7 @@
 #include "Object.h"
 
 class StaticMesh;
+class Camera;
 
 namespace YAML
 {
@@ -20,6 +21,7 @@ public:
     void LoadObject(const std::string& objName, const YAML::Node& i_node, PFN_CustomSerlizeObject i_func);
 
     void RetriveStaticMeshes(std::vector<StaticMesh*>& o_staticMeshes);
+    void RetriveActiveCamera(Camera** o_camera);
 
 private:
     std::vector<Object*> m_objects;

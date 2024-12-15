@@ -11,6 +11,7 @@ bool DX12MiniRenderer::show_another_window = true;
 bool DX12MiniRenderer::clear_color = true;
 DX12MiniRenderer* DX12MiniRenderer::m_pThis = nullptr;
 ID3D12Device* g_pD3dDevice = nullptr;
+UIManager* g_pUIManager = nullptr;
 
 DX12MiniRenderer::DX12MiniRenderer()
     : m_pD3dDevice(nullptr),
@@ -178,6 +179,7 @@ void DX12MiniRenderer::Init()
     m_pUIManager = new UIManager(m_pD3dDevice, &m_eventManager);
     m_pUIManager->Init(m_pD3dCommandQueue);
     m_pUIManager->SetCustomImGUIFunc(GenerateImGUIStates);
+    g_pUIManager = m_pUIManager;
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();

@@ -2,6 +2,7 @@
 #include "../Utils/DX12Utils.h"
 #include "../UI/UIManager.h"
 #include "../Scene/Mesh.h"
+#include "../Scene/Camera.h"
 #include "../Scene/Level.h"
 #include <d3dcompiler.h>
 
@@ -11,8 +12,12 @@ ForwardRenderer::ForwardRenderer() :
     m_pPipelineState(nullptr),
     m_vertexBuffer(nullptr),
     m_vertexBufferView(),
+    m_idxBuffer(nullptr),
+    m_idxBufferView(),
     m_viewport(),
-    m_scissorRect()
+    m_scissorRect(),
+    m_pVsConstBuffer(nullptr),
+    m_cbvDescHeap(nullptr)
 {
 }
 
@@ -96,7 +101,7 @@ void ForwardRenderer::CreatePipelineStateObject()
     D3D12_RASTERIZER_DESC rasterizerDesc = {};
     {
         rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-        rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+        rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
         rasterizerDesc.FrontCounterClockwise = FALSE;
         rasterizerDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
         rasterizerDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
@@ -257,8 +262,82 @@ void ForwardRenderer::CreateVertexBuffer()
     m_idxBufferView.Format = DXGI_FORMAT_R16_UINT;
     m_idxBufferView.SizeInBytes = sizeof(indices);
 
-
     GpuQueueWaitIdle(m_pD3dDevice, m_pMainCommandQueue);
+}
+
+void ForwardRenderer::CreateMeshRenderGpuResources()
+{
+    // Padding to 256 bytes for constant buffer
+    float vsConstantBuffer[64] = {};
+
+    D3D12_HEAP_PROPERTIES heapProperties{};
+    {
+        heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+    }
+
+    D3D12_RESOURCE_DESC bufferRsrcDesc{};
+    {
+        bufferRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        bufferRsrcDesc.Alignment = 0;
+        bufferRsrcDesc.Width = sizeof(vsConstantBuffer);
+        bufferRsrcDesc.Height = 1;
+        bufferRsrcDesc.DepthOrArraySize = 1;
+        bufferRsrcDesc.MipLevels = 1;
+        bufferRsrcDesc.Format = DXGI_FORMAT_UNKNOWN;
+        bufferRsrcDesc.SampleDesc.Count = 1;
+        bufferRsrcDesc.SampleDesc.Quality = 0;
+        bufferRsrcDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        bufferRsrcDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    }
+
+    ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferRsrcDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_pVsConstBuffer)));
+
+    // Describe and create a constant buffer view (CBV) descriptor heap.
+    // Flags indicate that this descriptor heap can be bound to the pipeline 
+    // and that descriptors contained in it can be referenced by a root table.
+    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+    cbvHeapDesc.NumDescriptors = 1;
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvDescHeap)));
+
+    // Describe and create a constant buffer view.
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+    cbvDesc.BufferLocation = m_pVsConstBuffer->GetGPUVirtualAddress();
+    cbvDesc.SizeInBytes = sizeof(vsConstantBuffer);
+    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart());    
+}
+
+void ForwardRenderer::UpdatePerFrameGpuResources()
+{
+    float vsConstantBuffer[64] = {};
+    Camera* pCamera = nullptr;
+    m_pLevel->RetriveActiveCamera(&pCamera);
+    pCamera->CameraUpdate();
+
+    std::vector<StaticMesh*> staticMeshes;
+    m_pLevel->RetriveStaticMeshes(staticMeshes);
+    staticMeshes[0]->GenModelMatrix();
+    
+    memcpy(vsConstantBuffer, staticMeshes[0]->m_modelMat, sizeof(float) * 16);
+    memcpy(vsConstantBuffer + 16, pCamera->m_vpMat, sizeof(float) * 16);
+
+    // Map and initialize the constant buffer. We don't unmap this until the
+    // app closes. Keeping things mapped for the lifetime of the resource is okay.
+    D3D12_RANGE readRange{ 0, 0 };        // We do not intend to read from this resource on the CPU.
+    ThrowIfFailed(m_pVsConstBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pVsConstBufferBegin)));
+    memcpy(m_pVsConstBufferBegin, vsConstantBuffer, sizeof(vsConstantBuffer));
+    m_pVsConstBuffer->Unmap(0, nullptr);
 }
 
 void ForwardRenderer::CustomInit()
@@ -266,6 +345,7 @@ void ForwardRenderer::CustomInit()
     CreateRootSignature();
     CreatePipelineStateObject();
     CreateVertexBuffer();
+    CreateMeshRenderGpuResources();
 
     uint32_t winWidth, winHeight;
     m_pUIManager->GetWindowSize(winWidth, winHeight);
@@ -282,10 +362,12 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
 
     D3D12_CPU_DESCRIPTOR_HANDLE frameDSVDescriptor = m_pUIManager->GetCurrentMainDSVDescriptor();
 
-    std::vector<StaticMesh*> staticMeshes;
-    m_pLevel->RetriveStaticMeshes(staticMeshes);
+    // Padding to 256 bytes for constant buffer
+    float vsConstantBuffer[64] = {};
 
-    ID3D12DescriptorHeap* ppHeaps[] = { staticMeshes[0]->m_cbvDescHeap };
+    UpdatePerFrameGpuResources();
+
+    ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
     pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
     pCommandList->SetPipelineState(m_pPipelineState);
@@ -296,7 +378,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->IASetIndexBuffer(&m_idxBufferView);
     pCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    pCommandList->SetGraphicsRootDescriptorTable(0, staticMeshes[0]->m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
+    pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
     pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     /*
@@ -325,4 +407,16 @@ void ForwardRenderer::CustomDeinit()
 
     m_idxBuffer->Release();
     m_idxBuffer = nullptr;
+
+    if (m_pVsConstBuffer)
+    {
+        m_pVsConstBuffer->Release();
+        m_pVsConstBuffer = nullptr;
+    }
+
+    if (m_cbvDescHeap)
+    {
+        m_cbvDescHeap->Release();
+        m_cbvDescHeap = nullptr;
+    }
 }

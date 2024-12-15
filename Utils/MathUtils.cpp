@@ -12,7 +12,7 @@ void GenViewMat(
 {
     float z[3] = {};
     memcpy(z, pView, 3 * sizeof(float));
-    ScalarMul(-1.f, z, 3);
+    // ScalarMul(-1.f, z, 3);
 
     float pUp[3] = {};
     memcpy(pUp, pWorldUp, 3 * sizeof(float));
@@ -41,8 +41,8 @@ void GenViewMat(
 }
 
 void GenPerspectiveProjMat(
-    float near,
-    float far,
+    float nearPlane,
+    float farPlane,
     float fov,
     float aspect,
     float* pResMat)
@@ -68,12 +68,28 @@ void GenPerspectiveProjMat(
     pResMat[11] = -1.f;
     pResMat[14] = near * far / (near - far);
     */
+    /* DX12 style. Refer from MS doc. Note that on MS doc, that is a column-major matrix, which needs to be transposed. */
+    /* I always use row-major matrix. */
     float c = 1.f / tanf(fov * 0.5f);
-    pResMat[0] = c;
-    pResMat[5] = aspect * c;
-    pResMat[10] = far / (far - near);
-    pResMat[11] = 1.f;
-    pResMat[14] = near * far / (near - far);
+    pResMat[0] = aspect * c;
+    pResMat[5] = c;
+    pResMat[10] = farPlane / (farPlane - nearPlane);
+    pResMat[11] = nearPlane * farPlane / (nearPlane - farPlane);
+    pResMat[14] = 1.f;
+    
+    /*
+    float Y = 1.f / tanf(fov * 0.5f);
+    float X = Y * aspect;
+
+    float Q1 = farPlane / (nearPlane - farPlane);
+    float Q2 = Q1 * nearPlane;
+
+    pResMat[0] = X;
+    pResMat[5] = Y;
+    pResMat[10] = Q1;
+    pResMat[11] = -1.f;
+    pResMat[14] = Q2;
+    */
 }
 
 void GenRotationMat(
