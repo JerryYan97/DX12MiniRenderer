@@ -49,6 +49,7 @@ void GenPerspectiveProjMat(
 {
     memset(pResMat, 0, 16 * sizeof(float));
 
+    /* Vulkan -- Depth Inverse
     float c = 1.f / tanf(fov / 2.f);
 
     pResMat[0] = c / aspect;
@@ -56,6 +57,23 @@ void GenPerspectiveProjMat(
     pResMat[10] = near / (far - near);
     pResMat[11] = near * far / (far - near);
     pResMat[14] = -1.f;
+    */
+
+    // DX12
+    /*
+    float c = 1.f / tanf(fov * 0.5f);
+    pResMat[0] = c;
+    pResMat[5] = aspect * c;
+    pResMat[10] = far / (near - far);
+    pResMat[11] = -1.f;
+    pResMat[14] = near * far / (near - far);
+    */
+    float c = 1.f / tanf(fov * 0.5f);
+    pResMat[0] = c;
+    pResMat[5] = aspect * c;
+    pResMat[10] = far / (far - near);
+    pResMat[11] = 1.f;
+    pResMat[14] = near * far / (near - far);
 }
 
 void GenRotationMat(
