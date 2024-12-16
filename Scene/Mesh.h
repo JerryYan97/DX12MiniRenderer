@@ -32,6 +32,8 @@ public:
     MeshPrimitive();
     ~MeshPrimitive();
 
+    void CreateVertIdxBuffer(); // Create vertex buffer ram data and vertex and index buffer on GPU.
+
     // float m_position[3];
     std::vector<float>    m_vertData;
 
@@ -55,6 +57,9 @@ public:
     ID3D12Resource*       m_gpuVertBuffer;
     ID3D12Resource*       m_gpuIndexBuffer;
     ID3D12Resource*       m_gpuConstantMaterialBuffer;
+
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+    D3D12_INDEX_BUFFER_VIEW  m_idxBufferView;
     // ID3D12DescriptorHeap* m_cbvDescHeap;
 
     bool m_isConstantMaterial;

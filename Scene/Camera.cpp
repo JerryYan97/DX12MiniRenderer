@@ -65,5 +65,4 @@ void Camera::CameraUpdate()
     GenViewMat(m_view, m_pos, m_up, m_viewMat);
 
     MatMulMat(m_projMat, m_viewMat, m_vpMat, 4);
-    // memcpy(m_vpMat, m_viewMat, sizeof(float) * 16);
 }

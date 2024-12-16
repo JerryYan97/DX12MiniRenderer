@@ -2,8 +2,12 @@
 #include <math.h>
 #include <cstring>
 
-// The pView is not equivalent to camera space's z.
-    // pView should be the -z direction of a camera space.
+// In Vulkan or OGL:
+// The pView is not equivalent to camera space's z
+// pView should be the -z direction of a camera space.
+//
+// In DX12:
+// The pView is equivalent to camera space's z+.
 void GenViewMat(
     float* const pView,
     float* const pPos,

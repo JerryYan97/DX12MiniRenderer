@@ -10,14 +10,11 @@ ForwardRenderer::ForwardRenderer() :
     RendererBackend(RendererBackendType::Forward),
     m_pRootSignature(nullptr),
     m_pPipelineState(nullptr),
-    m_vertexBuffer(nullptr),
-    m_vertexBufferView(),
-    m_idxBuffer(nullptr),
-    m_idxBufferView(),
     m_viewport(),
     m_scissorRect(),
     m_pVsConstBuffer(nullptr),
-    m_cbvDescHeap(nullptr)
+    m_cbvDescHeap(nullptr),
+    m_pVsConstBufferBegin(nullptr)
 {
 }
 
@@ -82,20 +79,20 @@ void ForwardRenderer::CreatePipelineStateObject()
     ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
     // Define the vertex input layout.
-    /*
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "TANGENT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
-    */
+    /*
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
+    */
 
     // Describe and create the graphics pipeline state object (PSO).
     D3D12_RASTERIZER_DESC rasterizerDesc = {};
@@ -157,112 +154,6 @@ void ForwardRenderer::CreatePipelineStateObject()
 
     vertShader->Release();
     pixelShader->Release();
-}
-
-void ForwardRenderer::CreateVertexBuffer()
-{
-    std::vector<StaticMesh*> staticMeshes;
-    m_pLevel->RetriveStaticMeshes(staticMeshes);
-    std::vector<float>&    posData = staticMeshes[0]->m_meshPrimitives[0].m_posData;
-    std::vector<uint16_t>& idxData = staticMeshes[0]->m_meshPrimitives[0].m_idxDataUint16;
-
-    struct Vertex
-    {
-        float position[3];
-        float color[4];
-    };
-
-    // Define the geometry for a triangle.
-    /**/
-    Vertex triangleVertices[] =
-    {
-        { { 0.25f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { { 0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { -0.25f, -0.25f * 1.6, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-        { { -0.25f, 0.25f * 1.6, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }
-    };
-    
-    uint16_t indices[] = { 0, 1, 3, 3, 1, 2 };
-    
-    /*
-    Vertex triangleVertices[] =
-    {
-        { { posData[0], posData[1], posData[2]}, {1.0f, 0.0f, 0.0f, 1.0f}},
-        { { posData[3], posData[4], posData[5] }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { posData[6], posData[7], posData[8] }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-    };
-    */
-    
-    const UINT vertexBufferSize = sizeof(triangleVertices);
-
-    D3D12_HEAP_PROPERTIES heapProperties{};
-    {
-        heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-        heapProperties.CreationNodeMask = 1;
-        heapProperties.VisibleNodeMask = 1;
-    }
-
-    D3D12_RESOURCE_DESC bufferRsrcDesc{};
-    {
-        bufferRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        bufferRsrcDesc.Alignment = 0;
-        bufferRsrcDesc.Width = vertexBufferSize;
-        bufferRsrcDesc.Height = 1;
-        bufferRsrcDesc.DepthOrArraySize = 1;
-        bufferRsrcDesc.MipLevels = 1;
-        bufferRsrcDesc.Format = DXGI_FORMAT_UNKNOWN;
-        bufferRsrcDesc.SampleDesc.Count = 1;
-        bufferRsrcDesc.SampleDesc.Quality = 0;
-        bufferRsrcDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-        bufferRsrcDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    }
-
-    D3D12_RESOURCE_DESC idxBufferRsrcDesc = bufferRsrcDesc;
-    idxBufferRsrcDesc.Width = sizeof(indices);
-
-    ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferRsrcDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_vertexBuffer)));
-
-    ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &idxBufferRsrcDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_idxBuffer)
-    ));
-
-    // Copy the triangle data to the vertex buffer.
-    void* pVertexDataBegin;
-    D3D12_RANGE readRange{ 0, 0 };        // We do not intend to read from this resource on the CPU.
-    ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, &pVertexDataBegin));
-    memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-    m_vertexBuffer->Unmap(0, nullptr);
-
-    // Initialize the vertex buffer view.
-    m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-    m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-    m_vertexBufferView.SizeInBytes = vertexBufferSize;
-
-    // Copy the model idx data to the idx buffer.
-    void* pIdxDataBegin;
-    ThrowIfFailed(m_idxBuffer->Map(0, &readRange, &pIdxDataBegin));
-    memcpy(pIdxDataBegin, indices, sizeof(indices));
-    m_idxBuffer->Unmap(0, nullptr);
-
-    // Initialize the index buffer view.
-    m_idxBufferView.BufferLocation = m_idxBuffer->GetGPUVirtualAddress();
-    m_idxBufferView.Format = DXGI_FORMAT_R16_UINT;
-    m_idxBufferView.SizeInBytes = sizeof(indices);
-
-    GpuQueueWaitIdle(m_pD3dDevice, m_pMainCommandQueue);
 }
 
 void ForwardRenderer::CreateMeshRenderGpuResources()
@@ -344,7 +235,6 @@ void ForwardRenderer::CustomInit()
 {
     CreateRootSignature();
     CreatePipelineStateObject();
-    CreateVertexBuffer();
     CreateMeshRenderGpuResources();
 
     uint32_t winWidth, winHeight;
@@ -367,6 +257,11 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
 
     UpdatePerFrameGpuResources();
 
+    std::vector<StaticMesh*> staticMeshes;
+    m_pLevel->RetriveStaticMeshes(staticMeshes);
+
+    const uint32_t idxCnt = staticMeshes[0]->m_meshPrimitives[0].m_idxDataUint16.size();
+
     ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
     pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
@@ -376,10 +271,10 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     pCommandList->RSSetScissorRects(1, &m_scissorRect);
     pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    pCommandList->IASetIndexBuffer(&m_idxBufferView);
-    pCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    pCommandList->IASetIndexBuffer(&staticMeshes[0]->m_meshPrimitives[0].m_idxBufferView);
+    pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[0]->m_meshPrimitives[0].m_vertexBufferView);
     pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
-    pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+    pCommandList->DrawIndexedInstanced(idxCnt, 1, 0, 0, 0);
 
     /*
     * It looks like D3D auto sync RT: https://github.com/microsoft/DirectX-Graphics-Samples/issues/132#issuecomment-209052225
@@ -401,12 +296,6 @@ void ForwardRenderer::CustomDeinit()
 
     m_pPipelineState->Release();
     m_pPipelineState = nullptr;
-
-    m_vertexBuffer->Release();
-    m_vertexBuffer = nullptr;
-
-    m_idxBuffer->Release();
-    m_idxBuffer = nullptr;
 
     if (m_pVsConstBuffer)
     {

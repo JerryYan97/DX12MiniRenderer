@@ -17,17 +17,11 @@ private:
     void CreateMeshRenderGpuResources();
     void CreateRootSignature();
     void CreatePipelineStateObject();
-    void CreateVertexBuffer();
 
     void UpdatePerFrameGpuResources();
 
     ID3D12RootSignature* m_pRootSignature;
     ID3D12PipelineState* m_pPipelineState;
-
-    ID3D12Resource*          m_vertexBuffer;
-    ID3D12Resource*          m_idxBuffer;
-    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-    D3D12_INDEX_BUFFER_VIEW  m_idxBufferView;
     
     ID3D12Resource*       m_pVsConstBuffer;
     UINT8*                m_pVsConstBufferBegin;

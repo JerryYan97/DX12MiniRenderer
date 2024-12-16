@@ -368,6 +368,8 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             pfnSetDefaultOcclusion(meshPrimitive);
             pfnSetDefaultNormal(meshPrimitive);
         }
+
+        meshPrimitive.CreateVertIdxBuffer();
     }
 }
 

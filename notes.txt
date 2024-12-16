@@ -49,7 +49,7 @@ Fixed Triangle (Checked)
 
 Milestone 1:
 GLTF Triangle, Cube, Sphere.
-Basic Camera Model.
+Basic Camera Model. ()
 Shader Load Infra (Using DXC API -- NO Need) 
 Basic Point Light Scene -- PBR.
 -------

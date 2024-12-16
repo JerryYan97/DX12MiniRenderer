@@ -10,6 +10,14 @@
 //*********************************************************
 #pragma pack_matrix(row_major)
 
+struct VSInput
+{
+    float4 position : POSITION;
+    float4 normal : NORMAL0;
+    float4 tangent : TANGENT0;
+    float2 texcoord : TEXCOORD0;
+};
+
 struct PSInput
 {
     float4 position : SV_POSITION;
@@ -22,7 +30,7 @@ cbuffer VsUboBuffer : register(b0)
     float4x4 vpMat;
 };
 
-PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+PSInput VSMain(VSInput input)
 {
     PSInput result;
 
@@ -30,9 +38,9 @@ PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
     
     // result.position = mul(mvpMat, position);
     // result.position = position;
-    result.position = float4(position.xyz, 1.0);
+    result.position = float4(input.position.xyz, 1.0);
     result.position = mul(vpMat, mul(modelMat, result.position));
-    result.color = color;
+    result.color = float4(1.0, 1.0, 0.0, 1.0);
 
     return result;
 }
