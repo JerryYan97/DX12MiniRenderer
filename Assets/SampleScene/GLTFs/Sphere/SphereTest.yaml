@@ -1,4 +1,4 @@
-SceneName: CubeTest
+SceneName: SphereTest
 SceneType: GLTF
 SceneGraph:
   TriangleInst:
@@ -6,7 +6,7 @@ SceneGraph:
     Position: [0.2, 0.0, 0.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
-    AssetPath: cube.gltf
+    AssetPath: uvSphere.gltf
   PointLightInst1:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]

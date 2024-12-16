@@ -48,8 +48,8 @@ Milestone 0: (Done)
 Fixed Triangle (Checked)
 
 Milestone 1:
-GLTF Triangle, Cube, Sphere.
-Basic Camera Model. ()
+GLTF Triangle, Cube, Sphere. (Done)
+Basic Camera Model. (Done)
 Shader Load Infra (Using DXC API -- NO Need) 
 Basic Point Light Scene -- PBR.
 -------
