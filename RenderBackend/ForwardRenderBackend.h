@@ -29,4 +29,6 @@ private:
 
     D3D12_VIEWPORT m_viewport;
     D3D12_RECT     m_scissorRect;
+
+    ID3D12DescriptorHeap* m_shaderVisibleCbvHeap;
 };

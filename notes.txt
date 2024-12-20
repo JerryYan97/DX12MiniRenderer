@@ -51,7 +51,7 @@ Milestone 1:
 GLTF Triangle, Cube, Sphere. (Done)
 Basic Camera Model. (Done)
 Shader Load Infra (Using DXC API -- NO Need) 
-Basic Point Light Scene -- PBR.
+Basic Point Light Spheres Scene -- PBR.
 -------
 Specific Milestone 1 tasks:
 - Shader Prebuild infra setup -- PBR shader is relatively large -- Download DXC and put it as a prebuild step.
@@ -64,14 +64,18 @@ Specific Milestone 1 tasks:
 
 
 Milestone 2:
+GLTF Texture PBR basic support.
+More GLTF models rendering (Simple) --> Decorate project front page.
+Code Cleanup.
+
+
+Milestone 3:
 Integrate IBL, Cubemap Background Rendering.
-GLTF PBR basic support.
-Spheres PBR scene.
 
 
 Misc TODOs:
 - Use singlenton, global variables and static to simplify programming patterns.
-
+- DXR, DLSS/FSR, mesh-shader Nanite, Restir, GPU-Workgraph examples are must for my further graphics career.
 
 Refs:
 https://github.com/microsoft/DirectXTK12/wiki/Getting-Started

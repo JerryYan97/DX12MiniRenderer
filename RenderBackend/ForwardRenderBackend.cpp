@@ -198,7 +198,8 @@ void ForwardRenderer::CreateMeshRenderGpuResources()
     // and that descriptors contained in it can be referenced by a root table.
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
     cbvHeapDesc.NumDescriptors = 1;
-    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    // cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvDescHeap)));
 
@@ -206,7 +207,11 @@ void ForwardRenderer::CreateMeshRenderGpuResources()
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
     cbvDesc.BufferLocation = m_pVsConstBuffer->GetGPUVirtualAddress();
     cbvDesc.SizeInBytes = sizeof(vsConstantBuffer);
-    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart());    
+    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart());
+
+    // Shader visible heap.
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_shaderVisibleCbvHeap)));
 }
 
 void ForwardRenderer::UpdatePerFrameGpuResources()
@@ -255,6 +260,8 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     // Padding to 256 bytes for constant buffer
     float vsConstantBuffer[64] = {};
 
+    m_pD3dDevice->CopyDescriptorsSimple(1, m_shaderVisibleCbvHeap->GetCPUDescriptorHandleForHeapStart(), m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
     UpdatePerFrameGpuResources();
 
     std::vector<StaticMesh*> staticMeshes;
@@ -262,7 +269,8 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
 
     const uint32_t idxCnt = staticMeshes[0]->m_meshPrimitives[0].m_idxDataUint16.size();
 
-    ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
+    // ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
+    ID3D12DescriptorHeap* ppHeaps[] = { m_shaderVisibleCbvHeap };
     pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
     pCommandList->SetPipelineState(m_pPipelineState);
@@ -273,7 +281,8 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->IASetIndexBuffer(&staticMeshes[0]->m_meshPrimitives[0].m_idxBufferView);
     pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[0]->m_meshPrimitives[0].m_vertexBufferView);
-    pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
+    // pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
+    pCommandList->SetGraphicsRootDescriptorTable(0, m_shaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart());
     pCommandList->DrawIndexedInstanced(idxCnt, 1, 0, 0, 0);
 
     /*
@@ -307,5 +316,11 @@ void ForwardRenderer::CustomDeinit()
     {
         m_cbvDescHeap->Release();
         m_cbvDescHeap = nullptr;
+    }
+
+    if (m_shaderVisibleCbvHeap)
+    {
+        m_shaderVisibleCbvHeap->Release();
+        m_shaderVisibleCbvHeap = nullptr;
     }
 }
