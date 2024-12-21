@@ -23,12 +23,16 @@ private:
     ID3D12RootSignature* m_pRootSignature;
     ID3D12PipelineState* m_pPipelineState;
     
-    ID3D12Resource*       m_pVsConstBuffer;
-    UINT8*                m_pVsConstBufferBegin;
-    ID3D12DescriptorHeap* m_cbvDescHeap;
+    ID3D12Resource*       m_pVsSceneBuffer;
+    ID3D12Resource*       m_pPsSceneBuffer;
+    UINT8*                m_pVsSceneBufferBegin;
+    UINT8*                m_pPsSceneBufferBegin;
+    ID3D12DescriptorHeap* m_pSceneCbvHeap;
 
     D3D12_VIEWPORT m_viewport;
     D3D12_RECT     m_scissorRect;
 
-    ID3D12DescriptorHeap* m_shaderVisibleCbvHeap;
+    // ID3D12DescriptorHeap* m_shaderVisibleCbvHeap;
+
+    std::vector<ID3D12DescriptorHeap*> m_inflightShaderVisibleCbvHeaps;
 };

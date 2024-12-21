@@ -117,7 +117,11 @@ void MeshPrimitive::CreateVertIdxBuffer()
 
 StaticMesh::StaticMesh()
     : m_loadedInRAM(false),
-      m_loadedInVRAM(false)
+      m_loadedInVRAM(false),
+      m_staticMeshConstantBuffer(nullptr),
+      m_staticMeshCbvDescHeap(nullptr),
+      m_staticMeshCnstMaterialBuffer(nullptr),
+      m_staticMeshCnstMaterialCbvDescHeap(nullptr)
 {
     memset(m_position, 0, sizeof(float) * 3);
     memset(m_scale, 0, sizeof(float) * 3);
@@ -130,7 +134,25 @@ StaticMesh::StaticMesh()
 
 StaticMesh::~StaticMesh()
 {
-    
+    if (m_staticMeshConstantBuffer)
+    {
+        m_staticMeshConstantBuffer->Release();
+    }
+
+    if (m_staticMeshCbvDescHeap)
+    {
+        m_staticMeshCbvDescHeap->Release();
+    }
+
+    if (m_staticMeshCnstMaterialBuffer)
+    {
+        m_staticMeshCnstMaterialBuffer->Release();
+    }
+
+    if (m_staticMeshCnstMaterialCbvDescHeap)
+    {
+        m_staticMeshCnstMaterialCbvDescHeap->Release();
+    }
 }
 
 Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_node)
@@ -161,4 +183,85 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
 void StaticMesh::GenModelMatrix()
 {
     GenModelMat(m_position, m_rotation[2], m_rotation[0], m_rotation[1], m_scale, m_modelMat);
+
+    if (m_staticMeshConstantBuffer == nullptr && m_staticMeshCbvDescHeap == nullptr)
+    {
+        constexpr uint32_t CnstBufferSize = sizeof(float) * 64;
+
+        // NOTE: Constant buffer needs to be padded to 256 bytes.
+        D3D12_HEAP_PROPERTIES heapProperties{};
+        {
+            heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+            heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            heapProperties.CreationNodeMask = 1;
+            heapProperties.VisibleNodeMask = 1;
+        }
+
+        D3D12_RESOURCE_DESC bufferRsrcDesc{};
+        {
+            bufferRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            bufferRsrcDesc.Alignment = 0;
+            bufferRsrcDesc.Width = CnstBufferSize;
+            bufferRsrcDesc.Height = 1;
+            bufferRsrcDesc.DepthOrArraySize = 1;
+            bufferRsrcDesc.MipLevels = 1;
+            bufferRsrcDesc.Format = DXGI_FORMAT_UNKNOWN;
+            bufferRsrcDesc.SampleDesc.Count = 1;
+            bufferRsrcDesc.SampleDesc.Quality = 0;
+            bufferRsrcDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            bufferRsrcDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        }
+
+        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &bufferRsrcDesc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(&m_staticMeshConstantBuffer)));
+
+        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+        cbvHeapDesc.NumDescriptors = 1;
+        cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_staticMeshCbvDescHeap)));
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+        {
+            cbvDesc.BufferLocation = m_staticMeshConstantBuffer->GetGPUVirtualAddress();
+            cbvDesc.SizeInBytes = CnstBufferSize;
+        }
+
+        g_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_staticMeshCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
+
+        // Create and populate the static mesh constant material buffer.
+        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &bufferRsrcDesc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(&m_staticMeshCnstMaterialBuffer)));
+
+        ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_staticMeshCnstMaterialCbvDescHeap)));
+
+        cbvDesc.BufferLocation = m_staticMeshCnstMaterialBuffer->GetGPUVirtualAddress();
+        g_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
+
+        float materialData[16] = { 1.0f, 1.0f, 1.0f, 0.f,
+                                   1.0f, 1.0f, 0.f,  0.f};
+
+        void* pConstBufferBegin;
+        D3D12_RANGE readRange{ 0, 0 };
+        ThrowIfFailed(m_staticMeshCnstMaterialBuffer->Map(0, &readRange, &pConstBufferBegin));
+        memcpy(pConstBufferBegin, materialData, sizeof(float) * 16);
+        m_staticMeshCnstMaterialBuffer->Unmap(0, nullptr);
+    }
+
+    void* pConstBufferBegin;
+    D3D12_RANGE readRange{ 0, 0 };
+    ThrowIfFailed(m_staticMeshConstantBuffer->Map(0, &readRange, &pConstBufferBegin));
+    memcpy(pConstBufferBegin, m_modelMat, sizeof(float) * 16);
+    m_staticMeshConstantBuffer->Unmap(0, nullptr);
 }

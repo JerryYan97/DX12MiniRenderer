@@ -4,6 +4,7 @@
 
 class StaticMesh;
 class Camera;
+class Light;
 
 namespace YAML
 {
@@ -22,6 +23,7 @@ public:
 
     void RetriveStaticMeshes(std::vector<StaticMesh*>& o_staticMeshes);
     void RetriveActiveCamera(Camera** o_camera);
+    void RetriveLights(std::vector<Light*>& o_lights);
 
 private:
     std::vector<Object*> m_objects;

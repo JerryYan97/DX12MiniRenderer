@@ -49,7 +49,7 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
         }
         else if (type.compare("PointLight") == 0)
         {
-
+            o_pLevel->LoadObject(objName, itr.second, PointLight::Deseralize);
         }
         else if (type.compare("Camera") == 0)
         {

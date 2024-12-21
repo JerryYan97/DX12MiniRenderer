@@ -45,6 +45,20 @@ PSInput VSMain(VSInput input)
     return result;
 }
 
+cbuffer PsSceneBuffer : register(b1)
+{
+    float3 lightPositions[4];
+    float4 cameraPos; // one padding float
+    float4 ambientLight; // one padding float
+}
+
+cbuffer PsMaterialBuffer : register(b2)
+{
+    float4 constAlbedo;
+    float4 metalicRoughness;
+    uint materialMask; // 0 -- Constant, 1 -- Texture. No or all.
+}
+
 float4 PSMain(PSInput input) : SV_TARGET
 {
     return input.color;

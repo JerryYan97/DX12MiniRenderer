@@ -104,6 +104,12 @@ public:
 
     float m_modelMat[16];
 
+    ID3D12Resource* m_staticMeshConstantBuffer;
+    ID3D12DescriptorHeap* m_staticMeshCbvDescHeap;
+
+    ID3D12Resource* m_staticMeshCnstMaterialBuffer;
+    ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
+
 private:
     float m_position[3];
     float m_rotation[3];

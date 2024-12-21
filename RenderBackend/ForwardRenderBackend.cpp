@@ -4,6 +4,7 @@
 #include "../Scene/Mesh.h"
 #include "../Scene/Camera.h"
 #include "../Scene/Level.h"
+#include "../Scene/Lights.h"
 #include <d3dcompiler.h>
 
 ForwardRenderer::ForwardRenderer() :
@@ -12,9 +13,12 @@ ForwardRenderer::ForwardRenderer() :
     m_pPipelineState(nullptr),
     m_viewport(),
     m_scissorRect(),
-    m_pVsConstBuffer(nullptr),
-    m_cbvDescHeap(nullptr),
-    m_pVsConstBufferBegin(nullptr)
+    m_pVsSceneBuffer(nullptr),
+    m_pPsSceneBuffer(nullptr),
+    m_pSceneCbvHeap(nullptr),
+    m_pVsSceneBufferBegin(nullptr),
+    m_pPsSceneBufferBegin(nullptr)
+    // m_shaderVisibleCbvHeap(nullptr)
 {
 }
 
@@ -27,7 +31,7 @@ void ForwardRenderer::CreateRootSignature()
     D3D12_DESCRIPTOR_RANGE cbvRange = {};
     {
         cbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        cbvRange.NumDescriptors = 1;
+        cbvRange.NumDescriptors = 4;
         cbvRange.BaseShaderRegister = 0;
         cbvRange.RegisterSpace = 0;
         cbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -75,8 +79,10 @@ void ForwardRenderer::CreatePipelineStateObject()
         UINT compileFlags = 0;
 #endif
 
-    ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, nullptr));
-    ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+    // ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, nullptr));
+    // ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+    ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\PBRShaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, nullptr));
+    ThrowIfFailed(D3DCompileFromFile(L"C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\RenderBackend\\ForwardRendererShaders\\PBRShaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
     // Define the vertex input layout.
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -191,27 +197,35 @@ void ForwardRenderer::CreateMeshRenderGpuResources()
             &bufferRsrcDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(&m_pVsConstBuffer)));
+            IID_PPV_ARGS(&m_pVsSceneBuffer)));
+
+    ThrowIfFailed(m_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferRsrcDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_pPsSceneBuffer)));
 
     // Describe and create a constant buffer view (CBV) descriptor heap.
-    // Flags indicate that this descriptor heap can be bound to the pipeline 
-    // and that descriptors contained in it can be referenced by a root table.
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
     cbvHeapDesc.NumDescriptors = 1;
-    // cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvDescHeap)));
+    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_pSceneCbvHeap)));
 
     // Describe and create a constant buffer view.
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-    cbvDesc.BufferLocation = m_pVsConstBuffer->GetGPUVirtualAddress();
+    cbvDesc.BufferLocation = m_pVsSceneBuffer->GetGPUVirtualAddress();
     cbvDesc.SizeInBytes = sizeof(vsConstantBuffer);
-    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart());
+    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart());
 
-    // Shader visible heap.
-    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_shaderVisibleCbvHeap)));
+    const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    cbvDesc.BufferLocation = m_pPsSceneBuffer->GetGPUVirtualAddress();
+    D3D12_CPU_DESCRIPTOR_HANDLE psCbvHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
+    psCbvHandle.ptr += cbvDescHandleOffset;
+    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, psCbvHandle);
 }
 
 void ForwardRenderer::UpdatePerFrameGpuResources()
@@ -231,9 +245,30 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     // Map and initialize the constant buffer. We don't unmap this until the
     // app closes. Keeping things mapped for the lifetime of the resource is okay.
     D3D12_RANGE readRange{ 0, 0 };        // We do not intend to read from this resource on the CPU.
-    ThrowIfFailed(m_pVsConstBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pVsConstBufferBegin)));
-    memcpy(m_pVsConstBufferBegin, vsConstantBuffer, sizeof(vsConstantBuffer));
-    m_pVsConstBuffer->Unmap(0, nullptr);
+    ThrowIfFailed(m_pVsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pVsSceneBufferBegin)));
+    memcpy(m_pVsSceneBufferBegin, vsConstantBuffer, sizeof(vsConstantBuffer));
+    m_pVsSceneBuffer->Unmap(0, nullptr);
+
+
+    // Collect scene environment data to PS scene constant buffer
+    float psConstantBuffer[64] = {};
+
+    std::vector<Light*> sceneLights;
+    m_pLevel->RetriveLights(sceneLights);
+    assert(sceneLights.size() == 4, "Now we assume 4 point lights.");
+    for (uint32_t i = 0; i < sceneLights.size(); i++)
+    {
+        assert(sceneLights[i]->GetObjectTypeHash() == crc32("PointLight"));
+        PointLight* pPtLight = dynamic_cast<PointLight*>(sceneLights[i]);
+        memcpy(psConstantBuffer + i * 3, pPtLight->position, sizeof(float) * 3);
+    }
+
+    memcpy(psConstantBuffer + 12, pCamera->m_pos, sizeof(float) * 3);
+    // Current No Ambient Light.
+
+    ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
+    memcpy(m_pPsSceneBufferBegin, psConstantBuffer, sizeof(psConstantBuffer));
+    m_pPsSceneBuffer->Unmap(0, nullptr);
 }
 
 void ForwardRenderer::CustomInit()
@@ -260,30 +295,80 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     // Padding to 256 bytes for constant buffer
     float vsConstantBuffer[64] = {};
 
-    m_pD3dDevice->CopyDescriptorsSimple(1, m_shaderVisibleCbvHeap->GetCPUDescriptorHandleForHeapStart(), m_cbvDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
     UpdatePerFrameGpuResources();
 
     std::vector<StaticMesh*> staticMeshes;
     m_pLevel->RetriveStaticMeshes(staticMeshes);
 
-    const uint32_t idxCnt = staticMeshes[0]->m_meshPrimitives[0].m_idxDataUint16.size();
+    // Pre-Render
+    // Free previous frame resources
+    for (const auto& itr : m_inflightShaderVisibleCbvHeaps)
+    {
+        itr->Release();
+    }
+    m_inflightShaderVisibleCbvHeaps.clear();
 
-    // ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
-    ID3D12DescriptorHeap* ppHeaps[] = { m_shaderVisibleCbvHeap };
-    pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    // Render Logic
+    for (uint32_t mshIdx = 0; mshIdx < staticMeshes.size(); mshIdx++)
+    {
+        for (uint32_t primIdx = 0; primIdx < staticMeshes[mshIdx]->m_meshPrimitives.size(); primIdx++)
+        {
+            // Create in-flight shader visible CBV heap and properly copy the CBV descriptor to it.
+            // Shader visible heap.
+            D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+            cbvHeapDesc.NumDescriptors = 4;
+            cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+            cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-    pCommandList->SetPipelineState(m_pPipelineState);
-    pCommandList->SetGraphicsRootSignature(m_pRootSignature);
-    pCommandList->RSSetViewports(1, &m_viewport);
-    pCommandList->RSSetScissorRects(1, &m_scissorRect);
-    pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
-    pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    pCommandList->IASetIndexBuffer(&staticMeshes[0]->m_meshPrimitives[0].m_idxBufferView);
-    pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[0]->m_meshPrimitives[0].m_vertexBufferView);
-    // pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
-    pCommandList->SetGraphicsRootDescriptorTable(0, m_shaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart());
-    pCommandList->DrawIndexedInstanced(idxCnt, 1, 0, 0, 0);
+            ID3D12DescriptorHeap* pInflightShaderVisibleCbvHeap = nullptr;
+            ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pInflightShaderVisibleCbvHeap)));
+            m_inflightShaderVisibleCbvHeaps.push_back(pInflightShaderVisibleCbvHeap);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE shaderCbvDescHeapCpuHandle = pInflightShaderVisibleCbvHeap->GetCPUDescriptorHandleForHeapStart();
+            const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE vsObjCbvHandle = shaderCbvDescHeapCpuHandle;
+            D3D12_CPU_DESCRIPTOR_HANDLE meshModelMatCbvHandle = staticMeshes[mshIdx]->m_staticMeshCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
+            m_pD3dDevice->CopyDescriptorsSimple(1, vsObjCbvHandle, meshModelMatCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE vsSceneCbvHandle = shaderCbvDescHeapCpuHandle;
+            vsSceneCbvHandle.ptr += cbvDescHandleOffset;
+            D3D12_CPU_DESCRIPTOR_HANDLE vsSceneVpMatCbvHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
+            m_pD3dDevice->CopyDescriptorsSimple(1, vsSceneCbvHandle, vsSceneVpMatCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            
+            D3D12_CPU_DESCRIPTOR_HANDLE psObjCnstMaterialCbvHandle = shaderCbvDescHeapCpuHandle;
+            psObjCnstMaterialCbvHandle.ptr += cbvDescHandleOffset * 2;
+            D3D12_CPU_DESCRIPTOR_HANDLE psCnstMaterialCbvHandle = staticMeshes[mshIdx]->m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
+            m_pD3dDevice->CopyDescriptorsSimple(1, psObjCnstMaterialCbvHandle, psCnstMaterialCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE psSceneCbvHandle = shaderCbvDescHeapCpuHandle;
+            psSceneCbvHandle.ptr += cbvDescHandleOffset * 3;
+            D3D12_CPU_DESCRIPTOR_HANDLE psSceneSrcCbvHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
+            psSceneSrcCbvHandle.ptr += cbvDescHandleOffset;
+            m_pD3dDevice->CopyDescriptorsSimple(1, psSceneCbvHandle, psSceneSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            const uint32_t idxCnt = staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_idxDataUint16.size();
+
+            // ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
+            ID3D12DescriptorHeap* ppHeaps[] = { pInflightShaderVisibleCbvHeap };
+            pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+            pCommandList->SetPipelineState(m_pPipelineState);
+            pCommandList->SetGraphicsRootSignature(m_pRootSignature);
+            pCommandList->RSSetViewports(1, &m_viewport);
+            pCommandList->RSSetScissorRects(1, &m_scissorRect);
+            pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
+            pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            pCommandList->IASetIndexBuffer(&staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_idxBufferView);
+            pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_vertexBufferView);
+            // pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
+            pCommandList->SetGraphicsRootDescriptorTable(0, pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart());
+            pCommandList->DrawIndexedInstanced(idxCnt, 1, 0, 0, 0);
+        }
+    }
+
+    // Post-Render
+
 
     /*
     * It looks like D3D auto sync RT: https://github.com/microsoft/DirectX-Graphics-Samples/issues/132#issuecomment-209052225
@@ -306,21 +391,34 @@ void ForwardRenderer::CustomDeinit()
     m_pPipelineState->Release();
     m_pPipelineState = nullptr;
 
-    if (m_pVsConstBuffer)
+    if (m_pVsSceneBuffer)
     {
-        m_pVsConstBuffer->Release();
-        m_pVsConstBuffer = nullptr;
+        m_pVsSceneBuffer->Release();
+        m_pVsSceneBuffer = nullptr;
     }
 
-    if (m_cbvDescHeap)
+    if (m_pPsSceneBuffer)
     {
-        m_cbvDescHeap->Release();
-        m_cbvDescHeap = nullptr;
+        m_pPsSceneBuffer->Release();
+        m_pPsSceneBuffer = nullptr;
     }
 
+    if (m_pSceneCbvHeap)
+    {
+        m_pSceneCbvHeap->Release();
+        m_pSceneCbvHeap = nullptr;
+    }
+    
+    /*
     if (m_shaderVisibleCbvHeap)
     {
         m_shaderVisibleCbvHeap->Release();
         m_shaderVisibleCbvHeap = nullptr;
+    }
+    */
+
+    for (const auto& itr : m_inflightShaderVisibleCbvHeaps)
+    {
+        itr->Release();
     }
 }

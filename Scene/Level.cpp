@@ -1,6 +1,7 @@
 #include "Level.h"
 #include "Mesh.h"
 #include "Camera.h"
+#include "Lights.h"
 #include "../Utils/crc32.h"
 
 Level::Level()
@@ -46,6 +47,18 @@ void Level::RetriveActiveCamera(Camera** o_camera)
                 *o_camera = pCamera;
                 return;
             }
+        }
+    }
+}
+
+void Level::RetriveLights(std::vector<Light*>& o_lights)
+{
+    for (Object* pObj : m_objects)
+    {
+        if (pObj->GetObjectTypeHash() == crc32("AmbientLight") || pObj->GetObjectTypeHash() == crc32("PointLight"))
+        {
+            Light* pLight = dynamic_cast<Light*>(pObj);
+            o_lights.push_back(pLight);
         }
     }
 }
