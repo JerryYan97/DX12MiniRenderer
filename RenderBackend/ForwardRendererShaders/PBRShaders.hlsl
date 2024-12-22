@@ -132,7 +132,7 @@ PSInput VSMain(VSInput i_vertInput)
 {
     PSInput result = (PSInput)0;
 
-    float4x4 mvpMat = mul(modelMat, vpMat);
+    float4x4 mvpMat = mul(vpMat, modelMat);
     
     result.pos      = mul(mvpMat, float4(i_vertInput.position, 1.0));
     result.normal   = mul(modelMat, float4(i_vertInput.normal, 0.0));
