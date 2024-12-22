@@ -34,6 +34,11 @@ public:
 
     void CreateVertIdxBuffer(); // Create vertex buffer ram data and vertex and index buffer on GPU.
 
+    uint32_t GetIdxCount() const
+    {
+        return m_idxType ? m_idxDataUint32.size() : m_idxDataUint16.size();
+    }
+
     // float m_position[3];
     std::vector<float>    m_vertData;
 
@@ -42,7 +47,9 @@ public:
     std::vector<float>    m_tangentData;
     std::vector<float>    m_texCoordData;
 
+    bool                  m_idxType; // 0: uint16_t, 1: uint32_t
     std::vector<uint16_t> m_idxDataUint16;
+    std::vector<uint32_t> m_idxDataUint32;
 
     ConstantMaterial m_constantMaterial;
 

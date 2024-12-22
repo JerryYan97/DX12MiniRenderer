@@ -21,6 +21,9 @@ uint32_t GetAComponentEleBytesCnt(
     case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
         aComponentEleBytesCnt = sizeof(unsigned short);
         break;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+        aComponentEleBytesCnt = sizeof(unsigned int);
+        break;
     case TINYGLTF_COMPONENT_TYPE_BYTE:
         aComponentEleBytesCnt = 1;
         break;

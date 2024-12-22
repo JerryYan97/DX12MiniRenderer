@@ -3,7 +3,7 @@ SceneType: GLTF
 SceneGraph:
   TriangleInst:
     Type: StaticMesh
-    Position: [0.2, 0.0, 0.5]
+    Position: [0.2, 0.0, 4.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
     AssetPath: uvSphere.gltf

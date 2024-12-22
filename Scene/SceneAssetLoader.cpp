@@ -132,11 +132,22 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
         int indicesIdx = mesh.primitives[i].indices;
         const auto& idxAccessor = model.accessors[indicesIdx];
 
-        assert(idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT, "The idx accessor data type should be uint16.");
+        assert(idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT ||
+               idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT, "The idx accessor data type should be uint16/32.");
         assert(idxAccessor.type == TINYGLTF_TYPE_SCALAR, "The idx accessor type should be scalar.");
 
-        meshPrimitive.m_idxDataUint16.resize(idxAccessor.count);
-        ReadOutAccessorData(meshPrimitive.m_idxDataUint16.data(), idxAccessor, model.bufferViews, model.buffers);
+        if (idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
+        {
+            meshPrimitive.m_idxType = false;
+            meshPrimitive.m_idxDataUint16.resize(idxAccessor.count);
+            ReadOutAccessorData(meshPrimitive.m_idxDataUint16.data(), idxAccessor, model.bufferViews, model.buffers);
+        }
+        else if (idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT)
+        {
+            meshPrimitive.m_idxType = true;
+            meshPrimitive.m_idxDataUint32.resize(idxAccessor.count);
+            ReadOutAccessorData(meshPrimitive.m_idxDataUint32.data(), idxAccessor, model.bufferViews, model.buffers);
+        }
 
         // Load normal
         int normalIdx = -1;

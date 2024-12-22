@@ -30,6 +30,8 @@ MeshPrimitive::~MeshPrimitive()
 
 void MeshPrimitive::CreateVertIdxBuffer()
 {
+    const uint32_t idxBufferSizeByte = m_idxType ? sizeof(uint32_t) * m_idxDataUint32.size() :
+                                                   sizeof(uint16_t) * m_idxDataUint16.size();
     const uint32_t vertCnt = m_posData.size() / 3;
     const uint32_t vertSizeFloat = (3 + 3 + 4 + 2); // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
     const uint32_t vertSizeByte = sizeof(float) * vertSizeFloat;
@@ -69,7 +71,7 @@ void MeshPrimitive::CreateVertIdxBuffer()
     }
 
     D3D12_RESOURCE_DESC idxBufferRsrcDesc = bufferRsrcDesc;
-    idxBufferRsrcDesc.Width = sizeof(uint16_t) * m_idxDataUint16.size();
+    idxBufferRsrcDesc.Width = idxBufferSizeByte;
 
     ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
             &heapProperties,
@@ -106,13 +108,20 @@ void MeshPrimitive::CreateVertIdxBuffer()
     // Copy the model idx data to the idx buffer.
     void* pIdxDataBegin;
     ThrowIfFailed(m_gpuIndexBuffer->Map(0, &readRange, &pIdxDataBegin));
-    memcpy(pIdxDataBegin, m_idxDataUint16.data(), sizeof(uint16_t) * m_idxDataUint16.size());
+    if (m_idxType)
+    {
+        memcpy(pIdxDataBegin, m_idxDataUint32.data(), idxBufferSizeByte);
+    }
+    else
+    {
+        memcpy(pIdxDataBegin, m_idxDataUint16.data(), idxBufferSizeByte);
+    }
     m_gpuIndexBuffer->Unmap(0, nullptr);
 
     // Initialize the index buffer view.
     m_idxBufferView.BufferLocation = m_gpuIndexBuffer->GetGPUVirtualAddress();
-    m_idxBufferView.Format = DXGI_FORMAT_R16_UINT;
-    m_idxBufferView.SizeInBytes = sizeof(uint16_t) * m_idxDataUint16.size();
+    m_idxBufferView.Format = m_idxType ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+    m_idxBufferView.SizeInBytes = idxBufferSizeByte;
 }
 
 StaticMesh::StaticMesh()
@@ -250,7 +259,7 @@ void StaticMesh::GenModelMatrix()
         g_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
 
         float materialData[16] = { 1.0f, 1.0f, 1.0f, 0.f,
-                                   1.0f, 1.0f, 0.f,  0.f};
+                                   1.0f, 0.5f, 0.f,  0.f};
 
         void* pConstBufferBegin;
         D3D12_RANGE readRange{ 0, 0 };
