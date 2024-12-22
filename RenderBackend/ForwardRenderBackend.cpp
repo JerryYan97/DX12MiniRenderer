@@ -28,26 +28,40 @@ ForwardRenderer::~ForwardRenderer()
 
 void ForwardRenderer::CreateRootSignature()
 {
-    D3D12_DESCRIPTOR_RANGE cbvRange = {};
+    D3D12_DESCRIPTOR_RANGE vsCbvRange = {};
     {
-        cbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        cbvRange.NumDescriptors = 4;
-        cbvRange.BaseShaderRegister = 0;
-        cbvRange.RegisterSpace = 0;
-        cbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        vsCbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        vsCbvRange.NumDescriptors = 2;
+        vsCbvRange.BaseShaderRegister = 0;
+        vsCbvRange.RegisterSpace = 0;
+        vsCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     }
 
-    D3D12_ROOT_PARAMETER rootParameters[1] = {};
+    D3D12_DESCRIPTOR_RANGE psCbvRange = {};
+    {
+        psCbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        psCbvRange.NumDescriptors = 2;
+        psCbvRange.BaseShaderRegister = 2;
+        psCbvRange.RegisterSpace = 0;
+        psCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+
+    D3D12_ROOT_PARAMETER rootParameters[2] = {};
     {
         rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
-        rootParameters[0].DescriptorTable.pDescriptorRanges = &cbvRange;
+        rootParameters[0].DescriptorTable.pDescriptorRanges = &vsCbvRange;
         rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+        rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
+        rootParameters[1].DescriptorTable.pDescriptorRanges = &psCbvRange;
+        rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
-        rootSignatureDesc.NumParameters = 1;
+        rootSignatureDesc.NumParameters = 2;
         rootSignatureDesc.pParameters = rootParameters;
         rootSignatureDesc.NumStaticSamplers = 0;
         rootSignatureDesc.pStaticSamplers = nullptr;
@@ -209,7 +223,7 @@ void ForwardRenderer::CreateMeshRenderGpuResources()
 
     // Describe and create a constant buffer view (CBV) descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-    cbvHeapDesc.NumDescriptors = 1;
+    cbvHeapDesc.NumDescriptors = 2;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_pSceneCbvHeap)));
@@ -235,12 +249,7 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     m_pLevel->RetriveActiveCamera(&pCamera);
     pCamera->CameraUpdate();
 
-    std::vector<StaticMesh*> staticMeshes;
-    m_pLevel->RetriveStaticMeshes(staticMeshes);
-    staticMeshes[0]->GenModelMatrix();
-    
-    memcpy(vsConstantBuffer, staticMeshes[0]->m_modelMat, sizeof(float) * 16);
-    memcpy(vsConstantBuffer + 16, pCamera->m_vpMat, sizeof(float) * 16);
+    memcpy(vsConstantBuffer, pCamera->m_vpMat, sizeof(float) * 16);
 
     // Map and initialize the constant buffer. We don't unmap this until the
     // app closes. Keeping things mapped for the lifetime of the resource is okay.

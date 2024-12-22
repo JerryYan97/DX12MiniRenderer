@@ -1,5 +1,6 @@
 #pragma once
 #include "Object.h"
+#include "../Utils/crc32.h"
 #include <cstring>
 
 namespace YAML
@@ -21,6 +22,7 @@ public:
     { 
         memcpy(radiance, i_pRadiance, sizeof(radiance));
         m_objectType = "AmbientLight";
+        m_objectTypeHash = crc32("AmbientLight");
     }
     ~AmbientLight() {}
 
@@ -38,6 +40,7 @@ public:
         memcpy(position, i_pos, sizeof(position));
         memcpy(radiance, i_rad, sizeof(radiance));
         m_objectType = "PointLight";
+        m_objectTypeHash = crc32("PointLight");
     }
     ~PointLight() {}
 
