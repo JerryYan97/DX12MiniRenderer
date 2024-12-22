@@ -357,6 +357,9 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             m_pD3dDevice->CopyDescriptorsSimple(1, psSceneCbvHandle, psSceneSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
             const uint32_t idxCnt = staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_idxDataUint16.size();
+            const uint32_t cbvDescHeapHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            D3D12_GPU_DESCRIPTOR_HANDLE psCbvDescHeapGpuHandle = pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart();
+            psCbvDescHeapGpuHandle.ptr += cbvDescHeapHandleOffset * 2;
 
             // ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
             ID3D12DescriptorHeap* ppHeaps[] = { pInflightShaderVisibleCbvHeap };
@@ -372,6 +375,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_vertexBufferView);
             // pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
             pCommandList->SetGraphicsRootDescriptorTable(0, pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart());
+            pCommandList->SetGraphicsRootDescriptorTable(1, psCbvDescHeapGpuHandle);
             pCommandList->DrawIndexedInstanced(idxCnt, 1, 0, 0, 0);
         }
     }
