@@ -1,4 +1,5 @@
 #pragma once
+#include "../Utils/AssetManager.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -10,15 +11,6 @@ namespace YAML
     class Node;
 }
 
-struct ImgInfo
-{
-    uint32_t             pixWidth;
-    uint32_t             pixHeight;
-    uint32_t             componentCnt;
-    std::vector<uint8_t> dataVec;
-    uint32_t             componentType;
-};
-
 // By default, no occlusion, no emissive, standard geometry normal.
 struct ConstantMaterial
 {
@@ -26,6 +18,7 @@ struct ConstantMaterial
     float metallicRoughness[2];
 };
 
+/*
 class MeshPrimitive
 {
 public:
@@ -67,10 +60,7 @@ public:
 
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW  m_idxBufferView;
-    // ID3D12DescriptorHeap* m_cbvDescHeap;
-
-    bool m_isConstantMaterial;
-
+    */
     /*
     void InitGpuRsrc(VkDevice device, VmaAllocator* pAllocator, VkCommandBuffer cmdBuffer, VkQueue queue);
     void FinializeGpuRsrc(VkDevice device, VmaAllocator* pAllocator);
@@ -94,7 +84,7 @@ protected:
     GpuImg m_occlusionGpuImg;
     GpuImg m_emissiveGpuImg;
     */
-};
+// };
 
 class StaticMesh : public Object
 {
@@ -107,7 +97,9 @@ public:
 
     std::string m_assetPath;
 
-    std::vector<MeshPrimitive> m_meshPrimitives;
+    // std::vector<MeshPrimitive> m_meshPrimitives;
+
+    std::vector<PrimitiveAsset*> m_primitiveAssets;
 
     float m_modelMat[16];
 

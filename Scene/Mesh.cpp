@@ -9,6 +9,8 @@
 
 extern ID3D12Device* g_pD3dDevice;
 
+/*
+
 MeshPrimitive::MeshPrimitive()
     : m_gpuVertBuffer(nullptr),
       m_gpuIndexBuffer(nullptr),
@@ -123,6 +125,8 @@ void MeshPrimitive::CreateVertIdxBuffer()
     m_idxBufferView.Format = m_idxType ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
     m_idxBufferView.SizeInBytes = idxBufferSizeByte;
 }
+*/
+
 
 StaticMesh::StaticMesh()
     : m_loadedInRAM(false),

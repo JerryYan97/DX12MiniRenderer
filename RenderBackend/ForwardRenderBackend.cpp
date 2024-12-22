@@ -320,7 +320,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     // Render Logic
     for (uint32_t mshIdx = 0; mshIdx < staticMeshes.size(); mshIdx++)
     {
-        for (uint32_t primIdx = 0; primIdx < staticMeshes[mshIdx]->m_meshPrimitives.size(); primIdx++)
+        for (uint32_t primIdx = 0; primIdx < staticMeshes[mshIdx]->m_primitiveAssets.size(); primIdx++)
         {
             // Create in-flight shader visible CBV heap and properly copy the CBV descriptor to it.
             // Shader visible heap.
@@ -356,7 +356,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             psSceneSrcCbvHandle.ptr += cbvDescHandleOffset;
             m_pD3dDevice->CopyDescriptorsSimple(1, psSceneCbvHandle, psSceneSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-            const uint32_t idxCnt = staticMeshes[mshIdx]->m_meshPrimitives[primIdx].GetIdxCount();
+            const uint32_t idxCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxCnt;
             const uint32_t cbvDescHeapHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             D3D12_GPU_DESCRIPTOR_HANDLE psCbvDescHeapGpuHandle = pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart();
             psCbvDescHeapGpuHandle.ptr += cbvDescHeapHandleOffset * 2;
@@ -371,8 +371,8 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             pCommandList->RSSetScissorRects(1, &m_scissorRect);
             pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
             pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            pCommandList->IASetIndexBuffer(&staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_idxBufferView);
-            pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[mshIdx]->m_meshPrimitives[primIdx].m_vertexBufferView);
+            pCommandList->IASetIndexBuffer(&staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxBufferView);
+            pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_vertexBufferView);
             // pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
             pCommandList->SetGraphicsRootDescriptorTable(0, pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart());
             pCommandList->SetGraphicsRootDescriptorTable(1, psCbvDescHeapGpuHandle);

@@ -16,6 +16,8 @@
 
 SceneAssetLoader* SceneAssetLoader::m_pThis = nullptr;
 
+extern AssetManager* g_pAssetManager;
+
 SceneAssetLoader::SceneAssetLoader()
 {
    m_pThis = this;
@@ -109,12 +111,12 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
     // Any node MAY contain one mesh, defined in its mesh property. The mesh MAY be skinned using information provided in a referenced skin object.
     // TODO: We should support multiple meshes in the future.
     const auto& mesh = model.meshes[0];
-    pStaticMesh->m_meshPrimitives.resize(mesh.primitives.size());
+    // pStaticMesh->m_primitiveAssets.resize(mesh.primitives.size());
 
     for (uint32_t i = 0; i < mesh.primitives.size(); i++)
     {
         const auto& primitive = mesh.primitives[i];
-        MeshPrimitive& meshPrimitive = pStaticMesh->m_meshPrimitives[i];
+        PrimitiveAsset* pPrimitiveAsset = new PrimitiveAsset();
 
         // Load pos
         int posIdx = mesh.primitives[i].attributes.at("POSITION");
@@ -125,8 +127,8 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
         const auto& posBufferView = model.bufferViews[posAccessor.bufferView];
         // Assmue the data and element type of the position is float3
-        meshPrimitive.m_posData.resize(3 * posAccessor.count);
-        ReadOutAccessorData(meshPrimitive.m_posData.data(), posAccessor, model.bufferViews, model.buffers);
+        pPrimitiveAsset->m_posData.resize(3 * posAccessor.count);
+        ReadOutAccessorData(pPrimitiveAsset->m_posData.data(), posAccessor, model.bufferViews, model.buffers);
 
         // Load indices
         int indicesIdx = mesh.primitives[i].indices;
@@ -138,16 +140,17 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
         if (idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
         {
-            meshPrimitive.m_idxType = false;
-            meshPrimitive.m_idxDataUint16.resize(idxAccessor.count);
-            ReadOutAccessorData(meshPrimitive.m_idxDataUint16.data(), idxAccessor, model.bufferViews, model.buffers);
+            pPrimitiveAsset->m_idxType = false;
+            pPrimitiveAsset->m_idxDataUint16.resize(idxAccessor.count);
+            ReadOutAccessorData(pPrimitiveAsset->m_idxDataUint16.data(), idxAccessor, model.bufferViews, model.buffers);
         }
         else if (idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT)
         {
-            meshPrimitive.m_idxType = true;
-            meshPrimitive.m_idxDataUint32.resize(idxAccessor.count);
-            ReadOutAccessorData(meshPrimitive.m_idxDataUint32.data(), idxAccessor, model.bufferViews, model.buffers);
+            pPrimitiveAsset->m_idxType = true;
+            pPrimitiveAsset->m_idxDataUint32.resize(idxAccessor.count);
+            ReadOutAccessorData(pPrimitiveAsset->m_idxDataUint32.data(), idxAccessor, model.bufferViews, model.buffers);
         }
+        pPrimitiveAsset->m_idxCnt = idxAccessor.count;
 
         // Load normal
         int normalIdx = -1;
@@ -159,21 +162,21 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             assert(normalAccessor.componentType == TINYGLTF_PARAMETER_TYPE_FLOAT, "The normal accessor data type should be float.");
             assert(normalAccessor.type == TINYGLTF_TYPE_VEC3, "The normal accessor type should be vec3.");
 
-            meshPrimitive.m_normalData.resize(3 * normalAccessor.count);
-            ReadOutAccessorData(meshPrimitive.m_normalData.data(), normalAccessor, model.bufferViews, model.buffers);
+            pPrimitiveAsset->m_normalData.resize(3 * normalAccessor.count);
+            ReadOutAccessorData(pPrimitiveAsset->m_normalData.data(), normalAccessor, model.bufferViews, model.buffers);
         }
         else
         {
             // If we don't have any normal geo data, then we will just apply the first triangle's normal to all the other
             // triangles/vertices.
-            uint16_t idx0 = meshPrimitive.m_idxDataUint16[0];
-            float vertPos0[3] = { meshPrimitive.m_posData[3 * idx0], meshPrimitive.m_posData[3 * idx0 + 1], meshPrimitive.m_posData[3 * idx0 + 2] };
+            uint16_t idx0 = pPrimitiveAsset->m_idxDataUint16[0];
+            float vertPos0[3] = { pPrimitiveAsset->m_posData[3 * idx0], pPrimitiveAsset->m_posData[3 * idx0 + 1], pPrimitiveAsset->m_posData[3 * idx0 + 2] };
 
-            uint16_t idx1 = meshPrimitive.m_idxDataUint16[1];
-            float vertPos1[3] = { meshPrimitive.m_posData[3 * idx1], meshPrimitive.m_posData[3 * idx1 + 1], meshPrimitive.m_posData[3 * idx1 + 2] };
+            uint16_t idx1 = pPrimitiveAsset->m_idxDataUint16[1];
+            float vertPos1[3] = { pPrimitiveAsset->m_posData[3 * idx1], pPrimitiveAsset->m_posData[3 * idx1 + 1], pPrimitiveAsset->m_posData[3 * idx1 + 2] };
 
-            uint16_t idx2 = meshPrimitive.m_idxDataUint16[2];
-            float vertPos2[3] = { meshPrimitive.m_posData[3 * idx2], meshPrimitive.m_posData[3 * idx2 + 1], meshPrimitive.m_posData[3 * idx2 + 2] };
+            uint16_t idx2 = pPrimitiveAsset->m_idxDataUint16[2];
+            float vertPos2[3] = { pPrimitiveAsset->m_posData[3 * idx2], pPrimitiveAsset->m_posData[3 * idx2 + 1], pPrimitiveAsset->m_posData[3 * idx2 + 2] };
 
             float v1[3] = { vertPos1[0] - vertPos0[0], vertPos1[1] - vertPos0[1], vertPos1[2] - vertPos0[2] };
             float v2[3] = { vertPos2[0] - vertPos0[0], vertPos2[1] - vertPos0[1], vertPos2[2] - vertPos0[2] };
@@ -182,13 +185,13 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             CrossProductVec3(v1, v2, autoGenNormal);
             NormalizeVec(autoGenNormal, 3);
 
-            meshPrimitive.m_normalData.resize(3 * posAccessor.count);
+            pPrimitiveAsset->m_normalData.resize(3 * posAccessor.count);
             for (uint32_t i = 0; i < posAccessor.count; i++)
             {
                 uint32_t normalStartingIdx = i * 3;
-                meshPrimitive.m_normalData[normalStartingIdx] = autoGenNormal[0];
-                meshPrimitive.m_normalData[normalStartingIdx + 1] = autoGenNormal[1];
-                meshPrimitive.m_normalData[normalStartingIdx + 2] = autoGenNormal[2];
+                pPrimitiveAsset->m_normalData[normalStartingIdx] = autoGenNormal[0];
+                pPrimitiveAsset->m_normalData[normalStartingIdx + 1] = autoGenNormal[1];
+                pPrimitiveAsset->m_normalData[normalStartingIdx + 2] = autoGenNormal[2];
             }
         }
 
@@ -202,13 +205,13 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             assert(uvAccessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT, "The uv accessor data type should be float.");
             assert(uvAccessor.type == TINYGLTF_TYPE_VEC2, "The uv accessor type should be vec2.");
 
-            meshPrimitive.m_texCoordData.resize(2 * uvAccessor.count);
-            ReadOutAccessorData(meshPrimitive.m_texCoordData.data(), uvAccessor, model.bufferViews, model.buffers);
+            pPrimitiveAsset->m_texCoordData.resize(2 * uvAccessor.count);
+            ReadOutAccessorData(pPrimitiveAsset->m_texCoordData.data(), uvAccessor, model.bufferViews, model.buffers);
         }
         else
         {
             // assert(false, "The loaded mesh doesn't have uv data.");
-            meshPrimitive.m_texCoordData = std::vector<float>(posAccessor.count * 2, 0.f);
+            pPrimitiveAsset->m_texCoordData = std::vector<float>(posAccessor.count * 2, 0.f);
         }
 
         // Load tangent
@@ -222,13 +225,13 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             assert(tangentAccessor.type == TINYGLTF_TYPE_VEC4, "The tangent accessor type should be vec4.");
             assert(tangentAccessor.count == posAccessor.count, "The tangent data count should be the same as the pos data count.");
 
-            meshPrimitive.m_tangentData.resize(4 * tangentAccessor.count);
-            ReadOutAccessorData(meshPrimitive.m_tangentData.data(), tangentAccessor, model.bufferViews, model.buffers);
+            pPrimitiveAsset->m_tangentData.resize(4 * tangentAccessor.count);
+            ReadOutAccessorData(pPrimitiveAsset->m_tangentData.data(), tangentAccessor, model.bufferViews, model.buffers);
         }
         else
         {
             // assert(false, "The loaded mesh doesn't have tangent data.");
-            meshPrimitive.m_tangentData = std::vector<float>(posAccessor.count * 4, 0.f);
+            pPrimitiveAsset->m_tangentData = std::vector<float>(posAccessor.count * 4, 0.f);
         }
 
         // Load the base color texture or create a default pure color texture.
@@ -236,14 +239,14 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
         int materialIdx = mesh.primitives[i].material;
 
         // All the textures are 4 components R8G8B8A8 textures.
-        auto& pfnSetDefaultBaseColor = [](MeshPrimitive& meshPrimitive) {
+        auto& pfnSetDefaultBaseColor = [](PrimitiveAsset& meshPrimitive) {
             meshPrimitive.m_baseColorTex.pixHeight = 1;
             meshPrimitive.m_baseColorTex.pixWidth = 1;
             meshPrimitive.m_baseColorTex.componentCnt = 4;
             meshPrimitive.m_baseColorTex.dataVec = std::vector<uint8_t>(4, 255);
             };
 
-        auto& pfnSetDefaultMetallicRoughness = [](MeshPrimitive& meshPrimitive) {
+        auto& pfnSetDefaultMetallicRoughness = [](PrimitiveAsset& meshPrimitive) {
             float defaultMetallicRoughness[4] = { 0.f, 1.f, 0.f, 0.f };
             meshPrimitive.m_metallicRoughnessTex.pixHeight = 1;
             meshPrimitive.m_metallicRoughnessTex.pixWidth = 1;
@@ -252,7 +255,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             memcpy(meshPrimitive.m_metallicRoughnessTex.dataVec.data(), defaultMetallicRoughness, sizeof(defaultMetallicRoughness));
             };
 
-        auto& pfnSetDefaultOcclusion = [](MeshPrimitive& meshPrimitive) {
+        auto& pfnSetDefaultOcclusion = [](PrimitiveAsset& meshPrimitive) {
             float defaultOcclusion[4] = { 1.f, 0.f, 0.f, 0.f };
             meshPrimitive.m_occlusionTex.pixHeight = 1;
             meshPrimitive.m_occlusionTex.pixWidth = 1;
@@ -261,7 +264,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             memcpy(meshPrimitive.m_occlusionTex.dataVec.data(), &defaultOcclusion, sizeof(defaultOcclusion));
             };
 
-        auto& pfnSetDefaultNormal = [](MeshPrimitive& meshPrimitive) {
+        auto& pfnSetDefaultNormal = [](PrimitiveAsset& meshPrimitive) {
             float defaultNormal[3] = { 0.f, 0.f, 1.f };
             meshPrimitive.m_normalTex.pixHeight = 1;
             meshPrimitive.m_normalTex.pixWidth = 1;
@@ -269,7 +272,6 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             meshPrimitive.m_normalTex.dataVec = std::vector<uint8_t>(sizeof(defaultNormal), 0);
             memcpy(meshPrimitive.m_normalTex.dataVec.data(), defaultNormal, sizeof(defaultNormal));
             };
-
 
         if (materialIdx != -1)
         {
@@ -284,7 +286,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
             if (baseColorTexIdx == -1)
             {
-                pfnSetDefaultBaseColor(meshPrimitive);
+                pfnSetDefaultBaseColor(*pPrimitiveAsset);
             }
             else
             {
@@ -296,10 +298,10 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
                 // This model has a base color texture.
                 const auto& baseColorImg = model.images[baseColorTexImgIdx];
 
-                meshPrimitive.m_baseColorTex.pixWidth = baseColorImg.width;
-                meshPrimitive.m_baseColorTex.pixHeight = baseColorImg.height;
-                meshPrimitive.m_baseColorTex.componentCnt = baseColorImg.component;
-                meshPrimitive.m_baseColorTex.dataVec = baseColorImg.image;
+                pPrimitiveAsset->m_baseColorTex.pixWidth = baseColorImg.width;
+                pPrimitiveAsset->m_baseColorTex.pixHeight = baseColorImg.height;
+                pPrimitiveAsset->m_baseColorTex.componentCnt = baseColorImg.component;
+                pPrimitiveAsset->m_baseColorTex.dataVec = baseColorImg.image;
 
                 assert(baseColorImg.component == 4, "All textures should have 4 components.");
                 assert(baseColorImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -310,7 +312,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             // and MAY use more than 8 bits per channel.
             if (metallicRoughnessTexIdx == -1)
             {
-                pfnSetDefaultMetallicRoughness(meshPrimitive);
+                pfnSetDefaultMetallicRoughness(*pPrimitiveAsset);
             }
             else
             {
@@ -319,10 +321,10 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
                 const auto& metallicRoughnessImg = model.images[metallicRoughnessTexImgIdx];
 
-                meshPrimitive.m_metallicRoughnessTex.pixWidth = metallicRoughnessImg.width;
-                meshPrimitive.m_metallicRoughnessTex.pixHeight = metallicRoughnessImg.height;
-                meshPrimitive.m_metallicRoughnessTex.componentCnt = metallicRoughnessImg.component;
-                meshPrimitive.m_metallicRoughnessTex.dataVec = metallicRoughnessImg.image;
+                pPrimitiveAsset->m_metallicRoughnessTex.pixWidth = metallicRoughnessImg.width;
+                pPrimitiveAsset->m_metallicRoughnessTex.pixHeight = metallicRoughnessImg.height;
+                pPrimitiveAsset->m_metallicRoughnessTex.componentCnt = metallicRoughnessImg.component;
+                pPrimitiveAsset->m_metallicRoughnessTex.dataVec = metallicRoughnessImg.image;
 
                 assert(metallicRoughnessImg.component == 4, "All textures should have 4 components.");
                 assert(metallicRoughnessImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -330,7 +332,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
             if (normalTexIdx == -1)
             {
-                pfnSetDefaultNormal(meshPrimitive);
+                pfnSetDefaultNormal(*pPrimitiveAsset);
             }
             else
             {
@@ -339,10 +341,10 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
                 const auto& normalImg = model.images[normalTexImgIdx];
 
-                meshPrimitive.m_normalTex.pixWidth = normalImg.width;
-                meshPrimitive.m_normalTex.pixHeight = normalImg.height;
-                meshPrimitive.m_normalTex.componentCnt = normalImg.component;
-                meshPrimitive.m_normalTex.dataVec = normalImg.image;
+                pPrimitiveAsset->m_normalTex.pixWidth = normalImg.width;
+                pPrimitiveAsset->m_normalTex.pixHeight = normalImg.height;
+                pPrimitiveAsset->m_normalTex.componentCnt = normalImg.component;
+                pPrimitiveAsset->m_normalTex.dataVec = normalImg.image;
 
                 assert(normalImg.component == 4, "All textures should have 4 components.");
                 assert(normalImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -353,7 +355,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             // where 0.0 means fully - occluded area(no indirect lighting) and 1.0 means not occluded area(full indirect lighting).
             if (occlusionTexIdx == -1)
             {
-                pfnSetDefaultOcclusion(meshPrimitive);
+                pfnSetDefaultOcclusion(*pPrimitiveAsset);
             }
             else
             {
@@ -362,10 +364,10 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
 
                 const auto& occlusionImg = model.images[occlusionTexImgIdx];
 
-                meshPrimitive.m_occlusionTex.pixWidth = occlusionImg.width;
-                meshPrimitive.m_occlusionTex.pixHeight = occlusionImg.height;
-                meshPrimitive.m_occlusionTex.componentCnt = occlusionImg.component;
-                meshPrimitive.m_occlusionTex.dataVec = occlusionImg.image;
+                pPrimitiveAsset->m_occlusionTex.pixWidth = occlusionImg.width;
+                pPrimitiveAsset->m_occlusionTex.pixHeight = occlusionImg.height;
+                pPrimitiveAsset->m_occlusionTex.componentCnt = occlusionImg.component;
+                pPrimitiveAsset->m_occlusionTex.dataVec = occlusionImg.image;
 
                 assert(occlusionImg.component == 4, "All textures should have 4 components.");
                 assert(occlusionImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -374,13 +376,15 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
         else
         {
             // No material, then we will create a pure white model.
-            pfnSetDefaultBaseColor(meshPrimitive);
-            pfnSetDefaultMetallicRoughness(meshPrimitive);
-            pfnSetDefaultOcclusion(meshPrimitive);
-            pfnSetDefaultNormal(meshPrimitive);
+            pfnSetDefaultBaseColor(*pPrimitiveAsset);
+            pfnSetDefaultMetallicRoughness(*pPrimitiveAsset);
+            pfnSetDefaultOcclusion(*pPrimitiveAsset);
+            pfnSetDefaultNormal(*pPrimitiveAsset);
         }
 
-        meshPrimitive.CreateVertIdxBuffer();
+        // pPrimitiveAsset->CreateVertIdxBuffer();
+        g_pAssetManager->SaveModelPrimAssetAndCreateGpuRsrc(fileNamePath, pPrimitiveAsset);
+        pStaticMesh->m_primitiveAssets.push_back(pPrimitiveAsset);
     }
 }
 

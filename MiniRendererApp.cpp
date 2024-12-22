@@ -1,5 +1,6 @@
 #include "MiniRendererApp.h"
 #include "UI/UIManager.h"
+#include "Utils/AssetManager.h"
 #include "Scene/Level.h"
 #include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
@@ -12,10 +13,12 @@ bool DX12MiniRenderer::clear_color = true;
 DX12MiniRenderer* DX12MiniRenderer::m_pThis = nullptr;
 ID3D12Device* g_pD3dDevice = nullptr;
 UIManager* g_pUIManager = nullptr;
+AssetManager* g_pAssetManager = nullptr;
 
 DX12MiniRenderer::DX12MiniRenderer()
     : m_pD3dDevice(nullptr),
-      m_pUIManager(nullptr)
+      m_pUIManager(nullptr),
+      m_pAssetManager(nullptr)
 {
     m_pThis = this;
     // m_pRendererBackend = new HWRTRenderBackend();
@@ -181,6 +184,9 @@ void DX12MiniRenderer::Init()
     m_pUIManager->SetCustomImGUIFunc(GenerateImGUIStates);
     g_pUIManager = m_pUIManager;
 
+    m_pAssetManager = new AssetManager();
+    g_pAssetManager = m_pAssetManager;
+
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
     m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\Sphere\\SphereTest.yaml", m_pLevel);
@@ -202,7 +208,6 @@ void DX12MiniRenderer::Init()
     initStruct.pLevel = m_pLevel;
     m_pRendererBackend->Init(initStruct);
     
-
     m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);
 }
 
@@ -355,6 +360,7 @@ void DX12MiniRenderer::Finalize()
     delete m_pLevel;
 
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
+    if (m_pAssetManager) { m_pAssetManager->Deinit(); delete m_pAssetManager; m_pAssetManager = nullptr; }
     CleanupTempRendererInfarstructure();
     if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
     if (m_pRendererBackend) { m_pRendererBackend->Deinit(); delete m_pRendererBackend; m_pRendererBackend = nullptr; }

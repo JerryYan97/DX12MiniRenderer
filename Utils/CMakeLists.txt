@@ -11,4 +11,6 @@ target_sources(
     DX12Utils.h
     DescriptorManager.cpp
     DescriptorManager.h
+    AssetManager.h
+    AssetManager.cpp
 )

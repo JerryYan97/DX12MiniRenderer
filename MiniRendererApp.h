@@ -7,6 +7,7 @@
 class UIManager;
 class Level;
 class RendererBackend;
+class AssetManager;
 
 // It's possible to just use one fence like the ImGUI example but I prefer to use multiple fences for readability, which is more similar to Vulkan Fence.
 // The custom rule for sync is that the fence value = 0 means the fence is not signaled and is waiting for something or is ready to be used.
@@ -51,6 +52,7 @@ private:
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;
     SceneAssetLoader m_sceneAssetLoader;
+    AssetManager*    m_pAssetManager = nullptr;
 
     static DX12MiniRenderer* m_pThis;
 
