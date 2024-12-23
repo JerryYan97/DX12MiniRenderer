@@ -183,6 +183,30 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     memcpy(mesh->m_scale, scale.data(), sizeof(float) * 3);
     memcpy(mesh->m_rotation, rotation.data(), sizeof(float) * 3);
 
+    bool bNotDefineMaterial = i_node["Material"].IsNull();
+    if (bNotDefineMaterial)
+    {
+        mesh->m_isCnstMaterial = true;
+        mesh->m_cnstAlbedo[0] = 1.f; mesh->m_cnstAlbedo[1] = 0.f; mesh->m_cnstAlbedo[0] = 0.f;
+        mesh->m_cnstMetallic = 1.f; mesh->m_cnstRoughness = 0.f;
+    }
+    else
+    {
+        std::string materialType = i_node["Material"]["Type"].as<std::string>();
+        if (crc32(materialType.c_str()) == crc32("ConstMaterial"))
+        {
+            mesh->m_isCnstMaterial = true;
+            std::vector<float> cnstAlbedo = i_node["Material"]["Albedo"].as<std::vector<float>>();
+            mesh->m_cnstMetallic = i_node["Material"]["Metallic"].as<float>();
+            mesh->m_cnstRoughness = i_node["Material"]["Roughness"].as<float>();
+            memcpy(mesh->m_cnstAlbedo, cnstAlbedo.data(), sizeof(float) * 3);
+        }
+        else
+        {
+            assert(false, "Currently only support constant material.");
+        }
+    }
+
     assert((mesh->m_scale[0] == mesh->m_scale[1]) &&
            (mesh->m_scale[1] == mesh->m_scale[2]), "Assume scale are equal.");
 
@@ -262,8 +286,8 @@ void StaticMesh::GenModelMatrix()
         cbvDesc.BufferLocation = m_staticMeshCnstMaterialBuffer->GetGPUVirtualAddress();
         g_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
 
-        float materialData[16] = { 1.0f, 1.0f, 1.0f, 0.f,
-                                   1.0f, 0.5f, 0.f,  0.f};
+        float materialData[16] = { m_cnstAlbedo[0], m_cnstAlbedo[1], m_cnstAlbedo[2], 0.f,
+                                   m_cnstMetallic,  m_cnstRoughness, 0.f,  0.f};
 
         void* pConstBufferBegin;
         D3D12_RANGE readRange{ 0, 0 };

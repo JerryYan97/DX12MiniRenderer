@@ -64,7 +64,15 @@ void SceneAssetLoader::LoadStaticMesh(const std::string& fileNamePath, StaticMes
 {
     //#TODO: Check the file extension and call the appropriate loader. E.g. OpenUSD
     //#TODO: We may want to use FastGltf instead of TinyGltf.
-    LoadTinyGltf(fileNamePath, pStaticMesh);
+
+    if (g_pAssetManager->IsStaticMeshAssetLoaded(fileNamePath))
+    {
+        g_pAssetManager->LoadStaticMeshAssets(fileNamePath, pStaticMesh);
+    }
+    else
+    {
+        LoadTinyGltf(fileNamePath, pStaticMesh);
+    }
 }
 
 void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh* pStaticMesh)

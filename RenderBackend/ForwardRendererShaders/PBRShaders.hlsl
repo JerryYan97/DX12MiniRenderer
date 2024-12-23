@@ -206,7 +206,7 @@ float4 PSMain(PSInput input) : SV_TARGET
         Lo += (kD * (sphereDifAlbedo / 3.14159265359) + specular) * radiance * lightNormalCosTheta;
     }
 
-    float3 ambient = float3(0.0001, 0.0001, 0.0001) * sphereRefAlbedo;
+    float3 ambient = float3(0.005, 0.005, 0.005) * sphereRefAlbedo;
     float3 color = ambient + Lo;
 	
     // Gamma Correction

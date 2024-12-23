@@ -8,6 +8,8 @@
 * Make sure heavy data is only stored one time and managed by the AssetManager.
 */
 
+class StaticMesh;
+
 struct ImgInfo
 {
     uint32_t             pixWidth;
@@ -63,6 +65,13 @@ public:
     void SaveModelPrimAssetAndCreateGpuRsrc(const std::string& modelName, PrimitiveAsset* pPrimitiveAsset);
     void LoadAssets();
     void UnloadAssets();
+
+    bool IsStaticMeshAssetLoaded(const std::string& modelName) const
+    {
+        return m_primitiveAssets.find(modelName) != m_primitiveAssets.end();
+    }
+
+    void LoadStaticMeshAssets(const std::string& modelName, StaticMesh* pStaticMesh);
 
 private:
     void CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset);

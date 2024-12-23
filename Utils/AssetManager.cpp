@@ -1,5 +1,7 @@
 #include "AssetManager.h"
 #include "DX12Utils.h"
+#include "../Scene/Mesh.h"
+#include <cassert>
 
 extern ID3D12Device* g_pD3dDevice;
 
@@ -22,6 +24,18 @@ void AssetManager::LoadAssets()
 
 void AssetManager::UnloadAssets()
 {
+}
+
+void AssetManager::LoadStaticMeshAssets(const std::string& modelName, StaticMesh* pStaticMesh)
+{
+    if (m_primitiveAssets.count(modelName) > 0)
+    {
+        pStaticMesh->m_primitiveAssets = m_primitiveAssets[modelName];
+    }
+    else
+    {
+        assert(false, "Cannot find the model.");
+    }
 }
 
 void AssetManager::SaveModelPrimAssetAndCreateGpuRsrc(const std::string& name, PrimitiveAsset* pPrimitiveAsset)

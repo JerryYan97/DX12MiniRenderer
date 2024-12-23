@@ -114,6 +114,11 @@ private:
     float m_rotation[3];
     float m_scale[3];
 
+    bool  m_isCnstMaterial;
+    float m_cnstAlbedo[3];
+    float m_cnstMetallic;
+    float m_cnstRoughness;
+
     bool m_loadedInRAM;
     bool m_loadedInVRAM;
 };

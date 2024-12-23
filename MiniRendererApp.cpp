@@ -78,6 +78,7 @@ void DX12MiniRenderer::GenerateImGUIStates()
 {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
+    /*
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -104,14 +105,14 @@ void DX12MiniRenderer::GenerateImGUIStates()
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
-
+    */
     // 3. Show another simple window.
-    if (show_another_window)
+    // if (show_another_window)
     {
-        ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
+        ImGui::Begin("Debug Menu", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        // ImGui::Text("Hello from another window!");
+        // if (ImGui::Button("Close Me"))
+            // show_another_window = false;
         ImGui::End();
     }
 }
@@ -189,7 +190,7 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\Sphere\\SphereTest.yaml", m_pLevel);
+    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\PBRSpheresPtLights\\PBRSpherePtLights.yaml", m_pLevel);
 
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 
@@ -263,7 +264,7 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
         m_pD3dCommandList->ResourceBarrier(1, &barrier);
 
-        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+        ImVec4 clear_color = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
         m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
         m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
