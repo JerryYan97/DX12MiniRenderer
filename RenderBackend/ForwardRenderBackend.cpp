@@ -304,11 +304,12 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
             assert(ambientLightCnt <= 1, "We shouldn't have more than 1 ambient lights.");
             ambientLightCnt++;
             AmbientLight* pAmbientLight = dynamic_cast<AmbientLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + 48, pAmbientLight->radiance, sizeof(float) * 3);
+            memcpy(psConstantBuffer + 36, pAmbientLight->radiance, sizeof(float) * 3);
         }
     }
 
     memcpy(psConstantBuffer + 32, pCamera->m_pos, sizeof(float) * 3);
+    memcpy(psConstantBuffer + 40, &pointLightCnt, sizeof(uint32_t));
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));

@@ -161,7 +161,7 @@ cbuffer PsSceneBuffer : register(b3)
     float3 lightRadiance[4];
     float4 cameraPos;    // one padding float
     float4 ambientLight; // one padding float
-    // uint4  extraIntData; // (0): Point Light Counts; (1): ;
+    uint4  extraIntData; // (0): Point Light Counts; (1): ;
 }
 
 Texture2D    i_baseColorTexture      : register(t0);
@@ -196,9 +196,10 @@ float4 PSMain(PSInput input) : SV_TARGET
     float roughness = metalicRoughness.y;
 
     float3 Lo = float3(0.0, 0.0, 0.0); // Output light values to the view direction.
-    for (int i = 0; i < 4; i++)
+    uint lightCnt = extraIntData.x;
+    for (int i = 0; i < lightCnt; i++)
     {        
-        float3 lightColor = float3(24.0, 24.0, 24.0);
+        float3 lightColor = lightRadiance[i];
         float3 lightPos = lightPositions[i];
         float3 wi = normalize(lightPos - input.worldPos.xyz);
         float3 H = normalize(wi + wo);
