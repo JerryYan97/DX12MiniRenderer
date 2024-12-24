@@ -2,7 +2,7 @@ SceneName: SphereTest
 SceneType: GLTF
 BackgroundColor: [0.01, 0.01, 0.01]
 SceneGraph:
-  TriangleInst0:
+  SphereInst0:
     Type: StaticMesh
     Position: [-7.5, -2.0, 7.5]
     Scale: [1, 1, 1]
@@ -10,10 +10,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [1.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.05
       Metallic: 0.0
-  TriangleInst1:
+  SphereInst1:
     Type: StaticMesh
     Position: [-4.5, -2.0, 7.5]
     Scale: [1, 1, 1]
@@ -21,10 +21,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [1.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.15
       Metallic: 0.0
-  TriangleInst2:
+  SphereInst2:
     Type: StaticMesh
     Position: [-1.5, -2.0, 7.5]
     Scale: [1, 1, 1]
@@ -32,10 +32,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [-1.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.3
       Metallic: 0.0
-  TriangleInst3:
+  SphereInst3:
     Type: StaticMesh
     Position: [1.5, -2.0, 7.5]
     Scale: [1, 1, 1]
@@ -43,10 +43,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.45
       Metallic: 0.0
-  TriangleInst4:
+  SphereInst4:
     Type: StaticMesh
     Position: [4.5, -2.0, 7.5]
     Scale: [1, 1, 1]
@@ -54,10 +54,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.8
       Metallic: 0.0
-  TriangleInst5:
+  SphereInst5:
     Type: StaticMesh
     Position: [7.5, -2.0, 7.5]
     Scale: [1, 1, 1]
@@ -65,10 +65,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 1.0
       Metallic: 0.0
-  TriangleInst6:
+  SphereInst6:
     Type: StaticMesh
     Position: [-7.5, 2.0, 7.5]
     Scale: [1, 1, 1]
@@ -76,10 +76,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.05
       Metallic: 1.0
-  TriangleInst7:
+  SphereInst7:
     Type: StaticMesh
     Position: [-4.5, 2.0, 7.5]
     Scale: [1, 1, 1]
@@ -87,10 +87,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.15
       Metallic: 1.0
-  TriangleInst8:
+  SphereInst8:
     Type: StaticMesh
     Position: [-1.5, 2.0, 7.5]
     Scale: [1, 1, 1]
@@ -98,10 +98,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.3
       Metallic: 1.0
-  TriangleInst9:
+  SphereInst9:
     Type: StaticMesh
     Position: [1.5, 2.0, 7.5]
     Scale: [1, 1, 1]
@@ -109,10 +109,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.45
       Metallic: 1.0
-  TriangleInst10:
+  SphereInst10:
     Type: StaticMesh
     Position: [4.5, 2.0, 7.5]
     Scale: [1, 1, 1]
@@ -120,10 +120,10 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 0.7
       Metallic: 1.0
-  TriangleInst11:
+  SphereInst11:
     Type: StaticMesh
     Position: [7.5, 2.0, 7.5]
     Scale: [1, 1, 1]
@@ -131,24 +131,24 @@ SceneGraph:
     AssetPath: uvSphere.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.0, 1.0, 0.0]
+      Albedo: [1.00, 0.71, 0.09]
       Roughness: 1.0
       Metallic: 1.0
   PointLightInst1:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
+    Radiance: [24.0, 24.0, 24.0]
     Position: [5.0, 1.0, 3.0]
   PointLightInst2:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
+    Radiance: [24.0, 24.0, 24.0]
     Position: [-5.0, 1.0, 3.0]
   PointLightInst3:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
+    Radiance: [24.0, 24.0, 24.0]
     Position: [5.0, -1.0, 3.0]
   PointLightInst4:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
+    Radiance: [24.0, 24.0, 24.0]
     Position: [-5.0, -1.0, 3.0]
   AmbientLightInst:
     Type: AmbientLight

@@ -1,0 +1,43 @@
+SceneName: SphereTest
+SceneType: GLTF
+BackgroundColor: [0.01, 0.01, 0.01]
+SceneGraph:
+  TriangleInst0:
+    Type: StaticMesh
+    Position: [0.0, 0.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: texCube/BoxTextured.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 0.0]
+      Roughness: 1.0
+      Metallic: 0.0
+  PointLightInst1:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [5.0, 1.0, 3.0]
+  PointLightInst2:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [-5.0, 1.0, 3.0]
+  PointLightInst3:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [5.0, -1.0, 3.0]
+  PointLightInst4:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [-5.0, -1.0, 3.0]
+  AmbientLightInst:
+    Type: AmbientLight
+    Radiance: [0.005, 0.005, 0.005]
+  CameraInst:
+    Type: Camera
+    Position: [0.0, 0.0, -8.0]
+    View: [0.0, 0.0, 1.0]
+    Up: [0.0, 1.0, 0.0]
+    fov: 0.820304751
+    far: 100
+    near: 0.1
+    isActive: true

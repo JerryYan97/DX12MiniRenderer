@@ -18,6 +18,11 @@ struct ConstantMaterial
     float metallicRoughness[2];
 };
 
+const uint32_t ALBEDO_MASK            = 1;
+const uint32_t NORMAL_MASK            = 2;
+const uint32_t ROUGHNESS_METALIC_MASK = 4;
+const uint32_t AO_MASK                = 8;
+
 /*
 class MeshPrimitive
 {

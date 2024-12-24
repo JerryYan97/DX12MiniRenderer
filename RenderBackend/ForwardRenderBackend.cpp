@@ -264,24 +264,28 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
 
     std::vector<Light*> sceneLights;
     uint32_t ambientLightCnt = 0;
+    uint32_t pointLightCnt = 0;
     m_pLevel->RetriveLights(sceneLights);
     for (uint32_t i = 0; i < sceneLights.size(); i++)
     {
         if (sceneLights[i]->GetObjectTypeHash() == crc32("PointLight"))
         {
             PointLight* pPtLight = dynamic_cast<PointLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + i * 4, pPtLight->position, sizeof(float) * 3);
+            memcpy(psConstantBuffer + pointLightCnt * 4,      pPtLight->position, sizeof(float) * 3);
+            memcpy(psConstantBuffer + 16 + pointLightCnt * 4, pPtLight->radiance, sizeof(float) * 3);
+            pointLightCnt++;
         }
         else if (sceneLights[i]->GetObjectTypeHash() == crc32("AmbientLight"))
         {
             assert(ambientLightCnt <= 1, "We shouldn't have more than 1 ambient lights.");
             ambientLightCnt++;
             AmbientLight* pAmbientLight = dynamic_cast<AmbientLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + 20, pAmbientLight->radiance, sizeof(float) * 3);
+            memcpy(psConstantBuffer + 36, pAmbientLight->radiance, sizeof(float) * 3);
         }
     }
 
-    memcpy(psConstantBuffer + 16, pCamera->m_pos, sizeof(float) * 3);
+    memcpy(psConstantBuffer + 32, pCamera->m_pos, sizeof(float) * 3);
+    memcpy(psConstantBuffer + 40, &pointLightCnt, sizeof(uint32_t));
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
