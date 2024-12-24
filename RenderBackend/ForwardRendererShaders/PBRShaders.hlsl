@@ -158,8 +158,10 @@ cbuffer PsMaterialBuffer : register(b2)
 cbuffer PsSceneBuffer : register(b3)
 {
     float3 lightPositions[4];
+    float3 lightRadiance[4];
     float4 cameraPos;    // one padding float
     float4 ambientLight; // one padding float
+    // uint4  extraIntData; // (0): Point Light Counts; (1): ;
 }
 
 Texture2D    i_baseColorTexture      : register(t0);
@@ -180,11 +182,9 @@ SamplerState i_occlusionSamplerState : register(s3);
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float3 lightColor = float3(24.0, 24.0, 24.0);
-
 	// Gold
-    float3 sphereRefAlbedo = float3(1.00, 0.71, 0.09); // F0
-    float3 sphereDifAlbedo = float3(1.00, 0.71, 0.09);
+    float3 sphereRefAlbedo = constAlbedo.xyz; // F0
+    float3 sphereDifAlbedo = constAlbedo.xyz;
 
     float3 wo = normalize(cameraPos.xyz - input.worldPos.xyz);
 	
@@ -197,7 +197,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     float3 Lo = float3(0.0, 0.0, 0.0); // Output light values to the view direction.
     for (int i = 0; i < 4; i++)
-    {
+    {        
+        float3 lightColor = float3(24.0, 24.0, 24.0);
         float3 lightPos = lightPositions[i];
         float3 wi = normalize(lightPos - input.worldPos.xyz);
         float3 H = normalize(wi + wo);

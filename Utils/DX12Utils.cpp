@@ -4,3 +4,9 @@ void SendDataToBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* p
 {
 
 }
+
+
+void SendDataToTexture(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes)
+{
+
+}

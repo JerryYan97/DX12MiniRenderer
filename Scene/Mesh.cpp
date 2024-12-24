@@ -187,8 +187,8 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     if (bNotDefineMaterial)
     {
         mesh->m_isCnstMaterial = true;
-        mesh->m_cnstAlbedo[0] = 1.f; mesh->m_cnstAlbedo[1] = 0.f; mesh->m_cnstAlbedo[0] = 0.f;
-        mesh->m_cnstMetallic = 1.f; mesh->m_cnstRoughness = 0.f;
+        mesh->m_cnstAlbedo[0] = 1.f; mesh->m_cnstAlbedo[1] = 1.f; mesh->m_cnstAlbedo[0] = 1.f;
+        mesh->m_cnstMetallic = 0.f; mesh->m_cnstRoughness = 1.f;
     }
     else
     {
