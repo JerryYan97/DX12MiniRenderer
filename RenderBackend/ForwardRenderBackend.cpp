@@ -46,7 +46,27 @@ void ForwardRenderer::CreateRootSignature()
         psCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     }
 
-    D3D12_ROOT_PARAMETER rootParameters[2] = {};
+    D3D12_DESCRIPTOR_RANGE psSrvRange = {};
+    {
+        psSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        psSrvRange.NumDescriptors = 4;
+        psSrvRange.BaseShaderRegister = 0;
+        psSrvRange.RegisterSpace = 0;
+        psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+    
+    D3D12_DESCRIPTOR_RANGE psSamplerRange = {};
+    {
+        psSamplerRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+        psSamplerRange.NumDescriptors = 4;
+        psSamplerRange.BaseShaderRegister = 0;
+        psSamplerRange.RegisterSpace = 0;
+        psSamplerRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+
+    D3D12_DESCRIPTOR_RANGE psRanges[] = { psCbvRange, psSrvRange};
+
+    D3D12_ROOT_PARAMETER rootParameters[3] = {};
     {
         rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -54,14 +74,19 @@ void ForwardRenderer::CreateRootSignature()
         rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
         rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
-        rootParameters[1].DescriptorTable.pDescriptorRanges = &psCbvRange;
+        rootParameters[1].DescriptorTable.NumDescriptorRanges = 2;
+        rootParameters[1].DescriptorTable.pDescriptorRanges = psRanges;
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
+        rootParameters[2].DescriptorTable.pDescriptorRanges = &psSamplerRange;
+        rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
-        rootSignatureDesc.NumParameters = 2;
+        rootSignatureDesc.NumParameters = 3;
         rootSignatureDesc.pParameters = rootParameters;
         rootSignatureDesc.NumStaticSamplers = 0;
         rootSignatureDesc.pStaticSamplers = nullptr;
@@ -257,7 +282,6 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     ThrowIfFailed(m_pVsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pVsSceneBufferBegin)));
     memcpy(m_pVsSceneBufferBegin, vsConstantBuffer, sizeof(vsConstantBuffer));
     m_pVsSceneBuffer->Unmap(0, nullptr);
-
 
     // Collect scene environment data to PS scene constant buffer
     float psConstantBuffer[64] = {};

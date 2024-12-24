@@ -143,11 +143,16 @@ PSInput VSMain(VSInput i_vertInput)
     return result;
 }
 
+static const uint ALBEDO_MASK            = 1;
+static const uint NORMAL_MASK            = 2;
+static const uint ROUGHNESS_METALIC_MASK = 4;
+static const uint AO_MASK                = 8;
+
 cbuffer PsMaterialBuffer : register(b2)
 {
     float4 constAlbedo;
     float4 metalicRoughness;
-    uint materialMask; // 0 -- Constant, 1 -- Texture. No or all.
+    uint materialMask; // 0 -- Constant
 }
 
 cbuffer PsSceneBuffer : register(b3)
@@ -156,6 +161,22 @@ cbuffer PsSceneBuffer : register(b3)
     float4 cameraPos;    // one padding float
     float4 ambientLight; // one padding float
 }
+
+Texture2D    i_baseColorTexture      : register(t0);
+SamplerState i_baseColorSamplerState : register(s0);
+
+Texture2D    i_normalTexture      : register(t1);
+SamplerState i_normalSamplerState : register(s1);
+
+// The textures for metalness and roughness properties are packed together in a single texture called
+// metallicRoughnessTexture. Its green channel contains roughness values and its blue channel contains metalness
+// values.
+Texture2D    i_roughnessMetallicTexture      : register(t2);
+SamplerState i_roughnessMetallicSamplerState : register(s2);
+
+Texture2D    i_occlusionTexture      : register(t3);
+SamplerState i_occlusionSamplerState : register(s3);
+
 
 float4 PSMain(PSInput input) : SV_TARGET
 {

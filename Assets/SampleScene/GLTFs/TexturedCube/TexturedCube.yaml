@@ -1,0 +1,164 @@
+SceneName: SphereTest
+SceneType: GLTF
+BackgroundColor: [0.01, 0.01, 0.01]
+SceneGraph:
+  TriangleInst0:
+    Type: StaticMesh
+    Position: [-7.5, -2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 0.0]
+      Roughness: 0.05
+      Metallic: 0.0
+  TriangleInst1:
+    Type: StaticMesh
+    Position: [-4.5, -2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 0.0]
+      Roughness: 0.15
+      Metallic: 0.0
+  TriangleInst2:
+    Type: StaticMesh
+    Position: [-1.5, -2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [-1.0, 1.0, 0.0]
+      Roughness: 0.3
+      Metallic: 0.0
+  TriangleInst3:
+    Type: StaticMesh
+    Position: [1.5, -2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.45
+      Metallic: 0.0
+  TriangleInst4:
+    Type: StaticMesh
+    Position: [4.5, -2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.8
+      Metallic: 0.0
+  TriangleInst5:
+    Type: StaticMesh
+    Position: [7.5, -2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 1.0
+      Metallic: 0.0
+  TriangleInst6:
+    Type: StaticMesh
+    Position: [-7.5, 2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.05
+      Metallic: 1.0
+  TriangleInst7:
+    Type: StaticMesh
+    Position: [-4.5, 2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.15
+      Metallic: 1.0
+  TriangleInst8:
+    Type: StaticMesh
+    Position: [-1.5, 2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.3
+      Metallic: 1.0
+  TriangleInst9:
+    Type: StaticMesh
+    Position: [1.5, 2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.45
+      Metallic: 1.0
+  TriangleInst10:
+    Type: StaticMesh
+    Position: [4.5, 2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 0.7
+      Metallic: 1.0
+  TriangleInst11:
+    Type: StaticMesh
+    Position: [7.5, 2.0, 7.5]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: uvSphere.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.0, 1.0, 0.0]
+      Roughness: 1.0
+      Metallic: 1.0
+  PointLightInst1:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [5.0, 1.0, 3.0]
+  PointLightInst2:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [-5.0, 1.0, 3.0]
+  PointLightInst3:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [5.0, -1.0, 3.0]
+  PointLightInst4:
+    Type: PointLight
+    Radiance: [1.0, 1.0, 1.0]
+    Position: [-5.0, -1.0, 3.0]
+  AmbientLightInst:
+    Type: AmbientLight
+    Radiance: [0.005, 0.005, 0.005]
+  CameraInst:
+    Type: Camera
+    Position: [0.0, 0.0, -8.0]
+    View: [0.0, 0.0, 1.0]
+    Up: [0.0, 1.0, 0.0]
+    fov: 0.820304751
+    far: 100
+    near: 0.1
+    isActive: true

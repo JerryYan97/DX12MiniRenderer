@@ -64,6 +64,7 @@ Specific Milestone 1 tasks:
 
 
 Milestone 2:
+Texture Cube --> Texture GLTF Models.
 GLTF Texture PBR basic support.
 More GLTF models rendering (Simple) --> Decorate project front page.
 Code Cleanup.
@@ -76,6 +77,10 @@ Integrate IBL, Cubemap Background Rendering.
 Misc TODOs:
 - Use singlenton, global variables and static to simplify programming patterns.
 - DXR, DLSS/FSR, mesh-shader Nanite, Restir, GPU-Workgraph examples are must for my further graphics career.
+
+Gallery Candidants -- Texture or no texture complicated objects:
+Avocado, BarramundiFish, Buggy(It needs too much self-shadow, so we give it up. Though we should support it sometime), Duck, Fox, 
+ 
 
 Refs:
 https://github.com/microsoft/DirectXTK12/wiki/Getting-Started
