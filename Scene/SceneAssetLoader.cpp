@@ -37,6 +37,8 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
 
     m_currentScenePath = fileNamePath;
 
+    uint32_t ambientLightCnt = 0;
+
     for (const auto& itr : sceneGraph)
     {
         const std::string objName = itr.first.as<std::string>();
@@ -47,6 +49,8 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
         }
         else if (type.compare("AmbientLight") == 0)
         {
+            assert(ambientLightCnt <= 1, "Ambient Light Count shouldn't be larger than 1.");
+            ambientLightCnt++;
             o_pLevel->LoadObject(objName, itr.second, AmbientLight::Deseralize);
         }
         else if (type.compare("PointLight") == 0)

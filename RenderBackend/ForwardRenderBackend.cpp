@@ -263,13 +263,22 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     float psConstantBuffer[64] = {};
 
     std::vector<Light*> sceneLights;
+    uint32_t ambientLightCnt = 0;
     m_pLevel->RetriveLights(sceneLights);
-    assert(sceneLights.size() == 4, "Now we assume 4 point lights.");
     for (uint32_t i = 0; i < sceneLights.size(); i++)
     {
-        assert(sceneLights[i]->GetObjectTypeHash() == crc32("PointLight"));
-        PointLight* pPtLight = dynamic_cast<PointLight*>(sceneLights[i]);
-        memcpy(psConstantBuffer + i * 4, pPtLight->position, sizeof(float) * 3);
+        if (sceneLights[i]->GetObjectTypeHash() == crc32("PointLight"))
+        {
+            PointLight* pPtLight = dynamic_cast<PointLight*>(sceneLights[i]);
+            memcpy(psConstantBuffer + i * 4, pPtLight->position, sizeof(float) * 3);
+        }
+        else if (sceneLights[i]->GetObjectTypeHash() == crc32("AmbientLight"))
+        {
+            assert(ambientLightCnt <= 1, "We shouldn't have more than 1 ambient lights.");
+            ambientLightCnt++;
+            AmbientLight* pAmbientLight = dynamic_cast<AmbientLight*>(sceneLights[i]);
+            memcpy(psConstantBuffer + 20, pAmbientLight->radiance, sizeof(float) * 3);
+        }
     }
 
     memcpy(psConstantBuffer + 16, pCamera->m_pos, sizeof(float) * 3);

@@ -1,5 +1,6 @@
 SceneName: SphereTest
 SceneType: GLTF
+BackgroundColor: [0.01, 0.01, 0.01]
 SceneGraph:
   TriangleInst0:
     Type: StaticMesh
@@ -149,6 +150,9 @@ SceneGraph:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
     Position: [-5.0, -1.0, 3.0]
+  AmbientLightInst:
+    Type: AmbientLight
+    Radiance: [0.005, 0.005, 0.005]
   CameraInst:
     Type: Camera
     Position: [0.0, 0.0, -8.0]

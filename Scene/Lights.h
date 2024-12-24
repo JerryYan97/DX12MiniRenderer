@@ -27,9 +27,9 @@ public:
     ~AmbientLight() {}
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
-
-private:
     float radiance[3];
+private:
+    
 };
 
 class PointLight : public Light
