@@ -147,6 +147,7 @@ static const uint ALBEDO_MASK            = 1;
 static const uint NORMAL_MASK            = 2;
 static const uint ROUGHNESS_METALIC_MASK = 4;
 static const uint AO_MASK                = 8;
+static const uint EMISSIVE_MASK          = 16;
 
 cbuffer PsMaterialBuffer : register(b2)
 {
@@ -182,14 +183,16 @@ SamplerState i_occlusionSamplerState : register(s3);
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	// Gold
-    float3 texAlbedo = i_baseColorTexture.Sample(i_baseColorSamplerState, input.uv).xyz;
     float3 sphereRefAlbedo = constAlbedo.xyz; // F0
     float3 sphereDifAlbedo = constAlbedo.xyz;
     
-    sphereDifAlbedo = texAlbedo;
-    sphereRefAlbedo = texAlbedo;
-
+    if(materialMask & ALBEDO_MASK)
+    {
+        float3 texAlbedo = i_baseColorTexture.Sample(i_baseColorSamplerState, input.uv).xyz;
+        sphereDifAlbedo = texAlbedo;
+        sphereRefAlbedo = texAlbedo;
+    }
+    
     float3 wo = normalize(cameraPos.xyz - input.worldPos.xyz);
 	
     float3 worldNormal = normalize(input.normal.xyz);

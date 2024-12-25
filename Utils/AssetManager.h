@@ -10,6 +10,12 @@
 
 class StaticMesh;
 
+const uint32_t ALBEDO_MASK            = 1;
+const uint32_t NORMAL_MASK            = 2;
+const uint32_t ROUGHNESS_METALIC_MASK = 4;
+const uint32_t AO_MASK                = 8;
+const uint32_t EMISSIVE_MASK          = 16;
+
 enum class TexWrapMode
 {
     REPEAT,
@@ -68,6 +74,11 @@ struct PrimitiveAsset
     ImgInfo m_occlusionTex;         // R32_SFLOAT
     ImgInfo m_emissiveTex;          // Currently don't support.
 
+    uint32_t m_materialMask;
+
+    ID3D12Resource* m_staticMeshCnstMaterialBuffer;
+    ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
+
     uint32_t TextureCnt() const
     {
         uint32_t texCnt = 0;
@@ -77,6 +88,16 @@ struct PrimitiveAsset
         if(m_occlusionTex.pixWidth > 1) { texCnt++; }
         if(m_emissiveTex.pixWidth > 1) { texCnt++; }
         return texCnt;
+    }
+
+    void GenMaterialMask()
+    {
+        m_materialMask = 0;
+        if(m_baseColorTex.pixWidth > 1) { m_materialMask |= ALBEDO_MASK; }
+        if(m_normalTex.pixWidth > 1) { m_materialMask |= NORMAL_MASK; }
+        if(m_metallicRoughnessTex.pixWidth > 1) { m_materialMask |= ROUGHNESS_METALIC_MASK; }
+        if(m_occlusionTex.pixWidth > 1) { m_materialMask |= AO_MASK; }
+        if(m_emissiveTex.pixWidth > 1) { m_materialMask |= EMISSIVE_MASK; }
     }
 };
 

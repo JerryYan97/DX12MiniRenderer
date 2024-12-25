@@ -18,11 +18,6 @@ struct ConstantMaterial
     float metallicRoughness[2];
 };
 
-const uint32_t ALBEDO_MASK            = 1;
-const uint32_t NORMAL_MASK            = 2;
-const uint32_t ROUGHNESS_METALIC_MASK = 4;
-const uint32_t AO_MASK                = 8;
-
 /*
 class MeshPrimitive
 {
@@ -111,10 +106,8 @@ public:
     ID3D12Resource* m_staticMeshConstantBuffer;
     ID3D12DescriptorHeap* m_staticMeshCbvDescHeap;
 
-    ID3D12Resource* m_staticMeshCnstMaterialBuffer;
-    ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
-
 private:
+    void GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset);
     void GenAndInitGpuBufferRsrc();
     void GenAndInitTextures();
 
