@@ -54,19 +54,10 @@ void ForwardRenderer::CreateRootSignature()
         psSrvRange.RegisterSpace = 0;
         psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     }
-    
-    D3D12_DESCRIPTOR_RANGE psSamplerRange = {};
-    {
-        psSamplerRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-        psSamplerRange.NumDescriptors = 4;
-        psSamplerRange.BaseShaderRegister = 0;
-        psSamplerRange.RegisterSpace = 0;
-        psSamplerRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    }
 
     D3D12_DESCRIPTOR_RANGE psRanges[] = { psCbvRange, psSrvRange};
 
-    D3D12_ROOT_PARAMETER rootParameters[3] = {};
+    D3D12_ROOT_PARAMETER rootParameters[2] = {};
     {
         rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
@@ -77,19 +68,16 @@ void ForwardRenderer::CreateRootSignature()
         rootParameters[1].DescriptorTable.NumDescriptorRanges = 2;
         rootParameters[1].DescriptorTable.pDescriptorRanges = psRanges;
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-        rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
-        rootParameters[2].DescriptorTable.pDescriptorRanges = &psSamplerRange;
-        rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
+
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[4] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3) };
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
-        rootSignatureDesc.NumParameters = 3;
+        rootSignatureDesc.NumParameters = 2;
         rootSignatureDesc.pParameters = rootParameters;
-        rootSignatureDesc.NumStaticSamplers = 0;
-        rootSignatureDesc.pStaticSamplers = nullptr;
+        rootSignatureDesc.NumStaticSamplers = 4;
+        rootSignatureDesc.pStaticSamplers = staticSamplers;
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     }
 
@@ -362,7 +350,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             // Create in-flight shader visible CBV heap and properly copy the CBV descriptor to it.
             // Shader visible heap.
             D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-            cbvHeapDesc.NumDescriptors = 4;
+            cbvHeapDesc.NumDescriptors = 5;
             cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
@@ -392,6 +380,12 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             D3D12_CPU_DESCRIPTOR_HANDLE psSceneSrcCbvHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
             psSceneSrcCbvHandle.ptr += cbvDescHandleOffset;
             m_pD3dDevice->CopyDescriptorsSimple(1, psSceneCbvHandle, psSceneSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            // Texture SRV binding
+            D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
+            D3D12_CPU_DESCRIPTOR_HANDLE psObjAlbedoTexSrvHandle = shaderCbvDescHeapCpuHandle;
+            psObjAlbedoTexSrvHandle.ptr += cbvDescHandleOffset * 4;
+            m_pD3dDevice->CopyDescriptorsSimple(1, psObjAlbedoTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
             const uint32_t idxCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxCnt;
             const uint32_t cbvDescHeapHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

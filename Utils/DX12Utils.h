@@ -281,3 +281,34 @@ inline void GpuQueueWaitIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pCmdQueu
 
 void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes);
 ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device* pDevice, uint32_t sizeBytes);
+
+
+inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode)
+{
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = addressMode;
+    sampler.AddressV = addressMode;
+    sampler.AddressW = addressMode;
+    sampler.MipLODBias = 0;
+    sampler.MaxAnisotropy = 0;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+    sampler.MinLOD = 0.0f;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderRegister = regIdx;
+    sampler.RegisterSpace = 0;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    return sampler;
+}
+
+inline D3D12_STATIC_SAMPLER_DESC StaticBorderSampler(uint32_t regIdx)
+{
+    return StaticSampler(regIdx, D3D12_TEXTURE_ADDRESS_MODE_BORDER);
+}
+
+inline D3D12_STATIC_SAMPLER_DESC StaticWrapSampler(uint32_t regIdx)
+{
+    return StaticSampler(regIdx, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+}

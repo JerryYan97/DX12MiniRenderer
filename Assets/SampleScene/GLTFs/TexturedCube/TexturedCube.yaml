@@ -4,7 +4,7 @@ BackgroundColor: [0.01, 0.01, 0.01]
 SceneGraph:
   TriangleInst0:
     Type: StaticMesh
-    Position: [0.0, 0.0, 7.5]
+    Position: [0.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
     AssetPath: texCube/BoxTextured.gltf
@@ -15,27 +15,27 @@ SceneGraph:
       Metallic: 0.0
   PointLightInst1:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
-    Position: [5.0, 1.0, 3.0]
+    Radiance: [20.0, 20.0, 20.0]
+    Position: [1.0, 2.0, 1.0]
   PointLightInst2:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
-    Position: [-5.0, 1.0, 3.0]
+    Radiance: [20.0, 20.0, 20.0]
+    Position: [-1.0, 2.0, 1.0]
   PointLightInst3:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
-    Position: [5.0, -1.0, 3.0]
+    Radiance: [20.0, 20.0, 20.0]
+    Position: [2.0, -2.0, -1.0]
   PointLightInst4:
     Type: PointLight
-    Radiance: [1.0, 1.0, 1.0]
-    Position: [-5.0, -1.0, 3.0]
+    Radiance: [20.0, 20.0, 20.0]
+    Position: [-2.0, -2.0, -1.0]
   AmbientLightInst:
     Type: AmbientLight
-    Radiance: [0.005, 0.005, 0.005]
+    Radiance: [0.05, 0.05, 0.05]
   CameraInst:
     Type: Camera
-    Position: [0.0, 0.0, -8.0]
-    View: [0.0, 0.0, 1.0]
+    Position: [2.0, 2.0, -2.0]
+    View: [-0.577, -0.577, 0.577]
     Up: [0.0, 1.0, 0.0]
     fov: 0.820304751
     far: 100

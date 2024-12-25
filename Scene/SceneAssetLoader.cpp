@@ -79,6 +79,21 @@ void SceneAssetLoader::LoadStaticMesh(const std::string& fileNamePath, StaticMes
     }
 }
 
+TexWrapMode GltfSamplerWrapToInternalWrapMode(int wrapMode)
+{
+    switch (wrapMode)
+    {
+    case TINYGLTF_TEXTURE_WRAP_REPEAT:
+        return TexWrapMode::REPEAT;
+    case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:
+        return TexWrapMode::CLAMP_TO_EDGE;
+    case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT:
+        return TexWrapMode::MIRRORED_REPEAT;
+    default:
+        return TexWrapMode::REPEAT;
+    }
+}
+
 void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh* pStaticMesh)
 {
     std::string absPath = GetFileDir(m_pThis->m_currentScenePath);
@@ -314,6 +329,8 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
                 pPrimitiveAsset->m_baseColorTex.pixHeight = baseColorImg.height;
                 pPrimitiveAsset->m_baseColorTex.componentCnt = baseColorImg.component;
                 pPrimitiveAsset->m_baseColorTex.dataVec = baseColorImg.image;
+                pPrimitiveAsset->m_baseColorTex.wrapModeHorizontal = GltfSamplerWrapToInternalWrapMode(model.samplers[baseColorTex.sampler].wrapS);
+                pPrimitiveAsset->m_baseColorTex.wrapModeVertical = GltfSamplerWrapToInternalWrapMode(model.samplers[baseColorTex.sampler].wrapT);
 
                 assert(baseColorImg.component == 4, "All textures should have 4 components.");
                 assert(baseColorImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -337,6 +354,8 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
                 pPrimitiveAsset->m_metallicRoughnessTex.pixHeight = metallicRoughnessImg.height;
                 pPrimitiveAsset->m_metallicRoughnessTex.componentCnt = metallicRoughnessImg.component;
                 pPrimitiveAsset->m_metallicRoughnessTex.dataVec = metallicRoughnessImg.image;
+                pPrimitiveAsset->m_metallicRoughnessTex.wrapModeHorizontal = GltfSamplerWrapToInternalWrapMode(model.samplers[metallicRoughnessTex.sampler].wrapS);
+                pPrimitiveAsset->m_metallicRoughnessTex.wrapModeVertical = GltfSamplerWrapToInternalWrapMode(model.samplers[metallicRoughnessTex.sampler].wrapT);
 
                 assert(metallicRoughnessImg.component == 4, "All textures should have 4 components.");
                 assert(metallicRoughnessImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -357,6 +376,8 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
                 pPrimitiveAsset->m_normalTex.pixHeight = normalImg.height;
                 pPrimitiveAsset->m_normalTex.componentCnt = normalImg.component;
                 pPrimitiveAsset->m_normalTex.dataVec = normalImg.image;
+                pPrimitiveAsset->m_normalTex.wrapModeHorizontal = GltfSamplerWrapToInternalWrapMode(model.samplers[normalTex.sampler].wrapS);
+                pPrimitiveAsset->m_normalTex.wrapModeVertical = GltfSamplerWrapToInternalWrapMode(model.samplers[normalTex.sampler].wrapT);
 
                 assert(normalImg.component == 4, "All textures should have 4 components.");
                 assert(normalImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
@@ -380,6 +401,8 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
                 pPrimitiveAsset->m_occlusionTex.pixHeight = occlusionImg.height;
                 pPrimitiveAsset->m_occlusionTex.componentCnt = occlusionImg.component;
                 pPrimitiveAsset->m_occlusionTex.dataVec = occlusionImg.image;
+                pPrimitiveAsset->m_occlusionTex.wrapModeHorizontal = GltfSamplerWrapToInternalWrapMode(model.samplers[occlusionTex.sampler].wrapS);
+                pPrimitiveAsset->m_occlusionTex.wrapModeVertical = GltfSamplerWrapToInternalWrapMode(model.samplers[occlusionTex.sampler].wrapT);
 
                 assert(occlusionImg.component == 4, "All textures should have 4 components.");
                 assert(occlusionImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");

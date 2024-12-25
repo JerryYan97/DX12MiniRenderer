@@ -47,7 +47,7 @@ Milestone 3+:
 Milestone 0: (Done)
 Fixed Triangle (Checked)
 
-Milestone 1:
+Milestone 1: (Done)
 GLTF Triangle, Cube, Sphere. (Done)
 Basic Camera Model. (Done)
 Shader Load Infra (Using DXC API -- NO Need) 
@@ -64,7 +64,7 @@ Specific Milestone 1 tasks:
 
 
 Milestone 2:
-Texture Cube --> Texture GLTF Models.
+Texture Cube --> Texture GLTF Models. (Done)
 GLTF Texture PBR basic support.
 More GLTF models rendering (Simple) --> Decorate project front page.
 Code Cleanup.
@@ -79,7 +79,7 @@ Misc TODOs:
 - DXR, DLSS/FSR, mesh-shader Nanite, Restir, GPU-Workgraph examples are must for my further graphics career.
 
 Gallery Candidants -- Texture or no texture complicated objects:
-Avocado, BarramundiFish, Buggy(It needs too much self-shadow, so we give it up. Though we should support it sometime), Duck, Fox, 
+Avocado, BarramundiFish, Buggy(It needs too much self-shadow, so we give it up. Though we should support it sometime), Duck, Fox (Has animation, maybe not good), Water Bottle.
  
 
 Refs:

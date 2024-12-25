@@ -10,6 +10,14 @@
 
 class StaticMesh;
 
+enum class TexWrapMode
+{
+    REPEAT,
+    MIRRORED_REPEAT,
+    CLAMP_TO_EDGE,
+    CLAMP_TO_BORDER
+};
+
 struct ImgInfo
 {
     uint32_t             pixWidth;
@@ -20,6 +28,8 @@ struct ImgInfo
     ID3D12Resource*      gpuResource;
     bool                 isSentToGpu;
     uint32_t             srvHeapIdx;
+    TexWrapMode          wrapModeVertical;
+    TexWrapMode          wrapModeHorizontal;
 };
 
 struct TextureAsset

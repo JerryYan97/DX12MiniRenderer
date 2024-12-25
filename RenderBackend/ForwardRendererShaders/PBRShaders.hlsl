@@ -183,8 +183,12 @@ SamplerState i_occlusionSamplerState : register(s3);
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	// Gold
+    float3 texAlbedo = i_baseColorTexture.Sample(i_baseColorSamplerState, input.uv).xyz;
     float3 sphereRefAlbedo = constAlbedo.xyz; // F0
     float3 sphereDifAlbedo = constAlbedo.xyz;
+    
+    sphereDifAlbedo = texAlbedo;
+    sphereRefAlbedo = texAlbedo;
 
     float3 wo = normalize(cameraPos.xyz - input.worldPos.xyz);
 	
