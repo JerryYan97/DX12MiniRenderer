@@ -98,7 +98,7 @@ public:
     ~StaticMesh();
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
-    void GenModelMatrix();
+    void SendModelMatrixToGpuBuffer();
 
     std::string m_assetPath;
 
@@ -115,6 +115,9 @@ public:
     ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
 
 private:
+    void GenAndInitGpuBufferRsrc();
+    void GenAndInitTextures();
+
     float m_position[3];
     float m_rotation[3];
     float m_scale[3];
