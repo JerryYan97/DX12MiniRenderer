@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "Object.h"
 
 class StaticMesh;
@@ -24,6 +25,9 @@ public:
     void RetriveStaticMeshes(std::vector<StaticMesh*>& o_staticMeshes);
     void RetriveActiveCamera(Camera** o_camera);
     void RetriveLights(std::vector<Light*>& o_lights);
+
+    std::string m_sceneName;
+    float m_backgroundColor[3];
 
 private:
     std::vector<Object*> m_objects;

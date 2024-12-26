@@ -190,8 +190,9 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
+    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Duck\\Duck.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\TexturedCube\\TexturedCube.yaml", m_pLevel);
-    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\PBRSpheresPtLights\\PBRSpherePtLights.yaml", m_pLevel);
+    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\PBRSpheresPtLights\\PBRSpherePtLights.yaml", m_pLevel);
 
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 
@@ -265,7 +266,9 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
         m_pD3dCommandList->ResourceBarrier(1, &barrier);
 
-        ImVec4 clear_color = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
+        ImVec4 clear_color = ImVec4(m_pLevel->m_backgroundColor[0], 
+                                    m_pLevel->m_backgroundColor[1],
+                                    m_pLevel->m_backgroundColor[2], 1.00f);
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
         m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
         m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);

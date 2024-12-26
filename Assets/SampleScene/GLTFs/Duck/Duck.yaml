@@ -1,0 +1,43 @@
+SceneName: SphereTest
+SceneType: GLTF
+BackgroundColor: [0.2, 0.2, 0.01]
+SceneGraph:
+  TriangleInst0:
+    Type: StaticMesh
+    Position: [0.0, -0.5, 0.0]
+    Scale: [0.005, 0.005, 0.005]
+    Rotation: [0, 1.39626, 0]
+    AssetPath: duck/Duck.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 0.0]
+      Roughness: 1.0
+      Metallic: 0.0
+  PointLightInst1:
+    Type: PointLight
+    Radiance: [10.0, 10.0, 10.0]
+    Position: [1.0, 2.0, 0.0]
+  PointLightInst2:
+    Type: PointLight
+    Radiance: [10.0, 10.0, 10.0]
+    Position: [-1.0, 2.0, 0.0]
+  PointLightInst3:
+    Type: PointLight
+    Radiance: [10.0, 10.0, 10.0]
+    Position: [2.0, -2.0, 0.0]
+  PointLightInst4:
+    Type: PointLight
+    Radiance: [10.0, 10.0, 10.0]
+    Position: [-2.0, -2.0, 0.0]
+  AmbientLightInst:
+    Type: AmbientLight
+    Radiance: [0.1, 0.1, 0.1]
+  CameraInst:
+    Type: Camera
+    Position: [2.0, 1.0, -2.0]
+    View: [-0.667, -0.333, 0.667]
+    Up: [0.0, 1.0, 0.0]
+    fov: 0.820304751
+    far: 100
+    near: 0.1
+    isActive: true
