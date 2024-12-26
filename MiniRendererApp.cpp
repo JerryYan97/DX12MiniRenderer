@@ -190,7 +190,8 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Duck\\Duck.yaml", m_pLevel);
+    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Avocado\\Avocado.yaml", m_pLevel);
+    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Duck\\Duck.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\TexturedCube\\TexturedCube.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\PBRSpheresPtLights\\PBRSpherePtLights.yaml", m_pLevel);
 

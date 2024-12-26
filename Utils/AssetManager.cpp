@@ -160,6 +160,8 @@ void AssetManager::CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset)
 
 void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
 {
+    const uint32_t cbvSrvUavDescHandleOffset = g_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    
     // Describe and create a Texture2D.
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
@@ -181,15 +183,23 @@ void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
         heapProperties.VisibleNodeMask = 1;
     }
 
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+
     if (pPrimAsset->TextureCnt() > 0)
     {
         uint32_t texCnt = pPrimAsset->TextureCnt();
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-        srvHeapDesc.NumDescriptors = 1;
+        srvHeapDesc.NumDescriptors = texCnt;
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pPrimAsset->m_pTexturesSrvHeap)));
     }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE descHeapPtr = pPrimAsset->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
 
     uint32_t texHeapOffset = 0;
     if (pPrimAsset->m_baseColorTex.pixWidth > 1)
@@ -213,42 +223,105 @@ void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
             pPrimAsset->m_baseColorTex.dataVec.data(),
             pPrimAsset->m_baseColorTex.dataVec.size());
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = textureDesc.Format;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-
         g_pD3dDevice->CreateShaderResourceView(pPrimAsset->m_baseColorTex.gpuResource,
             &srvDesc,
-            pPrimAsset->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart());
+            descHeapPtr);
 
+        descHeapPtr.ptr += cbvSrvUavDescHandleOffset;
         pPrimAsset->m_baseColorTex.srvHeapIdx = texHeapOffset;
         texHeapOffset++;
     }
 
-    /*
-    if (pPrimAsset->m_metallicRoughnessTex.pixWidth > 0)
+    if (pPrimAsset->m_metallicRoughnessTex.pixWidth > 1)
     {
-        SendDataToTexture2D(g_pD3dDevice, pPrimAsset->m_metallicRoughnessTex.m_gpuTexture,
-                                           pPrimAsset->m_metallicRoughnessTex.m_imgData.data(),
-                                           pPrimAsset->m_metallicRoughnessTex.m_imgData.size());
+        pPrimAsset->m_metallicRoughnessTex.isSentToGpu = true;
+        textureDesc.Width = pPrimAsset->m_metallicRoughnessTex.pixWidth;
+        textureDesc.Height = pPrimAsset->m_metallicRoughnessTex.pixHeight;
+
+        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&pPrimAsset->m_metallicRoughnessTex.gpuResource)));
+
+        pPrimAsset->m_metallicRoughnessTex.gpuResource->SetName(L"MetallicRoughnessTexture");
+
+        SendDataToTexture2D(g_pD3dDevice,
+                            pPrimAsset->m_metallicRoughnessTex.gpuResource,
+                            pPrimAsset->m_metallicRoughnessTex.dataVec.data(),
+                            pPrimAsset->m_metallicRoughnessTex.dataVec.size());
+
+        g_pD3dDevice->CreateShaderResourceView(pPrimAsset->m_metallicRoughnessTex.gpuResource,
+                                               &srvDesc,
+                                               descHeapPtr);
+
+        descHeapPtr.ptr += cbvSrvUavDescHandleOffset;
+        pPrimAsset->m_metallicRoughnessTex.srvHeapIdx = texHeapOffset;
+        texHeapOffset++;
     }
 
-    if (pPrimAsset->m_normalTex.m_imgData.size() > 0)
+    if (pPrimAsset->m_normalTex.pixWidth > 1)
     {
-        SendDataToTexture2D(g_pD3dDevice, pPrimAsset->m_normalTex.m_gpuTexture,
-                                           pPrimAsset->m_normalTex.m_imgData.data(),
-                                           pPrimAsset->m_normalTex.m_imgData.size());
+        pPrimAsset->m_normalTex.isSentToGpu = true;
+        textureDesc.Width = pPrimAsset->m_normalTex.pixWidth;
+        textureDesc.Height = pPrimAsset->m_normalTex.pixHeight;
+
+        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&pPrimAsset->m_normalTex.gpuResource)));
+
+        pPrimAsset->m_normalTex.gpuResource->SetName(L"NormalTexture");
+
+        SendDataToTexture2D(g_pD3dDevice,
+                            pPrimAsset->m_normalTex.gpuResource,
+                            pPrimAsset->m_normalTex.dataVec.data(),
+                            pPrimAsset->m_normalTex.dataVec.size());
+
+        g_pD3dDevice->CreateShaderResourceView(pPrimAsset->m_normalTex.gpuResource,
+                                               &srvDesc,
+                                               descHeapPtr);
+
+        descHeapPtr.ptr += cbvSrvUavDescHandleOffset;
+        pPrimAsset->m_normalTex.srvHeapIdx = texHeapOffset;
+        texHeapOffset++;
     }
 
-    if (pPrimAsset->m_occlusionTex.m_imgData.size() > 0)
+    if (pPrimAsset->m_occlusionTex.pixWidth > 1)
     {
-        SendDataToTexture2D(g_pD3dDevice, pPrimAsset->m_occlusionTex.m_gpuTexture,
-                                           pPrimAsset->m_occlusionTex.m_imgData.data(),
-                                           pPrimAsset->m_occlusionTex.m_imgData.size());
+        pPrimAsset->m_occlusionTex.isSentToGpu = true;
+        textureDesc.Width = pPrimAsset->m_occlusionTex.pixWidth;
+        textureDesc.Height = pPrimAsset->m_occlusionTex.pixHeight;
+
+        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&pPrimAsset->m_occlusionTex.gpuResource)));
+
+        pPrimAsset->m_occlusionTex.gpuResource->SetName(L"OcclusionTexture");
+
+        SendDataToTexture2D(g_pD3dDevice,
+                            pPrimAsset->m_occlusionTex.gpuResource,
+                            pPrimAsset->m_occlusionTex.dataVec.data(),
+                            pPrimAsset->m_occlusionTex.dataVec.size());
+
+        g_pD3dDevice->CreateShaderResourceView(pPrimAsset->m_occlusionTex.gpuResource,
+                                               &srvDesc,
+                                               descHeapPtr);
+
+        descHeapPtr.ptr += cbvSrvUavDescHandleOffset;
+        pPrimAsset->m_occlusionTex.srvHeapIdx = texHeapOffset;
+        texHeapOffset++;
     }
-    */
+    /**/
 
     pPrimAsset->GenMaterialMask();
     GenPrimAssetMaterialBuffer(pPrimAsset);

@@ -393,9 +393,41 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             if (materialTexMask & ALBEDO_MASK)
             {
                 D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
+                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_baseColorTex.srvHeapIdx * cbvDescHandleOffset;
+
                 D3D12_CPU_DESCRIPTOR_HANDLE psObjAlbedoTexSrvHandle = shaderCbvDescHeapCpuHandle;
                 psObjAlbedoTexSrvHandle.ptr += cbvDescHandleOffset * 5;
                 m_pD3dDevice->CopyDescriptorsSimple(1, psObjAlbedoTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            }
+
+            if (materialTexMask & NORMAL_MASK)
+            {
+                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
+                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_normalTex.srvHeapIdx * cbvDescHandleOffset;
+
+                D3D12_CPU_DESCRIPTOR_HANDLE psObjNormalTexSrvHandle = shaderCbvDescHeapCpuHandle;
+                psObjNormalTexSrvHandle.ptr += cbvDescHandleOffset * 6;
+                m_pD3dDevice->CopyDescriptorsSimple(1, psObjNormalTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            }
+
+            if (materialTexMask & ROUGHNESS_METALIC_MASK)
+            {
+                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
+                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_metallicRoughnessTex.srvHeapIdx * cbvDescHandleOffset;
+
+                D3D12_CPU_DESCRIPTOR_HANDLE psObjRoughnessMetallicTexSrvHandle = shaderCbvDescHeapCpuHandle;
+                psObjRoughnessMetallicTexSrvHandle.ptr += cbvDescHandleOffset * 7;
+                m_pD3dDevice->CopyDescriptorsSimple(1, psObjRoughnessMetallicTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            }
+
+            if (materialTexMask & AO_MASK)
+            {
+                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
+                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_occlusionTex.srvHeapIdx * cbvDescHandleOffset;
+
+                D3D12_CPU_DESCRIPTOR_HANDLE psObjAOTexSrvHandle = shaderCbvDescHeapCpuHandle;
+                psObjAOTexSrvHandle.ptr += cbvDescHandleOffset * 8;
+                m_pD3dDevice->CopyDescriptorsSimple(1, psObjAOTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             }
 
             const uint32_t idxCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxCnt;
