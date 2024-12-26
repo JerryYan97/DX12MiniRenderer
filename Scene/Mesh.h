@@ -12,12 +12,13 @@ namespace YAML
 }
 
 // By default, no occlusion, no emissive, standard geometry normal.
+/*
 struct ConstantMaterial
 {
     float baseColorFactor[4];
     float metallicRoughness[2];
 };
-
+*/
 /*
 class MeshPrimitive
 {
@@ -106,10 +107,11 @@ public:
     ID3D12Resource* m_staticMeshConstantBuffer;
     ID3D12DescriptorHeap* m_staticMeshCbvDescHeap;
 
+    ID3D12Resource* m_staticMeshCnstMaterialBuffer;
+    ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
+
 private:
-    void GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset);
     void GenAndInitGpuBufferRsrc();
-    void GenAndInitTextures();
 
     float m_position[3];
     float m_rotation[3];

@@ -40,7 +40,7 @@ void ForwardRenderer::CreateRootSignature()
     D3D12_DESCRIPTOR_RANGE psCbvRange = {};
     {
         psCbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        psCbvRange.NumDescriptors = 2;
+        psCbvRange.NumDescriptors = 3;
         psCbvRange.BaseShaderRegister = 2;
         psCbvRange.RegisterSpace = 0;
         psCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -347,10 +347,12 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
     {
         for (uint32_t primIdx = 0; primIdx < staticMeshes[mshIdx]->m_primitiveAssets.size(); primIdx++)
         {
+            uint32_t materialTexCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->TextureCnt();
+
             // Create in-flight shader visible CBV heap and properly copy the CBV descriptor to it.
             // Shader visible heap.
             D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-            cbvHeapDesc.NumDescriptors = 5;
+            cbvHeapDesc.NumDescriptors = 5 + materialTexCnt;
             cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
@@ -372,7 +374,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             
             D3D12_CPU_DESCRIPTOR_HANDLE psObjCnstMaterialCbvHandle = shaderCbvDescHeapCpuHandle;
             psObjCnstMaterialCbvHandle.ptr += cbvDescHandleOffset * 2;
-            D3D12_CPU_DESCRIPTOR_HANDLE psCnstMaterialCbvHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
+            D3D12_CPU_DESCRIPTOR_HANDLE psCnstMaterialCbvHandle = staticMeshes[mshIdx]->m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
             m_pD3dDevice->CopyDescriptorsSimple(1, psObjCnstMaterialCbvHandle, psCnstMaterialCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
             D3D12_CPU_DESCRIPTOR_HANDLE psSceneCbvHandle = shaderCbvDescHeapCpuHandle;
@@ -381,11 +383,20 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, Render
             psSceneSrcCbvHandle.ptr += cbvDescHandleOffset;
             m_pD3dDevice->CopyDescriptorsSimple(1, psSceneCbvHandle, psSceneSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+            D3D12_CPU_DESCRIPTOR_HANDLE psPrimAssetCbvHandle = shaderCbvDescHeapCpuHandle;
+            psPrimAssetCbvHandle.ptr += cbvDescHandleOffset * 4;
+            D3D12_CPU_DESCRIPTOR_HANDLE psPrimAssetSrcCbvHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pMaterialMaskCbvHeap->GetCPUDescriptorHandleForHeapStart();
+            m_pD3dDevice->CopyDescriptorsSimple(1, psPrimAssetCbvHandle, psPrimAssetSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
             // Texture SRV binding
-            D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
-            D3D12_CPU_DESCRIPTOR_HANDLE psObjAlbedoTexSrvHandle = shaderCbvDescHeapCpuHandle;
-            psObjAlbedoTexSrvHandle.ptr += cbvDescHandleOffset * 4;
-            m_pD3dDevice->CopyDescriptorsSimple(1, psObjAlbedoTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            uint32_t materialTexMask = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_materialMask;
+            if (materialTexMask & ALBEDO_MASK)
+            {
+                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
+                D3D12_CPU_DESCRIPTOR_HANDLE psObjAlbedoTexSrvHandle = shaderCbvDescHeapCpuHandle;
+                psObjAlbedoTexSrvHandle.ptr += cbvDescHandleOffset * 5;
+                m_pD3dDevice->CopyDescriptorsSimple(1, psObjAlbedoTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            }
 
             const uint32_t idxCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxCnt;
             const uint32_t cbvDescHeapHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

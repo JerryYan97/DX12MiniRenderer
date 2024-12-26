@@ -149,11 +149,11 @@ static const uint ROUGHNESS_METALIC_MASK = 4;
 static const uint AO_MASK                = 8;
 static const uint EMISSIVE_MASK          = 16;
 
+// Per-Static Mesh Material Data
 cbuffer PsMaterialBuffer : register(b2)
 {
     float4 constAlbedo;
     float4 metalicRoughness;
-    uint materialMask; // 0 -- Constant
 }
 
 cbuffer PsSceneBuffer : register(b3)
@@ -163,6 +163,12 @@ cbuffer PsSceneBuffer : register(b3)
     float4 cameraPos;    // one padding float
     float4 ambientLight; // one padding float
     uint4  extraIntData; // (0): Point Light Counts; (1): ;
+}
+
+// Per-Primitive Asset Material Data.
+cbuffer PsMaterialMask : register(b4)
+{
+    uint materialMask;
 }
 
 Texture2D    i_baseColorTexture      : register(t0);

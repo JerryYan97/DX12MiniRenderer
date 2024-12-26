@@ -74,10 +74,9 @@ struct PrimitiveAsset
     ImgInfo m_occlusionTex;         // R32_SFLOAT
     ImgInfo m_emissiveTex;          // Currently don't support.
 
-    uint32_t m_materialMask;
-
-    ID3D12Resource* m_staticMeshCnstMaterialBuffer;
-    ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
+    uint32_t              m_materialMask;
+    ID3D12Resource*       m_materialMaskBuffer;
+    ID3D12DescriptorHeap* m_pMaterialMaskCbvHeap;
 
     uint32_t TextureCnt() const
     {
@@ -122,6 +121,8 @@ public:
 
 private:
     void CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset);
+    void GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset);
+    void GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset);
 
     std::unordered_map<std::string, std::vector<PrimitiveAsset*>> m_primitiveAssets;
 };

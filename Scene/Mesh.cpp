@@ -155,47 +155,14 @@ StaticMesh::~StaticMesh()
         m_staticMeshCbvDescHeap->Release();
     }
 
-    for (const auto& primItr : m_primitiveAssets)
+    if (m_staticMeshCnstMaterialBuffer)
     {
-        bool bReleaseSrvHeap = false;
-        if (primItr->m_baseColorTex.isSentToGpu)
-        {
-            primItr->m_baseColorTex.gpuResource->Release();
-            bReleaseSrvHeap = true;
-        }
+        m_staticMeshCnstMaterialBuffer->Release();
+    }
 
-        if (primItr->m_metallicRoughnessTex.isSentToGpu)
-        {
-            primItr->m_metallicRoughnessTex.gpuResource->Release();
-            bReleaseSrvHeap = true;
-        }
-
-        if (primItr->m_normalTex.isSentToGpu)
-        {
-            primItr->m_normalTex.gpuResource->Release();
-            bReleaseSrvHeap = true;
-        }
-
-        if (primItr->m_occlusionTex.isSentToGpu)
-        {
-            primItr->m_occlusionTex.gpuResource->Release();
-            bReleaseSrvHeap = true;
-        }
-
-        if (primItr->m_staticMeshCnstMaterialBuffer)
-        {
-            primItr->m_staticMeshCnstMaterialBuffer->Release();
-        }
-
-        if (primItr->m_staticMeshCnstMaterialCbvDescHeap)
-        {
-            primItr->m_staticMeshCnstMaterialCbvDescHeap->Release();
-        }
-
-        if (bReleaseSrvHeap)
-        {
-            primItr->m_pTexturesSrvHeap->Release();
-        }
+    if (m_staticMeshCnstMaterialCbvDescHeap)
+    {
+        m_staticMeshCnstMaterialCbvDescHeap->Release();
     }
 }
 
@@ -249,7 +216,6 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
 
     mesh->GenAndInitGpuBufferRsrc();
     mesh->SendModelMatrixToGpuBuffer();
-    mesh->GenAndInitTextures();
 
     return mesh;
 }
@@ -313,185 +279,39 @@ void StaticMesh::GenAndInitGpuBufferRsrc()
     }
 
     g_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_staticMeshCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
-}
 
-void StaticMesh::GenAndInitTextures()
-{
-    // Describe and create a Texture2D.
-    D3D12_RESOURCE_DESC textureDesc = {};
-    textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    textureDesc.Width = 0;
-    textureDesc.Height = 0;
-    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    textureDesc.DepthOrArraySize = 1;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    // Create and populate the static mesh constant material buffer.
+    ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferRsrcDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&m_staticMeshCnstMaterialBuffer)));
 
-    D3D12_HEAP_PROPERTIES heapProperties{};
+    ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_staticMeshCnstMaterialCbvDescHeap)));
+
     {
-        heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-        heapProperties.CreationNodeMask = 1;
-        heapProperties.VisibleNodeMask = 1;
+        cbvDesc.BufferLocation = m_staticMeshCnstMaterialBuffer->GetGPUVirtualAddress();
     }
+    g_pD3dDevice->CreateConstantBufferView(&cbvDesc, m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
 
-    for (uint32_t i = 0; i < m_primitiveAssets.size(); i++)
+    struct ConstantMaterial
     {
-        PrimitiveAsset* pPrimAsset = m_primitiveAssets[i];
+        float baseColorFactor[4];
+        float metallicRoughness[4];
+    };
 
-        if (pPrimAsset->TextureCnt() > 0)
-        {
-            uint32_t texCnt = pPrimAsset->TextureCnt();
-            D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-            srvHeapDesc.NumDescriptors = 1;
-            srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-            srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-            ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pPrimAsset->m_pTexturesSrvHeap)));
-        }
+    ConstantMaterial cnstMaterialData;
+    cnstMaterialData.baseColorFactor[0] = m_cnstAlbedo[0];
+    cnstMaterialData.baseColorFactor[1] = m_cnstAlbedo[1];
+    cnstMaterialData.baseColorFactor[2] = m_cnstAlbedo[2];
+    cnstMaterialData.metallicRoughness[0] = m_cnstMetallic;
+    cnstMaterialData.metallicRoughness[1] = m_cnstRoughness;
 
-        uint32_t texHeapOffset = 0;
-        if (pPrimAsset->m_baseColorTex.pixWidth > 1)
-        {
-            pPrimAsset->m_baseColorTex.isSentToGpu = true;
-            textureDesc.Width = pPrimAsset->m_baseColorTex.pixWidth;
-            textureDesc.Height = pPrimAsset->m_baseColorTex.pixHeight;
-
-            ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
-                    &heapProperties,
-                    D3D12_HEAP_FLAG_NONE,
-                    &textureDesc,
-                    D3D12_RESOURCE_STATE_COPY_DEST,
-                    nullptr,
-                    IID_PPV_ARGS(&pPrimAsset->m_baseColorTex.gpuResource)));
-
-            pPrimAsset->m_baseColorTex.gpuResource->SetName(L"BaseColorTexture");
-
-            /**/
-            SendDataToTexture2D(g_pD3dDevice,
-                                pPrimAsset->m_baseColorTex.gpuResource,
-                                pPrimAsset->m_baseColorTex.dataVec.data(),
-                                pPrimAsset->m_baseColorTex.dataVec.size());
-
-            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-            srvDesc.Format = textureDesc.Format;
-            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-            srvDesc.Texture2D.MipLevels = 1;
-
-            g_pD3dDevice->CreateShaderResourceView(pPrimAsset->m_baseColorTex.gpuResource,
-                                                   &srvDesc,
-                                                   pPrimAsset->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart());
-
-            pPrimAsset->m_baseColorTex.srvHeapIdx = texHeapOffset;
-            texHeapOffset++;
-        }
-
-        /*
-        if (pPrimAsset->m_metallicRoughnessTex.pixWidth > 0)
-        {
-            SendDataToTexture2D(g_pD3dDevice, pPrimAsset->m_metallicRoughnessTex.m_gpuTexture,
-                                               pPrimAsset->m_metallicRoughnessTex.m_imgData.data(),
-                                               pPrimAsset->m_metallicRoughnessTex.m_imgData.size());
-        }
-
-        if (pPrimAsset->m_normalTex.m_imgData.size() > 0)
-        {
-            SendDataToTexture2D(g_pD3dDevice, pPrimAsset->m_normalTex.m_gpuTexture,
-                                               pPrimAsset->m_normalTex.m_imgData.data(),
-                                               pPrimAsset->m_normalTex.m_imgData.size());
-        }
-
-        if (pPrimAsset->m_occlusionTex.m_imgData.size() > 0)
-        {
-            SendDataToTexture2D(g_pD3dDevice, pPrimAsset->m_occlusionTex.m_gpuTexture,
-                                               pPrimAsset->m_occlusionTex.m_imgData.data(),
-                                               pPrimAsset->m_occlusionTex.m_imgData.size());
-        }
-        */
-
-        pPrimAsset->GenMaterialMask();
-        GenPrimAssetMaterialBuffer(pPrimAsset);
-    }
-}
-
-void StaticMesh::GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset)
-{
-    if (pPrimAsset->m_staticMeshCnstMaterialBuffer == nullptr &&
-        pPrimAsset->m_staticMeshCnstMaterialCbvDescHeap == nullptr)
-    {
-        pPrimAsset->GenMaterialMask();
-        constexpr uint32_t CnstBufferSize = sizeof(float) * 64;
-
-        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-        cbvHeapDesc.NumDescriptors = 1;
-        cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-        // NOTE: Constant buffer needs to be padded to 256 bytes.
-        D3D12_HEAP_PROPERTIES heapProperties{};
-        {
-            heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-            heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-            heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-            heapProperties.CreationNodeMask = 1;
-            heapProperties.VisibleNodeMask = 1;
-        }
-
-        D3D12_RESOURCE_DESC bufferRsrcDesc{};
-        {
-            bufferRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-            bufferRsrcDesc.Alignment = 0;
-            bufferRsrcDesc.Width = CnstBufferSize;
-            bufferRsrcDesc.Height = 1;
-            bufferRsrcDesc.DepthOrArraySize = 1;
-            bufferRsrcDesc.MipLevels = 1;
-            bufferRsrcDesc.Format = DXGI_FORMAT_UNKNOWN;
-            bufferRsrcDesc.SampleDesc.Count = 1;
-            bufferRsrcDesc.SampleDesc.Quality = 0;
-            bufferRsrcDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-            bufferRsrcDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        }
-
-        // Create and populate the static mesh constant material buffer.
-        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferRsrcDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&pPrimAsset->m_staticMeshCnstMaterialBuffer)));
-
-        ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pPrimAsset->m_staticMeshCnstMaterialCbvDescHeap)));
-
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-        {
-            cbvDesc.BufferLocation = pPrimAsset->m_staticMeshCnstMaterialBuffer->GetGPUVirtualAddress();
-            cbvDesc.SizeInBytes = CnstBufferSize;
-        }
-        g_pD3dDevice->CreateConstantBufferView(&cbvDesc, pPrimAsset->m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart());
-
-        struct ConstantMaterial
-        {
-            float baseColorFactor[4];
-            float metallicRoughness[4];
-            uint32_t materialMask;
-        };
-
-        ConstantMaterial cnstMaterialData;
-        cnstMaterialData.baseColorFactor[0] = m_cnstAlbedo[0];
-        cnstMaterialData.baseColorFactor[1] = m_cnstAlbedo[1];
-        cnstMaterialData.baseColorFactor[2] = m_cnstAlbedo[2];
-        cnstMaterialData.metallicRoughness[0] = m_cnstMetallic;
-        cnstMaterialData.metallicRoughness[1] = m_cnstRoughness;
-        cnstMaterialData.materialMask = pPrimAsset->m_materialMask;
-
-        void* pConstBufferBegin;
-        D3D12_RANGE readRange{ 0, 0 };
-        ThrowIfFailed(pPrimAsset->m_staticMeshCnstMaterialBuffer->Map(0, &readRange, &pConstBufferBegin));
-        memcpy(pConstBufferBegin, &cnstMaterialData, sizeof(ConstantMaterial));
-        pPrimAsset->m_staticMeshCnstMaterialBuffer->Unmap(0, nullptr);
-    }
+    void* pConstBufferBegin;
+    D3D12_RANGE readRange{ 0, 0 };
+    ThrowIfFailed(m_staticMeshCnstMaterialBuffer->Map(0, &readRange, &pConstBufferBegin));
+    memcpy(pConstBufferBegin, &cnstMaterialData, sizeof(ConstantMaterial));
+    m_staticMeshCnstMaterialBuffer->Unmap(0, nullptr);
 }
