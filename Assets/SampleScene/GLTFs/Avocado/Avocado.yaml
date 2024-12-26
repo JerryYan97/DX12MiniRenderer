@@ -6,7 +6,7 @@ SceneGraph:
     Type: StaticMesh
     Position: [0.0, -0.5, 0.0]
     Scale: [12.0, 12.0, 12.0]
-    Rotation: [0, 0, 0]
+    Rotation: [0, -0.261799, 0]
     AssetPath: avocado/Avocado.gltf
     Material:
       Type: ConstMaterial
@@ -15,20 +15,20 @@ SceneGraph:
       Metallic: 0.0
   PointLightInst1:
     Type: PointLight
-    Radiance: [10.0, 10.0, 10.0]
-    Position: [1.0, 2.0, 0.0]
+    Radiance: [50.0, 50.0, 50.0]
+    Position: [5.0, 2.0, -5.0]
   PointLightInst2:
     Type: PointLight
-    Radiance: [10.0, 10.0, 10.0]
-    Position: [-1.0, 2.0, 0.0]
+    Radiance: [50.0, 50.0, 50.0]
+    Position: [-5.0, 2.0, -5.0]
   PointLightInst3:
     Type: PointLight
-    Radiance: [10.0, 10.0, 10.0]
-    Position: [2.0, -2.0, 0.0]
+    Radiance: [50.0, 50.0, 50.0]
+    Position: [5.0, -2.0, -5.0]
   PointLightInst4:
     Type: PointLight
-    Radiance: [10.0, 10.0, 10.0]
-    Position: [-2.0, -2.0, 0.0]
+    Radiance: [50.0, 50.0, 50.0]
+    Position: [-5.0, -2.0, -5.0]
   AmbientLightInst:
     Type: AmbientLight
     Radiance: [0.1, 0.1, 0.1]

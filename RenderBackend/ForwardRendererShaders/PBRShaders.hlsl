@@ -191,7 +191,6 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
     float3 sphereRefAlbedo = constAlbedo.xyz; // F0
     float3 sphereDifAlbedo = constAlbedo.xyz;
-    
     if(materialMask & ALBEDO_MASK)
     {
         float3 texAlbedo = i_baseColorTexture.Sample(i_baseColorSamplerState, input.uv).xyz;
@@ -199,14 +198,35 @@ float4 PSMain(PSInput input) : SV_TARGET
         sphereRefAlbedo = texAlbedo;
     }
     
-    float3 wo = normalize(cameraPos.xyz - input.worldPos.xyz);
-	
     float3 worldNormal = normalize(input.normal.xyz);
-
-    float viewNormalCosTheta = max(dot(worldNormal, wo), 0.0);
-
+    if(materialMask & NORMAL_MASK)
+    {
+        float3 normalSampled = i_normalTexture.Sample(i_normalSamplerState, input.uv).xyz;
+        float3 tangent = normalize(input.tangent.xyz);
+        float3 biTangent = normalize(cross(worldNormal, tangent));
+        normalSampled = normalSampled * 2.0 - 1.0;
+        worldNormal = tangent * normalSampled.x + biTangent * normalSampled.y + worldNormal * normalSampled.z;
+    }
+    
+    // Overwrite the constant metallic roughness if there is a texture.
     float metallic = metalicRoughness.x;
     float roughness = metalicRoughness.y;
+    if(materialMask & ROUGHNESS_METALIC_MASK)
+    {
+        float3 roughnessMetallicSampled = i_roughnessMetallicTexture.Sample(i_roughnessMetallicSamplerState, input.uv).xyz;
+        roughness = roughnessMetallicSampled.g;
+        metallic = roughnessMetallicSampled.b;
+    }
+    
+    float ao = 1.0;
+    if(materialMask & AO_MASK)
+    {
+        ao = i_occlusionTexture.Sample(i_occlusionSamplerState, input.uv).r;
+    }
+    
+    float3 wo = normalize(cameraPos.xyz - input.worldPos.xyz);
+	
+    float viewNormalCosTheta = max(dot(worldNormal, wo), 0.0);
 
     float3 Lo = float3(0.0, 0.0, 0.0); // Output light values to the view direction.
     uint lightCnt = extraIntData.x;
@@ -242,7 +262,7 @@ float4 PSMain(PSInput input) : SV_TARGET
         Lo += (kD * (sphereDifAlbedo / 3.14159265359) + specular) * radiance * lightNormalCosTheta;
     }
 
-    float3 ambient = ambientLight.xyz * sphereRefAlbedo;
+    float3 ambient = ambientLight.xyz * sphereRefAlbedo * ao;
     float3 color = ambient + Lo;
 	
     // Gamma Correction
