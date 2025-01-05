@@ -47,13 +47,17 @@ public:
     virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) = 0;
     static void OnResizeCallback(HEventArguments args)
     {
-        m_pInstance->CustomResize();
+        uint32_t width = std::any_cast<uint32_t>(args[crc32("Width")]);
+        uint32_t height = std::any_cast<uint32_t>(args[crc32("Height")]);
+        m_pInstance->CustomResize(width, height);
     }
 
     RendererBackendType GetType() { return m_type; }
 
+    virtual void Resize(uint32_t width, uint32_t height) {}
+
 protected:
-    virtual void CustomResize() {}
+    virtual void CustomResize(uint32_t width, uint32_t height) {}
     virtual void CustomInit() {}
     virtual void CustomDeinit() {}
 

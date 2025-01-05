@@ -38,7 +38,7 @@ set_target_properties(yaml-cpp-parse PROPERTIES FOLDER "YamlCpp")
 set_target_properties(yaml-cpp-read PROPERTIES FOLDER "YamlCpp")
 set_target_properties(yaml-cpp-sandbox PROPERTIES FOLDER "YamlCpp")
 
-target_compile_features(DX12MiniRenderer PRIVATE cxx_std_17)
+target_compile_features(DX12MiniRenderer PRIVATE cxx_std_20)
 
 target_link_libraries(DX12MiniRenderer d3d12 dxgi d3dcompiler yaml-cpp)
 

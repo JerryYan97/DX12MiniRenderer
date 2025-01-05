@@ -8,7 +8,10 @@ class HWRTRenderBackend : public RendererBackend
 {
     public:
         HWRTRenderBackend() : 
-            RendererBackend(RendererBackendType::PathTracing)/*,
+            RendererBackend(RendererBackendType::PathTracing),
+            m_uavHeap(nullptr),
+            m_renderTarget(nullptr)
+            /*,
             m_raytracingGlobalRootSignature(nullptr),
             m_raytracingLocalRootSignature(nullptr),
             m_rtPipelineStateObject(nullptr),
@@ -30,7 +33,7 @@ class HWRTRenderBackend : public RendererBackend
         // ID3D12Resource* GetRaytracingOutput() { return m_raytracingOutput; }
 
     protected:
-        virtual void CustomResize() override;
+        virtual void CustomResize(uint32_t width, uint32_t height) override;
         virtual void CustomInit() override;
         virtual void CustomDeinit() override;
     private:
@@ -75,4 +78,7 @@ class HWRTRenderBackend : public RendererBackend
         typedef UINT16 Index;
         struct Vertex { float v1, v2, v3; };
         */
+
+        ID3D12DescriptorHeap* m_uavHeap;
+        ID3D12Resource* m_renderTarget;
 };

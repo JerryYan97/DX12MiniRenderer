@@ -7,6 +7,11 @@
 #include "../UI/UIManager.h"
 #include <d3d12.h>
 
+constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
+constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = {.Type = D3D12_HEAP_TYPE_UPLOAD};
+constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = {.Type = D3D12_HEAP_TYPE_DEFAULT};
+
+
 /*
 static const wchar_t* c_hitGroupName         = L"MyHitGroup";
 static const wchar_t* c_raygenShaderName     = L"MyRaygenShader";
@@ -16,6 +21,16 @@ static const wchar_t* c_missShaderName       = L"MyMissShader";
 
 void HWRTRenderBackend::CustomInit()
 {
+    D3D12_DESCRIPTOR_HEAP_DESC uavHeapDesc = {
+        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+        .NumDescriptors = 1,
+        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE};
+    m_pD3dDevice->CreateDescriptorHeap(&uavHeapDesc, IID_PPV_ARGS(&m_uavHeap));
+
+    uint32_t winWidth, winHeight;
+    m_pUIManager->GetWindowSize(winWidth, winHeight);
+    CustomResize(winWidth, winHeight);
+
     /*
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
@@ -36,6 +51,8 @@ void HWRTRenderBackend::CustomInit()
 
 void HWRTRenderBackend::CustomDeinit()
 {
+    if(m_uavHeap) { m_uavHeap->Release(); m_uavHeap = nullptr; }
+    if(m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
     /*
     m_raytracingGlobalRootSignature->Release();
     m_raytracingGlobalRootSignature = nullptr;
@@ -607,8 +624,33 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, Rend
     */
 }
 
-void HWRTRenderBackend::CustomResize()
+void HWRTRenderBackend::CustomResize(uint32_t width, uint32_t height)
 {
+    std::cout << "Resizing to " << width << "x" << height << std::endl;
+
+    if (m_renderTarget) [[likely]]
+        m_renderTarget->Release();
+
+    D3D12_RESOURCE_DESC rtDesc = {
+        .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        .Width = width,
+        .Height = height,
+        .DepthOrArraySize = 1,
+        .MipLevels = 1,
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+        .SampleDesc = NO_AA,
+        .Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS};
+    m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &rtDesc,
+                                    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                    nullptr, IID_PPV_ARGS(&m_renderTarget));
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+        .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D};
+    m_pD3dDevice->CreateUnorderedAccessView(
+        m_renderTarget, nullptr, &uavDesc,
+        m_uavHeap->GetCPUDescriptorHandleForHeapStart());
+
     /*
     uint32_t winWidth, winHeight;
     m_pUIManager->GetWindowSize(winWidth, winHeight);

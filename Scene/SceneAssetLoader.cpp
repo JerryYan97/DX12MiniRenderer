@@ -268,14 +268,14 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
         int materialIdx = mesh.primitives[i].material;
 
         // All the textures are 4 components R8G8B8A8 textures.
-        auto& pfnSetDefaultBaseColor = [](PrimitiveAsset& meshPrimitive) {
+        auto pfnSetDefaultBaseColor = [](PrimitiveAsset& meshPrimitive) {
             meshPrimitive.m_baseColorTex.pixHeight = 1;
             meshPrimitive.m_baseColorTex.pixWidth = 1;
             meshPrimitive.m_baseColorTex.componentCnt = 4;
             meshPrimitive.m_baseColorTex.dataVec = std::vector<uint8_t>(4, 255);
             };
 
-        auto& pfnSetDefaultMetallicRoughness = [](PrimitiveAsset& meshPrimitive) {
+        auto pfnSetDefaultMetallicRoughness = [](PrimitiveAsset& meshPrimitive) {
             float defaultMetallicRoughness[4] = { 0.f, 1.f, 0.f, 0.f };
             meshPrimitive.m_metallicRoughnessTex.pixHeight = 1;
             meshPrimitive.m_metallicRoughnessTex.pixWidth = 1;
@@ -284,7 +284,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             memcpy(meshPrimitive.m_metallicRoughnessTex.dataVec.data(), defaultMetallicRoughness, sizeof(defaultMetallicRoughness));
             };
 
-        auto& pfnSetDefaultOcclusion = [](PrimitiveAsset& meshPrimitive) {
+        auto pfnSetDefaultOcclusion = [](PrimitiveAsset& meshPrimitive) {
             float defaultOcclusion[4] = { 1.f, 0.f, 0.f, 0.f };
             meshPrimitive.m_occlusionTex.pixHeight = 1;
             meshPrimitive.m_occlusionTex.pixWidth = 1;
@@ -293,7 +293,7 @@ void SceneAssetLoader::LoadTinyGltf(const std::string& fileNamePath, StaticMesh*
             memcpy(meshPrimitive.m_occlusionTex.dataVec.data(), &defaultOcclusion, sizeof(defaultOcclusion));
             };
 
-        auto& pfnSetDefaultNormal = [](PrimitiveAsset& meshPrimitive) {
+        auto pfnSetDefaultNormal = [](PrimitiveAsset& meshPrimitive) {
             float defaultNormal[3] = { 0.f, 0.f, 1.f };
             meshPrimitive.m_normalTex.pixHeight = 1;
             meshPrimitive.m_normalTex.pixWidth = 1;
