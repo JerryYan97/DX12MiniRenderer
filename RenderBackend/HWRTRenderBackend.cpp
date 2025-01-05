@@ -14,6 +14,7 @@ static const wchar_t* c_missShaderName       = L"MyMissShader";
 
 void HWRTRenderBackend::CustomInit()
 {
+    /*
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
 
@@ -28,10 +29,12 @@ void HWRTRenderBackend::CustomInit()
     BuildAccelerationStructures();
     BuildShaderTables();
     BuildRaytracingOutput();
+    */
 }
 
 void HWRTRenderBackend::CustomDeinit()
 {
+    /*
     m_raytracingGlobalRootSignature->Release();
     m_raytracingGlobalRootSignature = nullptr;
     m_raytracingLocalRootSignature->Release();
@@ -55,8 +58,10 @@ void HWRTRenderBackend::CustomDeinit()
     m_missShaderTable = nullptr;
     m_hitGroupShaderTable->Release();
     m_hitGroupShaderTable = nullptr;
+    */
 }
 
+/*
 void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
 {
     // Global Root Signature
@@ -129,7 +134,8 @@ void HWRTRenderBackend::InitRootSignatures() // Global and Local Root Signatures
         if (pError) { pError->Release(); }
     }
 }
-
+*/
+/*
 // NOTE that the local/global root signatures need to be the pointer of the pointer -- In the DX12 example, it uses `GetAddressOf` to get the pointer of the pointer.
 void HWRTRenderBackend::InitPipelineStates() // PSOs
 {
@@ -193,12 +199,13 @@ void HWRTRenderBackend::InitPipelineStates() // PSOs
     // D3D12_STATE_SUBOBJECT pipelineConfigSubobject{D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &pipelineConfigDesc};
     subobjects[6].Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG;
     subobjects[6].pDesc = &pipelineConfigDesc;
-
+    */
     // Create the state object
     /*
     D3D12_STATE_SUBOBJECT subobjects[7]{libSubobject, hitGroupSubobject, shaderConfigSubobject, localRootSignatureSubobject, 
                                         localRootSignatureAssociationSubobject, globalRootSignatureSubobject, pipelineConfigSubobject};
     */  
+/*
     raytracingPipelineStateObjectDesc.NumSubobjects = 7;
     raytracingPipelineStateObjectDesc.pSubobjects = subobjects;
 
@@ -211,7 +218,8 @@ void HWRTRenderBackend::InitPipelineStates() // PSOs
 
 
 }
-
+*/
+/*
 void HWRTRenderBackend::InitDescriptorHeaps() // Descriptor Heaps
 {
     D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
@@ -245,10 +253,11 @@ void HWRTRenderBackend::BuildGeometry() // Build Scene Geometry
         { -offset, offset, depthValue },
         { offset, offset, depthValue }
     };
-
+    
     AllocateUploadBuffer(m_pD3dDevice, vertices, sizeof(vertices), &m_vertexBuffer);
     AllocateUploadBuffer(m_pD3dDevice, indices, sizeof(indices), &m_indexBuffer);
     // Loop through all primitives and create gpu resources map
+    */
     /*
     for (StaticMesh* staticMesh : staticMeshes)
     {
@@ -271,8 +280,8 @@ void HWRTRenderBackend::BuildGeometry() // Build Scene Geometry
         }
     }
     */
-}
-
+// }
+/*
 void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleration Structures
 {
     // Create temp command list to build acceleration structures
@@ -306,7 +315,7 @@ void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleratio
     m_pD3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pCommandAllocator));
     m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence));
     m_pD3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, pCommandAllocator, nullptr, IID_PPV_ARGS(&pD3dCommandList));
-
+    */
     // We only have one mesh primitive for now
     /*
     std::vector<StaticMesh*> staticMeshes;
@@ -327,6 +336,7 @@ void HWRTRenderBackend::BuildAccelerationStructures() // Build Scene Acceleratio
         geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
     }
     */
+/*
     D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
     {
         geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -558,9 +568,10 @@ void HWRTRenderBackend::BuildRaytracingOutput() // Build Raytracing Output
     m_pD3dDevice->CreateUnorderedAccessView(m_raytracingOutput, nullptr, &uavDesc, uavDescriptorHandle);
     m_raytracingOutputResourceUAVGpuDescriptor = m_descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
-
+*/
 void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo)
 {
+    /*
     BuildAccelerationStructures();
 
     ID3D12GraphicsCommandList4* pDxrCommandList = nullptr;
@@ -591,17 +602,21 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, Rend
         dispatchDesc.Depth = 1;
     }
     pDxrCommandList->DispatchRays(&dispatchDesc);
+    */
 }
 
 void HWRTRenderBackend::CustomResize()
 {
+    /*
     uint32_t winWidth, winHeight;
     m_pUIManager->GetWindowSize(winWidth, winHeight);
     UpdateForSizeChange(winWidth, winHeight);
 
     UpdateForSizeChange(winWidth, winHeight);
+    */
 }
 
+/*
 void HWRTRenderBackend::UpdateForSizeChange(UINT width, UINT height)
 {
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
@@ -623,3 +638,4 @@ void HWRTRenderBackend::UpdateForSizeChange(UINT width, UINT height)
         };
     }
 }
+*/

@@ -8,7 +8,7 @@ class HWRTRenderBackend : public RendererBackend
 {
     public:
         HWRTRenderBackend() : 
-            RendererBackend(RendererBackendType::PathTracing) ,
+            RendererBackend(RendererBackendType::PathTracing)/*,
             m_raytracingGlobalRootSignature(nullptr),
             m_raytracingLocalRootSignature(nullptr),
             m_rtPipelineStateObject(nullptr),
@@ -20,20 +20,21 @@ class HWRTRenderBackend : public RendererBackend
             m_raytracingOutput(nullptr),
             m_rayGenShaderTable(nullptr),
             m_missShaderTable(nullptr),
-            m_hitGroupShaderTable(nullptr)
+            m_hitGroupShaderTable(nullptr)*/
         {}
         
         ~HWRTRenderBackend() {}
 
         virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) override;
 
-        ID3D12Resource* GetRaytracingOutput() { return m_raytracingOutput; }
+        // ID3D12Resource* GetRaytracingOutput() { return m_raytracingOutput; }
 
     protected:
         virtual void CustomResize() override;
         virtual void CustomInit() override;
         virtual void CustomDeinit() override;
     private:
+        /*
         // Various Init Functions
         void InitRootSignatures(); // Global and Local Root Signatures
         void InitPipelineStates(); // PSOs
@@ -73,4 +74,5 @@ class HWRTRenderBackend : public RendererBackend
 
         typedef UINT16 Index;
         struct Vertex { float v1, v2, v3; };
+        */
 };

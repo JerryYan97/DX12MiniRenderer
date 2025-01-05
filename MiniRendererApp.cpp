@@ -21,8 +21,8 @@ DX12MiniRenderer::DX12MiniRenderer()
       m_pAssetManager(nullptr)
 {
     m_pThis = this;
-    // m_pRendererBackend = new HWRTRenderBackend();
-    m_pRendererBackend = new ForwardRenderer();
+    m_pRendererBackend = new HWRTRenderBackend();
+    // m_pRendererBackend = new ForwardRenderer();
 }
 
 DX12MiniRenderer::~DX12MiniRenderer()
@@ -281,6 +281,7 @@ void DX12MiniRenderer::Run()
         
         if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)
         {
+            /*
             HWRTRenderBackend* pPathTracingBackend = dynamic_cast<HWRTRenderBackend*>(m_pRendererBackend);
             ID3D12Resource* raytracingOutput = pPathTracingBackend->GetRaytracingOutput();
 
@@ -330,6 +331,7 @@ void DX12MiniRenderer::Run()
                 waitCopyFinishTransBackBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
             }
             m_pD3dCommandList->ResourceBarrier(2, waitCopyFinishTransBackBarriers);
+            */
         }
         
         // Render Dear ImGui graphics
