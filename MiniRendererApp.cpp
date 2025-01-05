@@ -37,7 +37,7 @@ void DX12MiniRenderer::InitDevice()
     }
 
     // Create device
-    D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_0;
+    D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
     D3D12CreateDevice(nullptr, featureLevel, IID_PPV_ARGS(&m_pD3dDevice));
 
     if (m_pDx12Debug != nullptr)

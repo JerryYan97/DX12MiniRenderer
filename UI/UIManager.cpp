@@ -109,7 +109,12 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
     {
         IDXGIFactory4* dxgiFactory = nullptr;
         IDXGISwapChain1* swapChain1 = nullptr;
-        CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+        // CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+        if (FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&dxgiFactory))))
+        {
+            CreateDXGIFactory2(0, IID_PPV_ARGS(&dxgiFactory));
+        }            
+        
         // The command queue for swapchain back buffer rendering must be same as the command queue used to create the swapchain.
         dxgiFactory->CreateSwapChainForHwnd(iCmdQueue, m_hWnd, &sd, nullptr, nullptr, &swapChain1);
         swapChain1->QueryInterface(IID_PPV_ARGS(&m_pSwapChain));

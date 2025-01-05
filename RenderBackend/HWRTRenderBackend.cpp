@@ -7,10 +7,12 @@
 #include "../UI/UIManager.h"
 #include <d3d12.h>
 
+/*
 static const wchar_t* c_hitGroupName         = L"MyHitGroup";
 static const wchar_t* c_raygenShaderName     = L"MyRaygenShader";
 static const wchar_t* c_closestHitShaderName = L"MyClosestHitShader";
 static const wchar_t* c_missShaderName       = L"MyMissShader";
+*/
 
 void HWRTRenderBackend::CustomInit()
 {
