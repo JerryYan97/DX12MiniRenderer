@@ -10,7 +10,11 @@ class HWRTRenderBackend : public RendererBackend
         HWRTRenderBackend() : 
             RendererBackend(RendererBackendType::PathTracing),
             m_uavHeap(nullptr),
-            m_renderTarget(nullptr)
+            m_renderTarget(nullptr),
+            m_fence(nullptr),
+            m_quadVB(nullptr),
+            m_cubeVB(nullptr),
+            m_cubeIB(nullptr)
             /*,
             m_raytracingGlobalRootSignature(nullptr),
             m_raytracingLocalRootSignature(nullptr),
@@ -81,4 +85,15 @@ class HWRTRenderBackend : public RendererBackend
 
         ID3D12DescriptorHeap* m_uavHeap;
         ID3D12Resource* m_renderTarget;
+
+        ID3D12Fence* m_fence;
+
+        ID3D12Resource* m_quadVB;
+        ID3D12Resource* m_cubeVB;
+        ID3D12Resource* m_cubeIB;
+        void InitMeshes();
+
+        ID3D12Resource* MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize = nullptr);
+
+        void Flush();
 };

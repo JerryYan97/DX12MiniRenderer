@@ -125,7 +125,7 @@ void DX12MiniRenderer::InitTempRendererInfarstructure()
         D3D12_COMMAND_QUEUE_DESC desc = {};
         desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        desc.NodeMask = 1;
+        // desc.NodeMask = 1;
         m_pD3dDevice->CreateCommandQueue(&desc, IID_PPV_ARGS(&m_pD3dCommandQueue));
         m_pD3dCommandQueue->SetName(L"Main Command Queue");
     }
@@ -141,11 +141,13 @@ void DX12MiniRenderer::InitTempRendererInfarstructure()
         m_frameContexts[i].FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     }
 
-    m_pD3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_frameContexts[0].CommandAllocator, nullptr, IID_PPV_ARGS(&m_pD3dCommandList));
+    // m_pD3dDevice->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_frameContexts[0].CommandAllocator, nullptr, IID_PPV_ARGS(&m_pD3dCommandList));
+    m_pD3dDevice->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&m_pD3dCommandList));
 
     // Command lists are created in the recording state, but there is nothing
     // to record yet. The main loop expects it to be closed, so close it now.
-    m_pD3dCommandList->Close();
+    // CreateCommandList1(...) creates a command list in the closed state.
+    // m_pD3dCommandList->Close();
 }
 
 FrameContext* DX12MiniRenderer::WaitForCurrentFrameResources()

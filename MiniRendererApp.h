@@ -47,7 +47,7 @@ private:
     static void WaitGpuIdle(HEventArguments args);
     static void GenerateImGUIStates();
 
-    ID3D12Device*    m_pD3dDevice = nullptr;
+    ID3D12Device5*   m_pD3dDevice = nullptr;
     ID3D12Debug*     m_pDx12Debug = nullptr;
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;
@@ -62,8 +62,8 @@ private:
     FrameContext* WaitForCurrentFrameResources();
     void static TempRendererWaitGpuIdle();
 
-    ID3D12CommandQueue*        m_pD3dCommandQueue = nullptr;
-    ID3D12GraphicsCommandList* m_pD3dCommandList = nullptr;
+    ID3D12CommandQueue*         m_pD3dCommandQueue = nullptr;
+    ID3D12GraphicsCommandList4* m_pD3dCommandList = nullptr;
     // ID3D12Fence*               m_fence = nullptr;
     // HANDLE                     m_fenceEvent = nullptr;
     std::vector<FrameContext>  m_frameContexts;

@@ -10,7 +10,22 @@
 constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
 constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = {.Type = D3D12_HEAP_TYPE_UPLOAD};
 constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = {.Type = D3D12_HEAP_TYPE_DEFAULT};
+constexpr D3D12_RESOURCE_DESC BASIC_BUFFER_DESC = {
+    .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+    .Width = 0, // Will be changed in copies
+    .Height = 1,
+    .DepthOrArraySize = 1,
+    .MipLevels = 1,
+    .SampleDesc = NO_AA,
+    .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR};
 
+constexpr float quadVtx[] = {-1, 0, -1, -1, 0,  1, 1, 0, 1,
+                             -1, 0, -1,  1, 0, -1, 1, 0, 1};
+constexpr float cubeVtx[] = {-1, -1, -1, 1, -1, -1, -1, 1, -1, 1, 1, -1,
+                             -1, -1,  1, 1, -1,  1, -1, 1,  1, 1, 1,  1};
+constexpr short cubeIdx[] = {4, 6, 0, 2, 0, 6, 0, 1, 4, 5, 4, 1,
+                             0, 2, 1, 3, 1, 2, 1, 3, 5, 7, 5, 3,
+                             2, 6, 3, 7, 3, 6, 4, 5, 6, 7, 6, 5};
 
 /*
 static const wchar_t* c_hitGroupName         = L"MyHitGroup";
@@ -19,8 +34,45 @@ static const wchar_t* c_closestHitShaderName = L"MyClosestHitShader";
 static const wchar_t* c_missShaderName       = L"MyMissShader";
 */
 
+void HWRTRenderBackend::Flush()
+{
+    static UINT64 value = 1;
+    m_pMainCommandQueue->Signal(m_fence, value);
+    m_fence->SetEventOnCompletion(value++, nullptr);
+}
+
+void HWRTRenderBackend::InitMeshes()
+{
+    auto makeAndCopy = [=](auto& data) {
+        auto desc = BASIC_BUFFER_DESC;
+        desc.Width = sizeof(data);
+        ID3D12Resource* res;
+        m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+            // &desc, D3D12_RESOURCE_STATE_COMMON,
+            &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr, IID_PPV_ARGS(&res));
+
+        void* ptr;
+        res->Map(0, nullptr, &ptr);
+        memcpy(ptr, data, sizeof(data));
+        res->Unmap(0, nullptr);
+        return res;
+        };
+
+    m_quadVB = makeAndCopy(quadVtx);
+    m_cubeVB = makeAndCopy(cubeVtx);
+    m_cubeIB = makeAndCopy(cubeIdx);
+}
+
+ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize)
+{
+    return nullptr;
+}
+
 void HWRTRenderBackend::CustomInit()
 {
+    m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+
     D3D12_DESCRIPTOR_HEAP_DESC uavHeapDesc = {
         .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
         .NumDescriptors = 1,
@@ -31,6 +83,7 @@ void HWRTRenderBackend::CustomInit()
     m_pUIManager->GetWindowSize(winWidth, winHeight);
     CustomResize(winWidth, winHeight);
 
+    InitMeshes();
     /*
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
@@ -53,6 +106,11 @@ void HWRTRenderBackend::CustomDeinit()
 {
     if(m_uavHeap) { m_uavHeap->Release(); m_uavHeap = nullptr; }
     if(m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
+    if(m_quadVB) { m_quadVB->Release(); m_quadVB = nullptr; }
+    if(m_cubeVB) { m_cubeVB->Release(); m_cubeVB = nullptr; }
+    if(m_cubeIB) { m_cubeIB->Release(); m_cubeIB = nullptr; }
+    if(m_fence) { m_fence->Release(); m_fence = nullptr; }
+
     /*
     m_raytracingGlobalRootSignature->Release();
     m_raytracingGlobalRootSignature = nullptr;
