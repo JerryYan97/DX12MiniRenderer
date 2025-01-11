@@ -108,4 +108,11 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_cubeBlas;
 
         void UpdateTransforms();
+
+        void InitTopLevel();
+        ID3D12Resource* m_tlas;
+        ID3D12Resource* m_tlasUpdateScratch;
+
+        void InitRootSignature();
+        ID3D12RootSignature* m_rootSignature;
 };

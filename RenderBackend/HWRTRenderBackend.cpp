@@ -1,3 +1,5 @@
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
 #include "HWRTRenderBackend.h"
 #include "../Scene/SceneAssetLoader.h"
 #include "../Scene/Level.h"
@@ -6,6 +8,8 @@
 #include "RTShaders/Raytracing.hlsl.h"
 #include "../UI/UIManager.h"
 #include "../MiniRendererApp.h"
+#include <algorithm>     // For std::size, typed std::max, etc.
+#include <DirectXMath.h> // For XMMATRIX
 #include <d3d12.h>
 
 constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
@@ -108,7 +112,28 @@ ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_R
 constexpr UINT NUM_INSTANCES = 3;
 
 void HWRTRenderBackend::UpdateTransforms()
-{}
+{
+    using namespace DirectX;
+    auto set = [=](int idx, XMMATRIX mx) {
+        auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_instanceData[idx].Transform);
+        XMStoreFloat3x4(ptr, mx);
+    };
+
+    auto time = static_cast<float>(GetTickCount64()) / 1000;
+
+    auto cube = XMMatrixRotationRollPitchYaw(time / 2, time / 3, time / 5);
+    cube *= XMMatrixTranslation(-1.5, 2, 2);
+    set(0, cube);
+
+    auto mirror = XMMatrixRotationX(-1.8f);
+    mirror *= XMMatrixRotationY(XMScalarSinEst(time) / 8 + 1);
+    mirror *= XMMatrixTranslation(2, 2, 2);
+    set(1, mirror);
+
+    auto floor = XMMatrixScaling(5, 5, 5);
+    floor *= XMMatrixTranslation(0, 0, 2);
+    set(2, floor);
+}
 
 void HWRTRenderBackend::InitScene()
 {
@@ -129,6 +154,20 @@ void HWRTRenderBackend::InitScene()
 
     UpdateTransforms();
 
+}
+
+void HWRTRenderBackend::InitTopLevel()
+{
+    UINT64 updateScratchSize;
+    m_tlas = MakeTLAS(m_instances, NUM_INSTANCES, &updateScratchSize);
+
+    auto desc = BASIC_BUFFER_DESC;
+    // WARP bug workaround: use 8 if the required size was reported as less
+    desc.Width = std::max(updateScratchSize, 8ULL);
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
+                                          D3D12_RESOURCE_STATE_COMMON, nullptr,
+                                          IID_PPV_ARGS(&m_tlasUpdateScratch));
 }
 
 ID3D12Resource* HWRTRenderBackend::MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer, UINT indices)
@@ -177,6 +216,33 @@ void HWRTRenderBackend::InitBottomLevel()
     m_cubeBlas = MakeBLAS(m_cubeVB, std::size(cubeVtx), m_cubeIB, std::size(cubeIdx));
 }
 
+void HWRTRenderBackend::InitRootSignature()
+{
+
+    D3D12_DESCRIPTOR_RANGE uavRange = {
+        .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+        .NumDescriptors = 1,
+    };
+    D3D12_ROOT_PARAMETER params[] = {
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+         .DescriptorTable = {.NumDescriptorRanges = 1,
+                             .pDescriptorRanges = &uavRange}},
+
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+         .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}}};
+
+    D3D12_ROOT_SIGNATURE_DESC desc = {.NumParameters = std::size(params),
+                                      .pParameters = params};
+
+    ID3DBlob* blob;
+    D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &blob,
+                                nullptr);
+    m_pD3dDevice->CreateRootSignature(0, blob->GetBufferPointer(),
+                                blob->GetBufferSize(),
+                                IID_PPV_ARGS(&m_rootSignature));
+    blob->Release();
+}
+
 void HWRTRenderBackend::CustomInit()
 {
     m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
@@ -194,6 +260,8 @@ void HWRTRenderBackend::CustomInit()
     InitMeshes();
     InitBottomLevel();
     InitScene();
+    InitTopLevel();
+    InitRootSignature();
     /*
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
@@ -223,6 +291,9 @@ void HWRTRenderBackend::CustomDeinit()
     if(m_instances) { m_instances->Release(); m_instances = nullptr; }
     if(m_quadBlas) { m_quadBlas->Release(); m_quadBlas = nullptr; }
     if(m_cubeBlas) { m_cubeBlas->Release(); m_cubeBlas = nullptr; }
+    if(m_tlas) { m_tlas->Release(); m_tlas = nullptr; }
+    if(m_tlasUpdateScratch) { m_tlasUpdateScratch->Release(); m_tlasUpdateScratch = nullptr; }
+    if(m_rootSignature) { m_rootSignature->Release(); m_rootSignature = nullptr; }
     /*
     m_raytracingGlobalRootSignature->Release();
     m_raytracingGlobalRootSignature = nullptr;
