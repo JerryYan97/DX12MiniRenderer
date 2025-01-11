@@ -1,4 +1,5 @@
 #include "RendererBackend.h"
+#include "../MiniRendererApp.h"
 
 RendererBackend* RendererBackend::m_pInstance = nullptr;
 
@@ -11,6 +12,8 @@ void RendererBackend::Init(RendererBackendInitStruct initStruct)
     m_pSceneAssetLoader = initStruct.pSceneAssetLoader;
     m_pLevel = initStruct.pLevel;
     m_pMainCommandQueue = initStruct.pMainCmdQueue;
+    m_pInitFrameContext = initStruct.pInitFrameContext;
+    m_pCommandList = initStruct.pCommandList;
 
     CustomInit();
 }

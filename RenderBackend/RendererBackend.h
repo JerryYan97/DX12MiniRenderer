@@ -7,6 +7,7 @@ class UIManager;
 class HEventManager;
 class SceneAssetLoader;
 class Level;
+class FrameContext;
 
 enum class RendererBackendType
 {
@@ -22,13 +23,15 @@ struct RenderTargetInfo
 
 struct RendererBackendInitStruct
 {
-    ID3D12Device*  pD3dDevice = nullptr;
+    ID3D12Device5*  pD3dDevice = nullptr;
     ID3D12Debug*   pDx12Debug = nullptr;
     UIManager*     pUIManager = nullptr;
     HEventManager* pEventManager = nullptr;
     SceneAssetLoader*   pSceneAssetLoader = nullptr;
     Level*         pLevel = nullptr;
     ID3D12CommandQueue* pMainCmdQueue = nullptr;
+    FrameContext*  pInitFrameContext = nullptr;
+    ID3D12GraphicsCommandList4* pCommandList = nullptr;
 };
 
 class RendererBackend
@@ -61,13 +64,15 @@ protected:
     virtual void CustomInit() {}
     virtual void CustomDeinit() {}
 
-    ID3D12Device*  m_pD3dDevice = nullptr;
+    ID3D12Device5* m_pD3dDevice = nullptr;
     ID3D12Debug*   m_pDx12Debug = nullptr;
     ID3D12CommandQueue* m_pMainCommandQueue = nullptr;
     UIManager*     m_pUIManager = nullptr;
     HEventManager* m_pEventManager = nullptr;
     SceneAssetLoader*   m_pSceneAssetLoader = nullptr;
     Level*         m_pLevel = nullptr;
+    FrameContext*  m_pInitFrameContext = nullptr;
+    ID3D12GraphicsCommandList4* m_pCommandList = nullptr;
 
 private:
     RendererBackendType m_type;

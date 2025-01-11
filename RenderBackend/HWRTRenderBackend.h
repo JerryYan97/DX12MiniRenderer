@@ -94,6 +94,18 @@ class HWRTRenderBackend : public RendererBackend
         void InitMeshes();
 
         ID3D12Resource* MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize = nullptr);
+        ID3D12Resource* MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer = nullptr, UINT indices = 0);
+        ID3D12Resource* MakeTLAS(ID3D12Resource* instances, UINT numInstances, UINT64* updateScratchSize);
 
         void Flush();
+
+        void InitScene();
+        ID3D12Resource* m_instances;
+        D3D12_RAYTRACING_INSTANCE_DESC* m_instanceData;
+
+        void InitBottomLevel();
+        ID3D12Resource* m_quadBlas;
+        ID3D12Resource* m_cubeBlas;
+
+        void UpdateTransforms();
 };

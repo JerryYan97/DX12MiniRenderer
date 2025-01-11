@@ -213,6 +213,8 @@ void DX12MiniRenderer::Init()
     initStruct.pEventManager = &m_eventManager;
     initStruct.pSceneAssetLoader = &m_sceneAssetLoader;
     initStruct.pLevel = m_pLevel;
+    initStruct.pInitFrameContext = &m_frameContexts[0];
+    initStruct.pCommandList = m_pD3dCommandList;
     m_pRendererBackend->Init(initStruct);
     
     m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);

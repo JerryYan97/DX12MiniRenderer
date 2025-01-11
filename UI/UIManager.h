@@ -54,7 +54,7 @@ public:
     void GetWindowSize(uint32_t& oWidth, uint32_t& oHeight) { oWidth = m_windowWidth; oHeight = m_windowHeight; }
 
     // Member Variables
-    const static unsigned int NUM_BACK_BUFFERS = 3;
+    const static unsigned int NUM_BACK_BUFFERS = 2;
 
 private:
     void WindowResize(LPARAM lParam);

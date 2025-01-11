@@ -5,6 +5,7 @@
 #include "../Utils/DX12Utils.h"
 #include "RTShaders/Raytracing.hlsl.h"
 #include "../UI/UIManager.h"
+#include "../MiniRendererApp.h"
 #include <d3d12.h>
 
 constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
@@ -66,7 +67,114 @@ void HWRTRenderBackend::InitMeshes()
 
 ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize)
 {
-    return nullptr;
+    auto makeBuffer = [=](UINT64 size, auto initialState) {
+        auto desc = BASIC_BUFFER_DESC;
+        desc.Width = size;
+        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        ID3D12Resource* buffer;
+        m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE,
+                                              &desc, initialState, nullptr,
+                                              IID_PPV_ARGS(&buffer));
+        return buffer;
+    };
+
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo;
+    m_pD3dDevice->GetRaytracingAccelerationStructurePrebuildInfo(&inputs,
+                                                           &prebuildInfo);
+    if (updateScratchSize)
+        *updateScratchSize = prebuildInfo.UpdateScratchDataSizeInBytes;
+
+    auto* scratch = makeBuffer(prebuildInfo.ScratchDataSizeInBytes,
+                               D3D12_RESOURCE_STATE_COMMON);
+    auto* as = makeBuffer(prebuildInfo.ResultDataMaxSizeInBytes,
+                          D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {
+        .DestAccelerationStructureData = as->GetGPUVirtualAddress(),
+        .Inputs = inputs,
+        .ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress()};
+
+    m_pInitFrameContext->CommandAllocator->Reset();
+    m_pCommandList->Reset(m_pInitFrameContext->CommandAllocator, nullptr);
+    m_pCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
+    m_pCommandList->Close();
+    m_pMainCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&m_pCommandList));
+
+    Flush();
+    scratch->Release();
+    return as;
+}
+
+constexpr UINT NUM_INSTANCES = 3;
+
+void HWRTRenderBackend::UpdateTransforms()
+{}
+
+void HWRTRenderBackend::InitScene()
+{
+    auto instancesDesc = BASIC_BUFFER_DESC;
+    instancesDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * NUM_INSTANCES;
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                    // &instancesDesc, D3D12_RESOURCE_STATE_COMMON,
+                                    &instancesDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                    nullptr, IID_PPV_ARGS(&m_instances));
+    m_instances->Map(0, nullptr, reinterpret_cast<void**>(&m_instanceData));
+
+    for (UINT i = 0; i < NUM_INSTANCES; ++i)
+        m_instanceData[i] = {
+            .InstanceID = i,
+            .InstanceMask = 1,
+            .AccelerationStructure = (i ? m_quadBlas : m_cubeBlas)->GetGPUVirtualAddress(),
+        };
+
+    UpdateTransforms();
+
+}
+
+ID3D12Resource* HWRTRenderBackend::MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer, UINT indices)
+{
+    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {
+        .Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+        .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
+
+        .Triangles = {
+            .Transform3x4 = 0,
+
+            .IndexFormat = indexBuffer ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_UNKNOWN,
+            .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
+            .IndexCount = indices,
+            .VertexCount = vertexFloats / 3,
+            .IndexBuffer = indexBuffer ? indexBuffer->GetGPUVirtualAddress() : 0,
+            .VertexBuffer = {.StartAddress = vertexBuffer->GetGPUVirtualAddress(),
+                             .StrideInBytes = sizeof(float) * 3}}};
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = {
+        .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+        .NumDescs = 1,
+        .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+        .pGeometryDescs = &geometryDesc};
+
+    return MakeAccelerationStructure(inputs);
+}
+
+ID3D12Resource* HWRTRenderBackend::MakeTLAS(ID3D12Resource* instances, UINT numInstances,
+                         UINT64* updateScratchSize)
+{
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = {
+        .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE,
+        .NumDescs = numInstances,
+        .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+        .InstanceDescs = instances->GetGPUVirtualAddress()};
+
+    return MakeAccelerationStructure(inputs, updateScratchSize);
+}
+
+void HWRTRenderBackend::InitBottomLevel()
+{
+    m_quadBlas = MakeBLAS(m_quadVB, std::size(quadVtx));
+    m_cubeBlas = MakeBLAS(m_cubeVB, std::size(cubeVtx), m_cubeIB, std::size(cubeIdx));
 }
 
 void HWRTRenderBackend::CustomInit()
@@ -84,6 +192,8 @@ void HWRTRenderBackend::CustomInit()
     CustomResize(winWidth, winHeight);
 
     InitMeshes();
+    InitBottomLevel();
+    InitScene();
     /*
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
@@ -110,7 +220,9 @@ void HWRTRenderBackend::CustomDeinit()
     if(m_cubeVB) { m_cubeVB->Release(); m_cubeVB = nullptr; }
     if(m_cubeIB) { m_cubeIB->Release(); m_cubeIB = nullptr; }
     if(m_fence) { m_fence->Release(); m_fence = nullptr; }
-
+    if(m_instances) { m_instances->Release(); m_instances = nullptr; }
+    if(m_quadBlas) { m_quadBlas->Release(); m_quadBlas = nullptr; }
+    if(m_cubeBlas) { m_cubeBlas->Release(); m_cubeBlas = nullptr; }
     /*
     m_raytracingGlobalRootSignature->Release();
     m_raytracingGlobalRootSignature = nullptr;
