@@ -19,6 +19,7 @@ struct RenderTargetInfo
 {
     ID3D12Resource* pResource = nullptr;
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
+    D3D12_RESOURCE_DESC rtDesc;
 };
 
 struct RendererBackendInitStruct

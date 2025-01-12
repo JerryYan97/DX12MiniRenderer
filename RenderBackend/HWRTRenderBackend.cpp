@@ -917,6 +917,54 @@ void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
 
 void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
+    UpdateScene(pCommandList);
+
+    pCommandList->SetPipelineState1(m_pso);
+    pCommandList->SetComputeRootSignature(m_rootSignature);
+    pCommandList->SetDescriptorHeaps(1, &m_uavHeap);
+    auto uavTable = m_uavHeap->GetGPUDescriptorHandleForHeapStart();
+    pCommandList->SetComputeRootDescriptorTable(0, uavTable); // ?u0 ?t0
+    pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
+
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {
+        .RayGenerationShaderRecord = {
+            .StartAddress = m_shaderIDs->GetGPUVirtualAddress(),
+            .SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES},
+        .MissShaderTable = {
+            .StartAddress = m_shaderIDs->GetGPUVirtualAddress() +
+                            D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT,
+            .SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES},
+        .HitGroupTable = {
+            .StartAddress = m_shaderIDs->GetGPUVirtualAddress() +
+                            2 * D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT,
+            .SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES},
+        .Width = static_cast<UINT>(rtInfo.rtDesc.Width),
+        .Height = rtInfo.rtDesc.Height,
+        .Depth = 1};
+    pCommandList->DispatchRays(&dispatchDesc);
+
+    auto barrier = [&](auto* resource, auto before, auto after) {
+        D3D12_RESOURCE_BARRIER rb = {
+            .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+            .Transition = {.pResource = resource,
+                           .StateBefore = before,
+                           .StateAfter = after},
+        };
+        pCommandList->ResourceBarrier(1, &rb);
+    };
+
+    barrier(m_renderTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COPY_SOURCE);
+    barrier(rtInfo.pResource, D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_COPY_DEST);
+
+    pCommandList->CopyResource(rtInfo.pResource, m_renderTarget);
+
+    barrier(rtInfo.pResource, D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_RENDER_TARGET);
+    barrier(m_renderTarget, D3D12_RESOURCE_STATE_COPY_SOURCE,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
     /*
     BuildAccelerationStructures();
 

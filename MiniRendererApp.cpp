@@ -280,7 +280,7 @@ void DX12MiniRenderer::Run()
         m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
         // Render Scene
-        RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor};
+        RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
         m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
         
         if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)

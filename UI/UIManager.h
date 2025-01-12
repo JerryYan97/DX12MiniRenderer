@@ -44,6 +44,8 @@ public:
     ID3D12Resource* GetCurrentMainDSVResource() { return m_mainDepthStencilResources[GetCurrentBackBufferIndex()]; }
     D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentMainDSVDescriptor() { return m_mainDepthStencilDescriptors[GetCurrentBackBufferIndex()]; }
     
+    D3D12_RESOURCE_DESC GetCurrentRTResourceDesc() { return m_mainRenderTargetResources[GetCurrentBackBufferIndex()]->GetDesc(); }
+
     /*
     * Free all resources.
     */
