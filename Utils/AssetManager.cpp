@@ -189,6 +189,8 @@ void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = 1;
 
+    D3D12_CPU_DESCRIPTOR_HANDLE descHeapPtr{};
+
     if (pPrimAsset->TextureCnt() > 0)
     {
         uint32_t texCnt = pPrimAsset->TextureCnt();
@@ -197,9 +199,8 @@ void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(g_pD3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pPrimAsset->m_pTexturesSrvHeap)));
+        descHeapPtr = pPrimAsset->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
     }
-
-    D3D12_CPU_DESCRIPTOR_HANDLE descHeapPtr = pPrimAsset->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
 
     uint32_t texHeapOffset = 0;
     if (pPrimAsset->m_baseColorTex.pixWidth > 1)
