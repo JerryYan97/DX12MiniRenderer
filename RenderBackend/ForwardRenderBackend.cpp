@@ -317,7 +317,7 @@ void ForwardRenderer::CustomInit()
     m_scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
 }
 
-void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo)
+void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
     uint32_t winWidth, winHeight;
     m_pUIManager->GetWindowSize(winWidth, winHeight);

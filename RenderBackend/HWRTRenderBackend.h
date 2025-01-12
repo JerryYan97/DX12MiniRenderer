@@ -32,7 +32,7 @@ class HWRTRenderBackend : public RendererBackend
         
         ~HWRTRenderBackend() {}
 
-        virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) override;
+        virtual void RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo) override;
 
         // ID3D12Resource* GetRaytracingOutput() { return m_raytracingOutput; }
 
@@ -115,4 +115,10 @@ class HWRTRenderBackend : public RendererBackend
 
         void InitRootSignature();
         ID3D12RootSignature* m_rootSignature;
+
+        void InitPipeline();
+        ID3D12StateObject* m_pso;
+        ID3D12Resource* m_shaderIDs;
+
+        void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
 };

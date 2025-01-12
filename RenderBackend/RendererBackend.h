@@ -47,7 +47,7 @@ public:
     void Init(RendererBackendInitStruct initStruct);
     void Deinit();
 
-    virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) = 0;
+    virtual void RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo) = 0;
     static void OnResizeCallback(HEventArguments args)
     {
         uint32_t width = std::any_cast<uint32_t>(args[crc32("Width")]);

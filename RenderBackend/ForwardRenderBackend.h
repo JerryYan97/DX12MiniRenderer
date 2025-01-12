@@ -7,7 +7,7 @@ public:
     ForwardRenderer();
     ~ForwardRenderer();
 
-    virtual void RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo) override;
+    virtual void RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo) override;
 
 protected:
     virtual void CustomInit();

@@ -5,7 +5,8 @@
 #include "../Scene/Level.h"
 #include "../Scene/Mesh.h"
 #include "../Utils/DX12Utils.h"
-#include "RTShaders/Raytracing.hlsl.h"
+// #include "RTShaders/Raytracing.hlsl.h"
+#include "RTShaders/shader.fxh"
 #include "../UI/UIManager.h"
 #include "../MiniRendererApp.h"
 #include <algorithm>     // For std::size, typed std::max, etc.
@@ -243,6 +244,65 @@ void HWRTRenderBackend::InitRootSignature()
     blob->Release();
 }
 
+constexpr UINT64 NUM_SHADER_IDS = 3;
+void HWRTRenderBackend::InitPipeline()
+{
+
+    D3D12_DXIL_LIBRARY_DESC lib = {
+        .DXILLibrary = {.pShaderBytecode = compiledShader,
+                        .BytecodeLength = std::size(compiledShader)}};
+
+    D3D12_HIT_GROUP_DESC hitGroup = {.HitGroupExport = L"HitGroup",
+                                     .Type = D3D12_HIT_GROUP_TYPE_TRIANGLES,
+                                     .ClosestHitShaderImport = L"ClosestHit"};
+
+    D3D12_RAYTRACING_SHADER_CONFIG shaderCfg = {
+        .MaxPayloadSizeInBytes = 20,
+        .MaxAttributeSizeInBytes = 8,
+    };
+
+    D3D12_GLOBAL_ROOT_SIGNATURE globalSig = {m_rootSignature};
+
+    D3D12_RAYTRACING_PIPELINE_CONFIG pipelineCfg = {.MaxTraceRecursionDepth = 3};
+
+    D3D12_STATE_SUBOBJECT subobjects[] = {
+        {.Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, .pDesc = &lib},
+        {.Type = D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, .pDesc = &hitGroup},
+        {.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, .pDesc = &shaderCfg},
+        {.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, .pDesc = &globalSig},
+        {.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, .pDesc = &pipelineCfg}};
+    D3D12_STATE_OBJECT_DESC desc = {.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE,
+                                    .NumSubobjects = std::size(subobjects),
+                                    .pSubobjects = subobjects};
+    m_pD3dDevice->CreateStateObject(&desc, IID_PPV_ARGS(&m_pso));
+
+    auto idDesc = BASIC_BUFFER_DESC;
+    idDesc.Width = NUM_SHADER_IDS * D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &idDesc,
+                                    // D3D12_RESOURCE_STATE_COMMON, nullptr,
+                                    D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                                    IID_PPV_ARGS(&m_shaderIDs));
+
+    ID3D12StateObjectProperties* props;
+    m_pso->QueryInterface(&props);
+
+    void* data;
+    auto writeId = [&](const wchar_t* name) {
+        void* id = props->GetShaderIdentifier(name);
+        memcpy(data, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        data = static_cast<char*>(data) +
+               D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+    };
+
+    m_shaderIDs->Map(0, nullptr, &data);
+    writeId(L"RayGeneration");
+    writeId(L"Miss");
+    writeId(L"HitGroup");
+    m_shaderIDs->Unmap(0, nullptr);
+
+    props->Release();
+}
+
 void HWRTRenderBackend::CustomInit()
 {
     m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
@@ -262,6 +322,7 @@ void HWRTRenderBackend::CustomInit()
     InitScene();
     InitTopLevel();
     InitRootSignature();
+    InitPipeline();
     /*
     m_rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
     ThrowIfFailed(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
@@ -294,6 +355,8 @@ void HWRTRenderBackend::CustomDeinit()
     if(m_tlas) { m_tlas->Release(); m_tlas = nullptr; }
     if(m_tlasUpdateScratch) { m_tlasUpdateScratch->Release(); m_tlasUpdateScratch = nullptr; }
     if(m_rootSignature) { m_rootSignature->Release(); m_rootSignature = nullptr; }
+    if(m_pso) { m_pso->Release(); m_pso = nullptr; }
+    if(m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
     /*
     m_raytracingGlobalRootSignature->Release();
     m_raytracingGlobalRootSignature = nullptr;
@@ -829,7 +892,30 @@ void HWRTRenderBackend::BuildRaytracingOutput() // Build Raytracing Output
     m_raytracingOutputResourceUAVGpuDescriptor = m_descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
 */
-void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList* pCommandList, RenderTargetInfo rtInfo)
+
+void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
+{
+    UpdateTransforms();
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {
+        .DestAccelerationStructureData = m_tlas->GetGPUVirtualAddress(),
+        .Inputs = {
+            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE,
+            .NumDescs = NUM_INSTANCES,
+            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+            .InstanceDescs = m_instances->GetGPUVirtualAddress()},
+        .SourceAccelerationStructureData = m_tlas->GetGPUVirtualAddress(),
+        .ScratchAccelerationStructureData = m_tlasUpdateScratch->GetGPUVirtualAddress(),
+    };
+    cmdList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
+
+    D3D12_RESOURCE_BARRIER barrier = {.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV,
+                                      .UAV = {.pResource = m_tlas}};
+    cmdList->ResourceBarrier(1, &barrier);
+}
+
+void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
     /*
     BuildAccelerationStructures();
