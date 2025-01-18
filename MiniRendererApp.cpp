@@ -190,14 +190,21 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Fish\\Fish.yaml", m_pLevel);
+    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBox\\CornellBox.yaml", m_pLevel);
+    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Fish\\Fish.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Avocado\\Avocado.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Duck\\Duck.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\TexturedCube\\TexturedCube.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\PBRSpheresPtLights\\PBRSpherePtLights.yaml", m_pLevel);
 
-    m_pRendererBackend = new HWRTRenderBackend();
-    // m_pRendererBackend = new ForwardRenderer();
+    if (m_pLevel->m_rendererBackendType == RendererBackendType::PathTracing)
+    {
+        m_pRendererBackend = new HWRTRenderBackend();
+    }
+    else
+    {
+        m_pRendererBackend = new ForwardRenderer();
+    }
 
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 

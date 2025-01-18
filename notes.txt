@@ -33,6 +33,8 @@ Milestone 1:
 
 Milestone 2:
 - Cornell box fully work path tracer rendering.
+-- Integrate into custom scene system. Render out a custom quad yaml scene in one pass with camera.
+-- 
 
 Milestone 3:
 - Cornell box with some textured gltf PBR models and mirror 
@@ -44,9 +46,10 @@ Milestone 3+:
 - Better GUI
 - Volumetric Rendering...
 - Hair Rendering...
+- Arguments parsing -- Use exe's input arguments to determine which asset to use.
 
 
-[Forward RoadMap]
+[Forward RoadMap] (Done)
 Milestone 0: (Done)
 Fixed Triangle (Checked)
 

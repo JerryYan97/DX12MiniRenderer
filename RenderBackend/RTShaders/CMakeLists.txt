@@ -3,4 +3,5 @@ target_sources(
     RaytracingHlslCompat.h
     Raytracing.hlsl.h
     shader.fxh
+    CustomRTShader.fxh
 )

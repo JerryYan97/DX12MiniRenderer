@@ -6,7 +6,8 @@
 #include "../Scene/Mesh.h"
 #include "../Utils/DX12Utils.h"
 // #include "RTShaders/Raytracing.hlsl.h"
-#include "RTShaders/shader.fxh"
+// #include "RTShaders/shader.fxh"
+#include "RTShaders/CustomRTShader.fxh"
 #include "../UI/UIManager.h"
 #include "../MiniRendererApp.h"
 #include <algorithm>     // For std::size, typed std::max, etc.
@@ -249,8 +250,8 @@ void HWRTRenderBackend::InitPipeline()
 {
 
     D3D12_DXIL_LIBRARY_DESC lib = {
-        .DXILLibrary = {.pShaderBytecode = compiledShader,
-                        .BytecodeLength = std::size(compiledShader)}};
+        .DXILLibrary = {.pShaderBytecode = CustomRTShader,
+                        .BytecodeLength = std::size(CustomRTShader)}};
 
     D3D12_HIT_GROUP_DESC hitGroup = {.HitGroupExport = L"HitGroup",
                                      .Type = D3D12_HIT_GROUP_TYPE_TRIANGLES,
