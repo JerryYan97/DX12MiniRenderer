@@ -32,6 +32,16 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
     // Load the scene file into the level
     YAML::Node config = YAML::LoadFile(fileNamePath.c_str());
     std::string sceneType = config["SceneType"].as<std::string>();
+    std::string rendererType = config["Renderer"].as<std::string>();
+
+    if (rendererType.compare("PathTracer") == 0)
+    {
+        o_pLevel->m_rendererBackendType = RendererBackendType::PathTracing;
+    }
+    else
+    {
+        o_pLevel->m_rendererBackendType = RendererBackendType::Forward;
+    }
 
     YAML::Node sceneGraph = config["SceneGraph"];
     std::vector<float> bgColor = config["BackgroundColor"].as<std::vector<float>>();

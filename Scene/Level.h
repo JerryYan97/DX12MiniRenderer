@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "Object.h"
+#include "../RenderBackend/RendererBackend.h"
 
 class StaticMesh;
 class Camera;
@@ -28,6 +29,8 @@ public:
 
     std::string m_sceneName;
     float m_backgroundColor[3];
+
+    RendererBackendType m_rendererBackendType;
 
 private:
     std::vector<Object*> m_objects;

@@ -1,0 +1,28 @@
+SceneName: Cornellbox
+Renderer: PathTracer
+PathTracing Settings:
+  MaxDepth: 1
+SceneType: GLTF
+SceneGraph:
+  ShortBox:
+    Type: StaticMesh
+    Position: [0.0, 0.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: CornellBox.gltf
+  TallBox:
+    Type: StaticMesh
+    Position: [0.0, 0.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: CornellBox.gltf
+  BottomWall:
+    Type: StaticMesh
+    Position: [0.0, 0.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: CornellBox.gltf
+CameraInputControl:
+  Type: Orbit
+  Target: [0.0, 0.0, 0.0]
+  Radius: 3.0

@@ -19,7 +19,7 @@ We can do the abstraction along the way instead of spending too much time on the
 Note that I was always using the coupled swapchain-FrameContext structure for simplicity. It is equivalent that we only have two buffers in the swapchain instead of 3, which can be harmful for the performance.
 
 [RT RoadMap needs to be put aside because of bugs -- Need to untangle the DXR example little by little. Won't be released.]
-Milestone 0:
+Milestone 0: (Done)
 - Integrate YamlCpp (Done)
 - Setup Yaml + GLTF based scene structure. (Done)
 - Render out a Triangle/Basic GLTF model in no bounce RT. (Load from fixed path)
@@ -33,6 +33,9 @@ Milestone 1:
 
 Milestone 2:
 - Cornell box fully work path tracer rendering.
+
+Milestone 3:
+- Cornell box with some textured gltf PBR models and mirror 
 
 Milestone 3+:
 - Sponza/Nv unreal Restir scene rendering.
@@ -112,3 +115,7 @@ https://learnopengl.com/Lighting/Basic-Lighting (In the One Last Thing Chapter -
 non-uniform scaling:
 https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/geometry/transforming-normals.html
 
+
+
+Compile command:
+dxc shader.hlsl /T lib_6_3 /Fh shader.fxh /Vn compiledShader
