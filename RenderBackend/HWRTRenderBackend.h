@@ -19,7 +19,9 @@ class HWRTRenderBackend : public RendererBackend
             m_rootSignature(nullptr),
             m_pso(nullptr),
             m_shaderIDs(nullptr),
-            m_numInstances(0)
+            m_numInstances(0),
+            m_cameraCnstBuffer(nullptr),
+            m_cameraCnstBufferMap(nullptr)
         {}
         
         ~HWRTRenderBackend() {}
@@ -71,5 +73,8 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12StateObject* m_pso;
         ID3D12Resource* m_shaderIDs;
 
-        // void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
+        void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
+        void UpdateCamera();
+        ID3D12Resource* m_cameraCnstBuffer;
+        void*           m_cameraCnstBufferMap;
 };

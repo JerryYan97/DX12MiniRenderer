@@ -5,9 +5,9 @@
 #include "../Utils/AssetManager.h"
 #include "../Scene/Level.h"
 #include "../Scene/Mesh.h"
+#include "../Scene/Camera.h"
 #include "../Utils/DX12Utils.h"
-// #include "RTShaders/Raytracing.hlsl.h"
-// #include "RTShaders/shader.fxh"
+#include "../Utils/MathUtils.h"
 #include "RTShaders/CustomRTShader.fxh"
 #include "../UI/UIManager.h"
 #include "../MiniRendererApp.h"
@@ -115,6 +115,17 @@ void HWRTRenderBackend::InitScene()
             memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
         }
     }
+
+    // Create and init the camera constant buffer
+    auto cameraCnstDesc = BASIC_BUFFER_DESC;
+    cameraCnstDesc.Width = sizeof(float) * 20;
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                    // &instancesDesc, D3D12_RESOURCE_STATE_COMMON,
+                                    &cameraCnstDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                    nullptr, IID_PPV_ARGS(&m_cameraCnstBuffer));
+    m_cameraCnstBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_cameraCnstBufferMap));
+
+    UpdateCamera();
 }
 
 void HWRTRenderBackend::InitTopLevel()
@@ -310,11 +321,32 @@ void HWRTRenderBackend::CustomDeinit()
     if(m_rootSignature) { m_rootSignature->Release(); m_rootSignature = nullptr; }
     if(m_pso) { m_pso->Release(); m_pso = nullptr; }
     if(m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
+    if(m_cameraCnstBuffer){ m_cameraCnstBuffer->Release(); m_cameraCnstBuffer = nullptr; }
 }
 
-/*
+void HWRTRenderBackend::UpdateCamera()
+{
+    Camera* pCamera = nullptr;
+    m_pLevel->RetriveActiveCamera(&pCamera);
+    float right[3] = {};
+    CrossProductVec3(pCamera->m_view, pCamera->m_up, right);
+    NormalizeVec(right, 3);
+
+    float cameraData[20] = {
+        pCamera->m_pos[0], pCamera->m_pos[1], pCamera->m_pos[2], 0.f,
+        pCamera->m_view[0], pCamera->m_view[1], pCamera->m_view[2], 0.f,
+        pCamera->m_up[0], pCamera->m_up[1], pCamera->m_up[2], 0.f,
+        right[0], right[0], right[2], 0.f,
+        pCamera->m_fov, pCamera->m_near, pCamera->m_far, 0.f
+    };
+
+    memcpy(m_cameraCnstBufferMap, cameraData, sizeof(cameraData));
+}
+
 void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
 {
+    UpdateCamera();
+    /*
     UpdateTransforms();
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {
@@ -333,13 +365,13 @@ void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
     D3D12_RESOURCE_BARRIER barrier = {.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV,
                                       .UAV = {.pResource = m_tlas}};
     cmdList->ResourceBarrier(1, &barrier);
+    */
 }
-*/
+
 
 void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
-    return;
-    // UpdateScene(pCommandList);
+    UpdateScene(pCommandList);
 
     pCommandList->SetPipelineState1(m_pso);
     pCommandList->SetComputeRootSignature(m_rootSignature);
@@ -347,6 +379,7 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Ren
     auto uavTable = m_uavHeap->GetGPUDescriptorHandleForHeapStart();
     pCommandList->SetComputeRootDescriptorTable(0, uavTable); // ?u0 ?t0
     pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootConstantBufferView(2, m_cameraCnstBuffer->GetGPUVirtualAddress());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {
         .RayGenerationShaderRecord = {
