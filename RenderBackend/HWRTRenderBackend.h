@@ -12,22 +12,14 @@ class HWRTRenderBackend : public RendererBackend
             m_uavHeap(nullptr),
             m_renderTarget(nullptr),
             m_fence(nullptr),
-            m_quadVB(nullptr),
-            m_cubeVB(nullptr),
-            m_cubeIB(nullptr)
-            /*,
-            m_raytracingGlobalRootSignature(nullptr),
-            m_raytracingLocalRootSignature(nullptr),
-            m_rtPipelineStateObject(nullptr),
-            m_dxrDevice(nullptr),
-            m_descriptorHeap(nullptr),
-            m_rayGenCB(),
-            m_blas(nullptr),
+            m_instances(nullptr),
+            // m_instanceData(nullptr),
             m_tlas(nullptr),
-            m_raytracingOutput(nullptr),
-            m_rayGenShaderTable(nullptr),
-            m_missShaderTable(nullptr),
-            m_hitGroupShaderTable(nullptr)*/
+            m_tlasUpdateScratch(nullptr),
+            m_rootSignature(nullptr),
+            m_pso(nullptr),
+            m_shaderIDs(nullptr),
+            m_numInstances(0)
         {}
         
         ~HWRTRenderBackend() {}
@@ -41,57 +33,10 @@ class HWRTRenderBackend : public RendererBackend
         virtual void CustomInit() override;
         virtual void CustomDeinit() override;
     private:
-        /*
-        // Various Init Functions
-        void InitRootSignatures(); // Global and Local Root Signatures
-        void InitPipelineStates(); // PSOs
-        void InitDescriptorHeaps(); // Descriptor Heaps
-        void BuildGeometry(); // Build Scene Geometry
-        void BuildAccelerationStructures(); // Build Scene Acceleration Structures
-        void BuildShaderTables(); // Build Shader Tables
-        void BuildRaytracingOutput(); // Build Raytracing Output
-
-        void UpdateForSizeChange(UINT width, UINT height);
-
-        // Root signatures
-        ID3D12RootSignature* m_raytracingGlobalRootSignature;
-        ID3D12RootSignature* m_raytracingLocalRootSignature;
-
-        ID3D12Resource* m_blas;
-        ID3D12Resource* m_tlas;
-
-        ID3D12Resource*             m_raytracingOutput;
-        D3D12_GPU_DESCRIPTOR_HANDLE m_raytracingOutputResourceUAVGpuDescriptor;
-        UINT                        m_raytracingOutputResourceUAVDescriptorHeapIndex;
-
-        ID3D12StateObject*    m_rtPipelineStateObject;
-        ID3D12DescriptorHeap* m_descriptorHeap;
-
-        RayGenConstantBuffer m_rayGenCB;
-
-        ID3D12Device5* m_dxrDevice;
-
-        // Shader Table
-        ID3D12Resource* m_rayGenShaderTable;
-        ID3D12Resource* m_missShaderTable;
-        ID3D12Resource* m_hitGroupShaderTable;
-
-        ID3D12Resource* m_indexBuffer;
-        ID3D12Resource* m_vertexBuffer;
-
-        typedef UINT16 Index;
-        struct Vertex { float v1, v2, v3; };
-        */
-
         ID3D12DescriptorHeap* m_uavHeap;
         ID3D12Resource* m_renderTarget;
 
         ID3D12Fence* m_fence;
-
-        ID3D12Resource* m_quadVB;
-        ID3D12Resource* m_cubeVB;
-        ID3D12Resource* m_cubeIB;
-        void InitMeshes();
 
         ID3D12Resource* MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize = nullptr);
         ID3D12Resource* MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer = nullptr, UINT indices = 0);
@@ -101,13 +46,19 @@ class HWRTRenderBackend : public RendererBackend
 
         void InitScene();
         ID3D12Resource* m_instances;
-        D3D12_RAYTRACING_INSTANCE_DESC* m_instanceData;
+        UINT m_numInstances;
+        // D3D12_RAYTRACING_INSTANCE_DESC* m_instanceData;
 
         void InitBottomLevel();
-        ID3D12Resource* m_quadBlas;
-        ID3D12Resource* m_cubeBlas;
+        // std::vector<ID3D12Resource*> m_blases;
+        // ID3D12Resource* m_quadBlas;
+        // ID3D12Resource* m_cubeBlas;
+        
 
-        void UpdateTransforms();
+
+
+
+        // void UpdateTransforms();
 
         void InitTopLevel();
         ID3D12Resource* m_tlas;
@@ -120,5 +71,5 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12StateObject* m_pso;
         ID3D12Resource* m_shaderIDs;
 
-        void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
+        // void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
 };

@@ -16,6 +16,8 @@ const uint32_t ROUGHNESS_METALIC_MASK = 4;
 const uint32_t AO_MASK                = 8;
 const uint32_t EMISSIVE_MASK          = 16;
 
+constexpr int VERT_SIZE_FLOAT = (3 + 3 + 4 + 2); // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
+
 enum class TexWrapMode
 {
     REPEAT,
@@ -78,6 +80,8 @@ struct PrimitiveAsset
     ID3D12Resource*       m_materialMaskBuffer;
     ID3D12DescriptorHeap* m_pMaterialMaskCbvHeap;
 
+    ID3D12Resource* m_blas;
+
     uint32_t TextureCnt() const
     {
         uint32_t texCnt = 0;
@@ -118,6 +122,23 @@ public:
     }
 
     void LoadStaticMeshAssets(const std::string& modelName, StaticMesh* pStaticMesh);
+
+    void RetriveAllStaticMeshesNames(std::vector<std::string>& o_staticMeshNames) const
+    {
+        for (const auto& pair : m_primitiveAssets)
+        {
+            o_staticMeshNames.push_back(pair.first);
+        }
+    }
+
+    void RetriveStaticMeshAssets(const std::string& modelName, std::vector<PrimitiveAsset*>& o_primitiveAssets) const
+    {
+        auto it = m_primitiveAssets.find(modelName);
+        if (it != m_primitiveAssets.end())
+        {
+            o_primitiveAssets = it->second;
+        }
+    }
 
 private:
     void CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset);

@@ -21,6 +21,7 @@ void AssetManager::Deinit()
             if (primItr->m_emissiveTex.isSentToGpu) { primItr->m_emissiveTex.gpuResource->Release(); }
             if (primItr->m_materialMaskBuffer) { primItr->m_materialMaskBuffer->Release(); }
             if (primItr->m_pMaterialMaskCbvHeap) { primItr->m_pMaterialMaskCbvHeap->Release(); }
+            if (primItr->m_blas) { primItr->m_blas->Release(); }
 
             delete primItr;
         }
@@ -53,7 +54,7 @@ void AssetManager::SaveModelPrimAssetAndCreateGpuRsrc(const std::string& name, P
                                                    sizeof(uint32_t) * pPrimitiveAsset->m_idxDataUint32.size() :
                                                    sizeof(uint16_t) * pPrimitiveAsset->m_idxDataUint16.size();
     const uint32_t vertCnt = pPrimitiveAsset->m_posData.size() / 3;
-    const uint32_t vertSizeFloat = (3 + 3 + 4 + 2); // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
+    const uint32_t vertSizeFloat = VERT_SIZE_FLOAT; // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
     const uint32_t vertSizeByte = sizeof(float) * vertSizeFloat;
     const uint32_t vertexBufferSize = vertCnt * vertSizeByte;
     pPrimitiveAsset->m_vertData.resize(vertCnt * vertSizeFloat);
