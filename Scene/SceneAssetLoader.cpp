@@ -44,7 +44,13 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
     }
 
     YAML::Node sceneGraph = config["SceneGraph"];
-    std::vector<float> bgColor = config["BackgroundColor"].as<std::vector<float>>();
+
+    std::vector<float> bgColor = std::vector<float>(3, 0.1f);
+    if (config["BackgroundColor"].IsSequence())
+    {
+        bgColor = config["BackgroundColor"].as<std::vector<float>>();
+    }
+
     memcpy(o_pLevel->m_backgroundColor, bgColor.data(), sizeof(o_pLevel->m_backgroundColor));
 
     m_currentScenePath = fileNamePath;

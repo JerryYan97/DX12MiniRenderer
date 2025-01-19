@@ -201,7 +201,11 @@ void HWRTRenderBackend::InitRootSignature()
                              .pDescriptorRanges = &uavRange}},
 
         {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
-         .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}}};
+         .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}},
+    
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
+         .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}}
+    };
 
     D3D12_ROOT_SIGNATURE_DESC desc = {.NumParameters = std::size(params),
                                       .pParameters = params};
@@ -334,6 +338,7 @@ void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
 
 void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
+    return;
     // UpdateScene(pCommandList);
 
     pCommandList->SetPipelineState1(m_pso);

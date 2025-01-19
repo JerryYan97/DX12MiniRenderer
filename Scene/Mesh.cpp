@@ -62,7 +62,7 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     memcpy(mesh->m_scale, scale.data(), sizeof(float) * 3);
     memcpy(mesh->m_rotation, rotation.data(), sizeof(float) * 3);
 
-    bool bNotDefineMaterial = i_node["Material"].IsNull();
+    bool bNotDefineMaterial = !i_node["Material"].IsDefined();
     if (bNotDefineMaterial)
     {
         mesh->m_isCnstMaterial = true;

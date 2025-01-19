@@ -5,7 +5,7 @@ struct Payload
     bool missed;
 };
 
-struct ConstantBufferStruct
+cbuffer CameraConstantBuffer : register(b0)
 {
     float4 cameraPos;
     float4 cameraDir;
@@ -18,7 +18,6 @@ static const float3 skyTop = float3(0.24, 0.44, 0.72);
 static const float3 skyBottom = float3(0.75, 0.86, 0.93);
 
 RaytracingAccelerationStructure scene : register(t0);
-ConstantBufferStruct constantBuffer : register(b0);
 
 RWTexture2D<float4> uav : register(u0);
 
@@ -30,23 +29,23 @@ void RayGeneration()
 
     float2 uv = idx / size;
 
-    float fov = constantBuffer.cameraInfo.x;
-    float near = constantBuffer.cameraInfo.y;
-    float far = constantBuffer.cameraInfo.z;
+    float fov = cameraInfo.x;
+    float near = cameraInfo.y;
+    float far = cameraInfo.z;
 
     float topOffset = tan(fov / 2.0) * near;
     float rightOffset = topOffset * (size.x / size.y);
 
-    float3 cameraDirCenter = constantBuffer.cameraPos.xyz +
-                             constantBuffer.cameraDir.xyz * near;
+    float3 cameraDirCenter = cameraPos.xyz +
+                             cameraDir.xyz * near;
     float3 targetOffset = float3((uv.x * 2.0 - 1.0) * rightOffset,
                                  (uv.y * 2.0 - 1.0) * topOffset,
                                  0.0);
     targetOffset = targetOffset + cameraDirCenter;
 
     RayDesc ray;
-    ray.Origin = constantBuffer.cameraPos.xyz;
-    ray.Direction = targetOffset - constantBuffer.cameraPos.xyz;
+    ray.Origin = cameraPos.xyz;
+    ray.Direction = targetOffset - cameraPos.xyz;
     ray.TMin = 0.001;
     ray.TMax = 1000;
 
