@@ -21,6 +21,18 @@ public:
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
     void SendModelMatrixToGpuBuffer();
 
+    std::vector<float> GetCnstAlbedo() const
+    {
+        std::vector<float> res = {m_cnstAlbedo[0], m_cnstAlbedo[1], m_cnstAlbedo[2]};
+        return res;
+    }
+
+    std::vector<float> GetCnstMetallicRoughness() const
+    {
+        std::vector<float> res = {m_cnstMetallic, m_cnstRoughness};
+        return res;
+    }
+
     std::string m_assetPath;
 
     // std::vector<MeshPrimitive> m_meshPrimitives;

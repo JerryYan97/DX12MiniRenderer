@@ -20,15 +20,15 @@ struct ConstantMaterialData
     float4 metallicRoughness;
 };
 
-// Most important bit: 0 - Constant Material; 1 - Texture Material.
-// Rest of the bits: idx in either constant material array or texture material array.
-
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
 static const float3 skyBottom = float3(0.75, 0.86, 0.93);
-static dword MATERIAL_MASK = 0x80000000;
+
+// 0-7 bits are for material textures mask. E.g. Reused from PBRShaders.hlsl.
+// 8-31 bits are for material index.
+static dword MATERIAL_TEX_MASK = 0xFF;
 
 RaytracingAccelerationStructure scene : register(t0);
-Buffer<dword> instsMaterialsMasks : register(t1);
+StructuredBuffer<dword> instsMaterialsMasks : register(t1);
 StructuredBuffer<ConstantMaterialData> cnstMaterials : register(t2);
 
 RWTexture2D<float4> uav : register(u0);
@@ -86,10 +86,13 @@ void ClosestHit(inout Payload payload,
 {
     uint instId = InstanceID();
     dword instMaterialMask = instsMaterialsMasks[instId];
-    bool isConstantMaterial = ((instMaterialMask & MATERIAL_MASK) > 0) ? false : true;
+
+    // If there is any texture, then the material is not constant.
+    bool isConstantMaterial = ((instMaterialMask & MATERIAL_TEX_MASK) > 0) ? false : true;
     if(isConstantMaterial)
     {
-        ConstantMaterialData cnstMaterialData = cnstMaterials[instMaterialMask];
+        uint instMaterialIdx = instMaterialMask >> 8;
+        ConstantMaterialData cnstMaterialData = cnstMaterials[instMaterialIdx];
         payload.color = cnstMaterialData.albedo.xyz;
     }
     else

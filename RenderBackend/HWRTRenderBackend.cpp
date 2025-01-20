@@ -98,6 +98,15 @@ void HWRTRenderBackend::InitScene()
     D3D12_RAYTRACING_INSTANCE_DESC* pAllInstData = nullptr;
     m_instances->Map(0, nullptr, reinterpret_cast<void**>(&pAllInstData));
 
+    struct CnstMaterial
+    {
+        float albedo[4];
+        float metallicRoughness[4];
+    };
+    std::vector<CnstMaterial> cnstMaterialsVecData;
+
+    std::vector<uint32_t> materialMasksVecData;
+
     UINT instIdx = 0;
     for (int sMeshIdx = 0; sMeshIdx < staticMeshes.size(); sMeshIdx++)
     {
@@ -113,6 +122,27 @@ void HWRTRenderBackend::InitScene()
 
             // Update transform
             memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
+
+            if (pPrimAsset->m_materialMask == 0)
+            {
+                // Constant material
+                static uint32_t cnstMaterialIdx = 0;
+                pPrimAsset->m_materialMask |= (cnstMaterialIdx << 8);
+
+                std::vector<float> albedo = staticMeshes[sMeshIdx]->GetCnstAlbedo();
+                std::vector<float> metallicRoughness = staticMeshes[sMeshIdx]->GetCnstMetallicRoughness();
+
+                CnstMaterial cnstMaterialData{
+                    .albedo = {albedo[0], albedo[1], albedo[2], 0.f},
+                    .metallicRoughness = {metallicRoughness[0], metallicRoughness[1], 0.f, 0.f}
+                };
+                
+                cnstMaterialsVecData.push_back(cnstMaterialData);
+                cnstMaterialIdx++;
+            }
+
+            // All primitives have their own material mask.
+            materialMasksVecData.push_back(pPrimAsset->m_materialMask);
         }
     }
 
@@ -120,12 +150,35 @@ void HWRTRenderBackend::InitScene()
     auto cameraCnstDesc = BASIC_BUFFER_DESC;
     cameraCnstDesc.Width = sizeof(float) * 20;
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
-                                    // &instancesDesc, D3D12_RESOURCE_STATE_COMMON,
-                                    &cameraCnstDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                                    nullptr, IID_PPV_ARGS(&m_cameraCnstBuffer));
+                                          &cameraCnstDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                          nullptr, IID_PPV_ARGS(&m_cameraCnstBuffer));
     m_cameraCnstBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_cameraCnstBufferMap));
 
     UpdateCamera();
+
+    // Create and init material mask and material data
+    auto materialMaskDesc = BASIC_BUFFER_DESC;
+    materialMaskDesc.Width = sizeof(uint32_t) * m_numInstances;
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                          &materialMaskDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                          nullptr, IID_PPV_ARGS(&m_materialMaskBuffer));
+    uint32_t* pMaterialMaskData;
+    m_materialMaskBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMaterialMaskData));
+    memcpy(pMaterialMaskData, materialMasksVecData.data(), sizeof(uint32_t) * m_numInstances);
+    m_materialMaskBuffer->Unmap(0, nullptr);
+
+    if (cnstMaterialsVecData.size())
+    {
+        auto cnstMaterialDesc = BASIC_BUFFER_DESC;
+        cnstMaterialDesc.Width = sizeof(CnstMaterial) * cnstMaterialsVecData.size();
+        m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                              &cnstMaterialDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                              nullptr, IID_PPV_ARGS(&m_cnstMaterialsBuffer));
+        CnstMaterial* pCnstMaterialData;
+        m_cnstMaterialsBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pCnstMaterialData));
+        memcpy(pCnstMaterialData, cnstMaterialsVecData.data(), sizeof(CnstMaterial) * cnstMaterialsVecData.size());
+        m_cnstMaterialsBuffer->Unmap(0, nullptr);
+    }
 }
 
 void HWRTRenderBackend::InitTopLevel()
@@ -215,7 +268,13 @@ void HWRTRenderBackend::InitRootSignature()
          .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}},
     
         {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
-         .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}}
+         .Descriptor = {.ShaderRegister = 0, .RegisterSpace = 0}},
+
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+         .Descriptor = {.ShaderRegister = 1, .RegisterSpace = 0}},
+
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+         .Descriptor = {.ShaderRegister = 2, .RegisterSpace = 0}}
     };
 
     D3D12_ROOT_SIGNATURE_DESC desc = {.NumParameters = std::size(params),
@@ -322,6 +381,8 @@ void HWRTRenderBackend::CustomDeinit()
     if(m_pso) { m_pso->Release(); m_pso = nullptr; }
     if(m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
     if(m_cameraCnstBuffer){ m_cameraCnstBuffer->Release(); m_cameraCnstBuffer = nullptr; }
+    if(m_cnstMaterialsBuffer) { m_cnstMaterialsBuffer->Release(); m_cnstMaterialsBuffer = nullptr; }
+    if(m_materialMaskBuffer) { m_materialMaskBuffer->Release(); m_materialMaskBuffer = nullptr; }
 }
 
 void HWRTRenderBackend::UpdateCamera()
@@ -380,6 +441,8 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Ren
     pCommandList->SetComputeRootDescriptorTable(0, uavTable); // ?u0 ?t0
     pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pCommandList->SetComputeRootConstantBufferView(2, m_cameraCnstBuffer->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(3, m_materialMaskBuffer->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(4, m_cnstMaterialsBuffer->GetGPUVirtualAddress());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {
         .RayGenerationShaderRecord = {
