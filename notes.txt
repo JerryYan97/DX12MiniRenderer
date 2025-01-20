@@ -27,13 +27,14 @@ Milestone 0: (Done)
 - Simple ImGUI Layout -- Overlay ImGUI window, Scene Hierarchy (Print on Load). (No Need)
 
 Milestone 1:
-- Make a cornell box (GLTF) in Blender.
+- Make a cornell box (GLTF) in Blender -- No. We will use Yaml to setup the scene.
+-- Integrate into custom scene system. Render out a custom quad yaml scene in one pass with camera. (Done)
+-- Extend the existing system. Render the constant material color. Multiple objects. And finally the cornell box.
 - Integrate Input Handler, which reuses the Vulkan project's input handler.
 - Cornell box GLTF Render with no bounce RT.
 
 Milestone 2:
 - Cornell box fully work path tracer rendering.
--- Integrate into custom scene system. Render out a custom quad yaml scene in one pass with camera.
 -- 
 
 Milestone 3:

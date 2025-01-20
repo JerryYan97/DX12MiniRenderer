@@ -14,10 +14,22 @@ cbuffer CameraConstantBuffer : register(b0)
     float4 cameraInfo; // x: fov, y: near, z: far.
 };
 
+struct ConstantMaterialData
+{
+    float4 albedo;
+    float4 metallicRoughness;
+};
+
+// Most important bit: 0 - Constant Material; 1 - Texture Material.
+// Rest of the bits: idx in either constant material array or texture material array.
+
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
 static const float3 skyBottom = float3(0.75, 0.86, 0.93);
+static dword MATERIAL_MASK = 0x80000000;
 
 RaytracingAccelerationStructure scene : register(t0);
+Buffer<dword> instsMaterialsMasks : register(t1);
+StructuredBuffer<ConstantMaterialData> cnstMaterials : register(t2);
 
 RWTexture2D<float4> uav : register(u0);
 
@@ -72,5 +84,16 @@ void Miss(inout Payload payload)
 void ClosestHit(inout Payload payload,
                 BuiltInTriangleIntersectionAttributes attrib)
 {
-    payload.color = float3(1, 0, 1);
+    uint instId = InstanceID();
+    dword instMaterialMask = instsMaterialsMasks[instId];
+    bool isConstantMaterial = ((instMaterialMask & MATERIAL_MASK) > 0) ? false : true;
+    if(isConstantMaterial)
+    {
+        ConstantMaterialData cnstMaterialData = cnstMaterials[instMaterialMask];
+        payload.color = cnstMaterialData.albedo.xyz;
+    }
+    else
+    {
+        payload.color = float3(1, 0, 1);
+    }
 }

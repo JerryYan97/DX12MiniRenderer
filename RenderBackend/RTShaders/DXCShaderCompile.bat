@@ -13,7 +13,7 @@ echo DXC_EXE: %DXC_EXE%
 set "BATCH_FILE_PATH=%~dp0"
 echo Batch file path: %BATCH_FILE_PATH%
 
-set "SHADER_COMPILE=%DXC_EXE% %BATCH_FILE_PATH%CustomRTShader.hlsl -T lib_6_3 -Fh %BATCH_FILE_PATH%CustomRTShader.fxh -Vn CustomRTShader"
+set "SHADER_COMPILE=%DXC_EXE% %BATCH_FILE_PATH%CustomRTShader.hlsl -T lib_6_3 -Fh %BATCH_FILE_PATH%CustomRTShader.fxh -Vn CustomRTShader" /enable_unbounded_descriptor_tables
 
 echo Executing command: %SHADER_COMPILE%
 call %SHADER_COMPILE%
