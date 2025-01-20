@@ -123,11 +123,13 @@ void HWRTRenderBackend::InitScene()
             // Update transform
             memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
 
+            // We cannot directly change the material mask on the prim asset because it maybe shared by static meshes with different const materials.
+            uint32_t rtMaterialMask = 0;
             if (pPrimAsset->m_materialMask == 0)
             {
                 // Constant material
                 static uint32_t cnstMaterialIdx = 0;
-                pPrimAsset->m_materialMask |= (cnstMaterialIdx << 8);
+                rtMaterialMask |= (cnstMaterialIdx << 8);
 
                 std::vector<float> albedo = staticMeshes[sMeshIdx]->GetCnstAlbedo();
                 std::vector<float> metallicRoughness = staticMeshes[sMeshIdx]->GetCnstMetallicRoughness();
@@ -140,9 +142,13 @@ void HWRTRenderBackend::InitScene()
                 cnstMaterialsVecData.push_back(cnstMaterialData);
                 cnstMaterialIdx++;
             }
+            else
+            {
+                rtMaterialMask = pPrimAsset->m_materialMask;
+            }
 
             // All primitives have their own material mask.
-            materialMasksVecData.push_back(pPrimAsset->m_materialMask);
+            materialMasksVecData.push_back(rtMaterialMask);
         }
     }
 
