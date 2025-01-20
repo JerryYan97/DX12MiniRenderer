@@ -51,7 +51,7 @@ void RayGeneration()
     float3 cameraDirCenter = cameraPos.xyz +
                              cameraDir.xyz * near;
     float3 targetOffset = float3((uv.x * 2.0 - 1.0) * rightOffset,
-                                 (uv.y * 2.0 - 1.0) * topOffset,
+                                 (1.0 - uv.y * 2.0) * topOffset,
                                  0.0);
     targetOffset = targetOffset + cameraDirCenter;
 
