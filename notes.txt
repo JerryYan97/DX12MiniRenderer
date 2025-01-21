@@ -26,21 +26,25 @@ Milestone 0: (Done)
 - Integrate DX12 memory allocator. (NO Need)
 - Simple ImGUI Layout -- Overlay ImGUI window, Scene Hierarchy (Print on Load). (No Need)
 
-Milestone 1:
-- Make a cornell box (GLTF) in Blender -- No. We will use Yaml to setup the scene.
+Milestone 1: (Done)
+- Make a cornell box (GLTF) in Blender -- No. We will use Yaml to setup the scene. (Done)
 -- Integrate into custom scene system. Render out a custom quad yaml scene in one pass with camera. (Done)
 -- Extend the existing system. Render the constant material color. Multiple objects. And finally the cornell box.
-- Integrate Input Handler, which reuses the Vulkan project's input handler.
-- Cornell box GLTF Render with no bounce RT.
+- Integrate Input Handler, which reuses the Vulkan project's input handler. (Postpone to milestone 3)
+- Cornell box GLTF Render with no bounce RT. (We don't use the importance sampling, so it's not valid.)
 
 Milestone 2:
 - Cornell box fully work path tracer rendering.
--- 
+-- Use the old-school Raytracing in one-weekend basic version.
 
 Milestone 3:
-- Cornell box with some textured gltf PBR models and mirror 
+ 
 
-Milestone 3+:
+Milestone 4:
+- Cornell box with some textured gltf PBR models and mirror 
+- 
+
+Milestone 4+:
 - Sponza/Nv unreal Restir scene rendering.
 - FSR integration.
 - Refactorization...

@@ -27,18 +27,31 @@ static const float3 skyBottom = float3(0.75, 0.86, 0.93);
 // 8-31 bits are for material index.
 static dword MATERIAL_TEX_MASK = 0xFF;
 
+static const uint SAMPLE_COUNT = 128;
+
 RaytracingAccelerationStructure scene : register(t0);
 StructuredBuffer<dword> instsMaterialsMasks : register(t1);
 StructuredBuffer<ConstantMaterialData> cnstMaterials : register(t2);
 
 RWTexture2D<float4> uav : register(u0);
 
+float rand_1_05(in float2 uv)
+{
+    float2 noise = (frac(sin(dot(uv ,float2(12.9898,78.233)*2.0)) * 43758.5453));
+    return abs(noise.x + noise.y) * 0.5;
+}
+
+float2 rand_2_10(in float2 uv) {
+    float noiseX = (frac(sin(dot(uv, float2(12.9898,78.233) * 2.0)) * 43758.5453));
+    float noiseY = sqrt(1 - noiseX * noiseX);
+    return float2(noiseX, noiseY);
+}
+
 [shader("raygeneration")]
 void RayGeneration()
 {
     uint2 idx = DispatchRaysIndex().xy;
     float2 size = DispatchRaysDimensions().xy;
-
     float2 uv = idx / size;
 
     float fov = cameraInfo.x;
@@ -50,24 +63,35 @@ void RayGeneration()
 
     float3 cameraDirCenter = cameraPos.xyz +
                              cameraDir.xyz * near;
-    float3 targetOffset = float3((uv.x * 2.0 - 1.0) * rightOffset,
-                                 (1.0 - uv.y * 2.0) * topOffset,
+
+    float3 res = float3(0, 0, 0);
+    for(uint i = 0; i < SAMPLE_COUNT; i++)
+    {
+        float2 noiseInput = uv * (i + 1);
+        float2 noise = rand_2_10(noiseInput) - float2(0.5, 0.5);
+        // float2 noise = float2(0, 0);
+        float2 jitteredUV = uv + (noise / size);
+        float3 targetOffset = float3((jitteredUV.x * 2.0 - 1.0) * rightOffset,
+                                 (1.0 - jitteredUV.y * 2.0) * topOffset,
                                  0.0);
-    targetOffset = targetOffset + cameraDirCenter;
+        targetOffset = targetOffset + cameraDirCenter;
+        
+        RayDesc ray;
+        ray.Origin = cameraPos.xyz;
+        ray.Direction = targetOffset - cameraPos.xyz;
+        ray.TMin = 0.001;
+        ray.TMax = 1000;
 
-    RayDesc ray;
-    ray.Origin = cameraPos.xyz;
-    ray.Direction = targetOffset - cameraPos.xyz;
-    ray.TMin = 0.001;
-    ray.TMax = 1000;
+        Payload payload;
+        payload.allowReflection = true;
+        payload.missed = false;
 
-    Payload payload;
-    payload.allowReflection = true;
-    payload.missed = false;
+        TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
 
-    TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
+        res += float3(payload.color);
+    } 
 
-    uav[idx] = float4(payload.color, 1);
+    uav[idx] = float4(res / (float)SAMPLE_COUNT, 1);
 }
 
 [shader("miss")]
