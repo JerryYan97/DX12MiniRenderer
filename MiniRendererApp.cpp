@@ -291,61 +291,6 @@ void DX12MiniRenderer::Run()
         RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
         m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
         
-        if (m_pRendererBackend->GetType() == RendererBackendType::PathTracing)
-        {
-            /*
-            HWRTRenderBackend* pPathTracingBackend = dynamic_cast<HWRTRenderBackend*>(m_pRendererBackend);
-            ID3D12Resource* raytracingOutput = pPathTracingBackend->GetRaytracingOutput();
-
-            D3D12_RESOURCE_BARRIER waitRTOutputAndStateTransBarriers[3] = {};
-            {
-                // Wait for the raytracing output to be ready.
-                waitRTOutputAndStateTransBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-                waitRTOutputAndStateTransBarriers[0].UAV.pResource = raytracingOutput;
-
-                // Transition the raytracing output to the copy src.
-                waitRTOutputAndStateTransBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                waitRTOutputAndStateTransBarriers[1].Transition.pResource = raytracingOutput;
-                waitRTOutputAndStateTransBarriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                waitRTOutputAndStateTransBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-                waitRTOutputAndStateTransBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
-
-                // Transition the backbuffer to the copy dest.
-                waitRTOutputAndStateTransBarriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                waitRTOutputAndStateTransBarriers[2].Transition.pResource = frameCRT;
-                waitRTOutputAndStateTransBarriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                waitRTOutputAndStateTransBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-                waitRTOutputAndStateTransBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-            }
-            m_pD3dCommandList->ResourceBarrier(3, waitRTOutputAndStateTransBarriers);
-
-            // Copy the raytracing output to the backbuffer.
-            m_pD3dCommandList->CopyResource(frameCRT, raytracingOutput);
-
-            D3D12_RESOURCE_BARRIER waitCopyFinishTransBackBarriers[2] = {};
-            {
-                // Wait for the copy to finish.
-                // waitCopyFinishTransBackBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-                // waitCopyFinishTransBackBarriers[0].Transition.pResource = frameCRT;
-
-                // Transition the backbuffer to the RT state.
-                waitCopyFinishTransBackBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                waitCopyFinishTransBackBarriers[0].Transition.pResource = frameCRT;
-                waitCopyFinishTransBackBarriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                waitCopyFinishTransBackBarriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-                waitCopyFinishTransBackBarriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-                // Transition the raytracing output to the UAV state.
-                waitCopyFinishTransBackBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                waitCopyFinishTransBackBarriers[1].Transition.pResource = raytracingOutput;
-                waitCopyFinishTransBackBarriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-                waitCopyFinishTransBackBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
-                waitCopyFinishTransBackBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-            }
-            m_pD3dCommandList->ResourceBarrier(2, waitCopyFinishTransBackBarriers);
-            */
-        }
-        
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
         m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);

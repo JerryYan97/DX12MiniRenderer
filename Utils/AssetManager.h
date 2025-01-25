@@ -140,6 +140,9 @@ public:
         }
     }
 
+    // Used by the DXR render backend for the scene information.
+    std::vector<PrimitiveAsset*> GenSceneVertIdxBuffer(std::vector<float>& sceneVertBuffer, std::vector<uint16_t>& sceneIdxBuffer);
+
 private:
     void CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset);
     void GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset);

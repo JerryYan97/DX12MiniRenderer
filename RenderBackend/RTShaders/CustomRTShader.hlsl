@@ -20,7 +20,7 @@ struct VertexReal
 
 struct InstInfo
 {
-    uint4 instUintInfo0; // x: material mask, y: scene vert buffer start offset, z: scene index buffer start offset, w: unused.
+    uint4 instUintInfo0; // x: material mask, y: scene vert buffer starts float, z: scene index buffer starts int, w: unused.
 
     // Constant material info. If material mask is 0, then we will use material here.
     float4 instAlbedo;
@@ -37,14 +37,6 @@ cbuffer FrameConstantBuffer : register(b0)
     uint4  randomSeeds; // x: random number; y: current time in microseconds. 
 };
 
-/*
-struct ConstantMaterialData
-{
-    float4 albedo;
-    float4 metallicRoughness;
-};
-*/
-
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
 static const float3 skyBottom = float3(0.75, 0.86, 0.93);
 
@@ -57,11 +49,9 @@ static const uint HIT_CHILD_RAY_COUNT = 4;
 
 RaytracingAccelerationStructure scene : register(t0);
 StructuredBuffer<InstInfo> instsInfo : register(t1);
-// StructuredBuffer<dword> instsMaterialsMasks : register(t1);
-// StructuredBuffer<ConstantMaterialData> cnstMaterials : register(t2);
 
-// StructuredBuffer<VertexRaw> sceneVertices : register(t2);
-// ByteAddressBuffer sceneIndices : register(t3);
+StructuredBuffer<VertexRaw> sceneVertices : register(t2);
+ByteAddressBuffer sceneIndices : register(t3);
 
 RWTexture2D<float4> uav : register(u0);
 
@@ -199,7 +189,6 @@ void ClosestHit(inout Payload payload,
     uint instId = InstanceID();
     InstInfo instInfo = instsInfo[instId];
     uint instMaterialMask = instInfo.instUintInfo0.x;
-    // dword instMaterialMask = instsMaterialsMasks[instId];
 
     uint indexSizeInBytes = 2;
     uint indicesPerTriangle = 3;
@@ -222,11 +211,8 @@ void ClosestHit(inout Payload payload,
     // triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
 
     // If there is any texture, then the material is not constant.
-    // bool isConstantMaterial = ((instMaterialMask & MATERIAL_TEX_MASK) > 0) ? false : true;
     if(instMaterialMask == 0)
     {
-        // uint instMaterialIdx = instMaterialMask >> 8;
-        // ConstantMaterialData cnstMaterialData = cnstMaterials[instMaterialIdx];
         payload.color = instInfo.instAlbedo.xyz;
     }
     else

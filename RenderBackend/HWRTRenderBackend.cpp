@@ -78,6 +78,26 @@ ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_R
 
 void HWRTRenderBackend::InitScene()
 {
+    std::vector<float> sceneVertData;
+    std::vector<uint16_t> sceneIdxData;
+    std::vector<PrimitiveAsset*> scenePrimAssets = g_pAssetManager->GenSceneVertIdxBuffer(sceneVertData, sceneIdxData);
+
+    auto GetPrimStartVertIdxStart = [&](PrimitiveAsset* tarPrim, uint32_t& vertStartFloat, uint32_t& idxStartInt) {
+        uint32_t vertFloatCnt = 0;
+        uint32_t idxIntCnt = 0;
+        for (auto* primAsset : scenePrimAssets)
+        {
+            if (primAsset == tarPrim)
+            {
+                vertStartFloat = vertFloatCnt;
+                idxStartInt = idxIntCnt;
+                break;
+            }
+            vertFloatCnt += primAsset->m_vertData.size();
+            idxIntCnt += primAsset->m_idxCnt;
+        }
+    };
+
     std::vector<StaticMesh*> staticMeshes;
     m_pLevel->RetriveStaticMeshes(staticMeshes);
 
@@ -127,8 +147,11 @@ void HWRTRenderBackend::InitScene()
             memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
 
             // A prim asset is a blas, but there can be multiple instances refer to one blas and use different materials...
+            uint32_t vertStartFloat, idxStartInt;
+            GetPrimStartVertIdxStart(pPrimAsset, vertStartFloat, idxStartInt);
+
             InstanceInfo instInfo{
-                .instUintInfo0 = {pPrimAsset->m_materialMask, 0, 0, 0},
+                .instUintInfo0 = {pPrimAsset->m_materialMask, vertStartFloat, idxStartInt, 0},
                 .instAlbedo = {staticMeshCnstAlbedo[0], staticMeshCnstAlbedo[1], staticMeshCnstAlbedo[2], 0.f},
                 .instMetallicRoughness = {staticMeshCnstMetallicRoughness[0], staticMeshCnstMetallicRoughness[1], 0.f, 0.f}
             };
@@ -156,6 +179,28 @@ void HWRTRenderBackend::InitScene()
     m_instInfoBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instInfoBufferMap));
     memcpy(instInfoBufferMap, instInfoVecData.data(), sizeof(InstanceInfo) * instInfoVecData.size());
     m_instInfoBuffer->Unmap(0, nullptr);
+
+    // Create and init scene vert buffer
+    auto sceneVertDesc = BASIC_BUFFER_DESC;
+    sceneVertDesc.Width = sizeof(float) * sceneVertData.size();
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                          &sceneVertDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                          nullptr, IID_PPV_ARGS(&m_sceneVertBuffer));
+    void* sceneVertBufferMap;
+    m_sceneVertBuffer->Map(0, nullptr, &sceneVertBufferMap);
+    memcpy(sceneVertBufferMap, sceneVertData.data(), sizeof(float) * sceneVertData.size());
+    m_sceneVertBuffer->Unmap(0, nullptr);
+
+    // Create and init scene idx buffer
+    auto sceneIdxDesc = BASIC_BUFFER_DESC;
+    sceneIdxDesc.Width = sizeof(uint16_t) * sceneIdxData.size();
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                          &sceneIdxDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                          nullptr, IID_PPV_ARGS(&m_sceneIdxBuffer));
+    void* sceneIdxBufferMap;
+    m_sceneIdxBuffer->Map(0, nullptr, &sceneIdxBufferMap);
+    memcpy(sceneIdxBufferMap, sceneIdxData.data(), sizeof(uint16_t) * sceneIdxData.size());
+    m_sceneIdxBuffer->Unmap(0, nullptr);
 }
 
 void HWRTRenderBackend::InitTopLevel()
@@ -251,7 +296,13 @@ void HWRTRenderBackend::InitRootSignature()
          .Descriptor = {.ShaderRegister = 1, .RegisterSpace = 0}},
 
         {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
-         .Descriptor = {.ShaderRegister = 2, .RegisterSpace = 0}}
+         .Descriptor = {.ShaderRegister = 2, .RegisterSpace = 0}},
+
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+         .Descriptor = {.ShaderRegister = 3, .RegisterSpace = 0}},
+
+        {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV,
+         .Descriptor = {.ShaderRegister = 4, .RegisterSpace = 0}},
     };
 
     D3D12_ROOT_SIGNATURE_DESC desc = {.NumParameters = std::size(params),
@@ -420,6 +471,8 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Ren
     pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pCommandList->SetComputeRootConstantBufferView(2, m_cameraCnstBuffer->GetGPUVirtualAddress());
     pCommandList->SetComputeRootShaderResourceView(3, m_instInfoBuffer->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(4, m_sceneVertBuffer->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(5, m_sceneIdxBuffer->GetGPUVirtualAddress());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {
         .RayGenerationShaderRecord = {

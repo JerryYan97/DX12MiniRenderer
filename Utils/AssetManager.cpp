@@ -1,6 +1,7 @@
 #include "AssetManager.h"
 #include "DX12Utils.h"
 #include "../Scene/Mesh.h"
+#include <unordered_set>
 #include <cassert>
 
 extern ID3D12Device* g_pD3dDevice;
@@ -329,7 +330,6 @@ void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
     GenPrimAssetMaterialBuffer(pPrimAsset);
 }
 
-
 void AssetManager::GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset)
 {
     pPrimAsset->GenMaterialMask();
@@ -388,4 +388,33 @@ void AssetManager::GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset)
     ThrowIfFailed(pPrimAsset->m_materialMaskBuffer->Map(0, &readRange, &pConstBufferBegin));
     memcpy(pConstBufferBegin, &pPrimAsset->m_materialMask, sizeof(uint32_t));
     pPrimAsset->m_materialMaskBuffer->Unmap(0, nullptr);
+}
+
+std::vector<PrimitiveAsset*> AssetManager::GenSceneVertIdxBuffer(std::vector<float>& sceneVertBuffer, std::vector<uint16_t>& sceneIdxBuffer)
+{
+    std::unordered_set<PrimitiveAsset*> recordedPrims;
+    std::vector<PrimitiveAsset*> prims;
+
+    for (const auto itr : m_primitiveAssets)
+    {
+        for (const auto primItr : itr.second)
+        {
+            if (recordedPrims.count(primItr) == 0)
+            {
+                recordedPrims.insert(primItr);
+                prims.push_back(primItr);
+            }
+        }
+    }
+
+    sceneVertBuffer.clear();
+    sceneIdxBuffer.clear();
+
+    for (auto prim : prims)
+    {
+        sceneVertBuffer.insert(sceneVertBuffer.end(), prim->m_posData.begin(), prim->m_posData.end());
+        sceneIdxBuffer.insert(sceneIdxBuffer.end(), prim->m_idxDataUint16.begin(), prim->m_idxDataUint16.end());
+    }
+
+    return prims;
 }

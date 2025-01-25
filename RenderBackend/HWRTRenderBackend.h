@@ -51,6 +51,7 @@ class HWRTRenderBackend : public RendererBackend
         UINT m_numInstances;
 
         ID3D12Resource* m_instInfoBuffer;
+        // For the scene vert/idx buffer, we will need to disable per-prim auto gpu buffer creation for the next refactorization.
         ID3D12Resource* m_sceneVertBuffer;
         ID3D12Resource* m_sceneIdxBuffer;
 
