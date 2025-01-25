@@ -13,7 +13,6 @@ class HWRTRenderBackend : public RendererBackend
             m_renderTarget(nullptr),
             m_fence(nullptr),
             m_instances(nullptr),
-            // m_instanceData(nullptr),
             m_tlas(nullptr),
             m_tlasUpdateScratch(nullptr),
             m_rootSignature(nullptr),
@@ -22,8 +21,6 @@ class HWRTRenderBackend : public RendererBackend
             m_numInstances(0),
             m_cameraCnstBuffer(nullptr),
             m_cameraCnstBufferMap(nullptr),
-            // m_cnstMaterialsBuffer(nullptr),
-            // m_materialMaskBuffer(nullptr),
             m_sceneVertBuffer(nullptr),
             m_sceneIdxBuffer(nullptr),
             m_instInfoBuffer(nullptr)
@@ -32,8 +29,6 @@ class HWRTRenderBackend : public RendererBackend
         ~HWRTRenderBackend() {}
 
         virtual void RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo) override;
-
-        // ID3D12Resource* GetRaytracingOutput() { return m_raytracingOutput; }
 
     protected:
         virtual void CustomResize(uint32_t width, uint32_t height) override;
@@ -55,24 +50,11 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_instances;
         UINT m_numInstances;
 
-        // ID3D12Resource* m_cnstMaterialsBuffer;
-        // ID3D12Resource* m_materialMaskBuffer;
         ID3D12Resource* m_instInfoBuffer;
         ID3D12Resource* m_sceneVertBuffer;
         ID3D12Resource* m_sceneIdxBuffer;
 
-        // D3D12_RAYTRACING_INSTANCE_DESC* m_instanceData;
-
         void InitBottomLevel();
-        // std::vector<ID3D12Resource*> m_blases;
-        // ID3D12Resource* m_quadBlas;
-        // ID3D12Resource* m_cubeBlas;
-        
-
-
-
-
-        // void UpdateTransforms();
 
         void InitTopLevel();
         ID3D12Resource* m_tlas;

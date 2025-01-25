@@ -98,17 +98,6 @@ void HWRTRenderBackend::InitScene()
     D3D12_RAYTRACING_INSTANCE_DESC* pAllInstData = nullptr;
     m_instances->Map(0, nullptr, reinterpret_cast<void**>(&pAllInstData));
 
-    /*
-    struct CnstMaterial
-    {
-        float albedo[4];
-        float metallicRoughness[4];
-    };
-    std::vector<CnstMaterial> cnstMaterialsVecData;
-
-    std::vector<uint32_t> materialMasksVecData;
-    */
-
     struct InstanceInfo
     {
         uint32_t instUintInfo0[4];
@@ -137,44 +126,13 @@ void HWRTRenderBackend::InitScene()
             // Update transform
             memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
 
-            // We cannot directly change the material mask on the prim asset because it maybe shared by static meshes with different const materials.
-            // No... A prim asset is a blas, but there can be multiple instances refer to one blas and use different materials...
+            // A prim asset is a blas, but there can be multiple instances refer to one blas and use different materials...
             InstanceInfo instInfo{
                 .instUintInfo0 = {pPrimAsset->m_materialMask, 0, 0, 0},
                 .instAlbedo = {staticMeshCnstAlbedo[0], staticMeshCnstAlbedo[1], staticMeshCnstAlbedo[2], 0.f},
                 .instMetallicRoughness = {staticMeshCnstMetallicRoughness[0], staticMeshCnstMetallicRoughness[1], 0.f, 0.f}
             };
             instInfoVecData.push_back(instInfo);
-
-
-
-            /*
-            uint32_t rtMaterialMask = 0;
-            if (pPrimAsset->m_materialMask == 0)
-            {
-                // Constant material
-                static uint32_t cnstMaterialIdx = 0;
-                rtMaterialMask |= (cnstMaterialIdx << 8);
-
-                std::vector<float> albedo = staticMeshes[sMeshIdx]->GetCnstAlbedo();
-                std::vector<float> metallicRoughness = staticMeshes[sMeshIdx]->GetCnstMetallicRoughness();
-
-                CnstMaterial cnstMaterialData{
-                    .albedo = {albedo[0], albedo[1], albedo[2], 0.f},
-                    .metallicRoughness = {metallicRoughness[0], metallicRoughness[1], 0.f, 0.f}
-                };
-                
-                cnstMaterialsVecData.push_back(cnstMaterialData);
-                cnstMaterialIdx++;
-            }
-            else
-            {
-                rtMaterialMask = pPrimAsset->m_materialMask;
-            }
-
-            // All primitives have their own material mask.
-            materialMasksVecData.push_back(rtMaterialMask);
-            */
         }
     }
 
@@ -198,32 +156,6 @@ void HWRTRenderBackend::InitScene()
     m_instInfoBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instInfoBufferMap));
     memcpy(instInfoBufferMap, instInfoVecData.data(), sizeof(InstanceInfo) * instInfoVecData.size());
     m_instInfoBuffer->Unmap(0, nullptr);
-
-    // Create and init material mask and material data
-    /*
-    auto materialMaskDesc = BASIC_BUFFER_DESC;
-    materialMaskDesc.Width = sizeof(uint32_t) * m_numInstances;
-    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
-                                          &materialMaskDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                                          nullptr, IID_PPV_ARGS(&m_materialMaskBuffer));
-    uint32_t* pMaterialMaskData;
-    m_materialMaskBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMaterialMaskData));
-    memcpy(pMaterialMaskData, materialMasksVecData.data(), sizeof(uint32_t) * m_numInstances);
-    m_materialMaskBuffer->Unmap(0, nullptr);
-
-    if (cnstMaterialsVecData.size())
-    {
-        auto cnstMaterialDesc = BASIC_BUFFER_DESC;
-        cnstMaterialDesc.Width = sizeof(CnstMaterial) * cnstMaterialsVecData.size();
-        m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
-                                              &cnstMaterialDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                                              nullptr, IID_PPV_ARGS(&m_cnstMaterialsBuffer));
-        CnstMaterial* pCnstMaterialData;
-        m_cnstMaterialsBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pCnstMaterialData));
-        memcpy(pCnstMaterialData, cnstMaterialsVecData.data(), sizeof(CnstMaterial) * cnstMaterialsVecData.size());
-        m_cnstMaterialsBuffer->Unmap(0, nullptr);
-    }
-    */
 }
 
 void HWRTRenderBackend::InitTopLevel()
@@ -426,8 +358,6 @@ void HWRTRenderBackend::CustomDeinit()
     if (m_pso) { m_pso->Release(); m_pso = nullptr; }
     if (m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
     if (m_cameraCnstBuffer) { m_cameraCnstBuffer->Release(); m_cameraCnstBuffer = nullptr; }
-    // if (m_cnstMaterialsBuffer) { m_cnstMaterialsBuffer->Release(); m_cnstMaterialsBuffer = nullptr; }
-    // if (m_materialMaskBuffer) { m_materialMaskBuffer->Release(); m_materialMaskBuffer = nullptr; }
     if (m_sceneVertBuffer) { m_sceneVertBuffer->Release(); m_sceneVertBuffer = nullptr; }
     if (m_sceneIdxBuffer) { m_sceneIdxBuffer->Release(); m_sceneIdxBuffer = nullptr; }
     if (m_instInfoBuffer) { m_instInfoBuffer->Release(); m_instInfoBuffer = nullptr; }
@@ -490,8 +420,6 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Ren
     pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pCommandList->SetComputeRootConstantBufferView(2, m_cameraCnstBuffer->GetGPUVirtualAddress());
     pCommandList->SetComputeRootShaderResourceView(3, m_instInfoBuffer->GetGPUVirtualAddress());
-    // pCommandList->SetComputeRootShaderResourceView(3, m_materialMaskBuffer->GetGPUVirtualAddress());
-    // pCommandList->SetComputeRootShaderResourceView(4, m_cnstMaterialsBuffer->GetGPUVirtualAddress());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {
         .RayGenerationShaderRecord = {
