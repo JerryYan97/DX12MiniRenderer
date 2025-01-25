@@ -98,6 +98,7 @@ void HWRTRenderBackend::InitScene()
     D3D12_RAYTRACING_INSTANCE_DESC* pAllInstData = nullptr;
     m_instances->Map(0, nullptr, reinterpret_cast<void**>(&pAllInstData));
 
+    /*
     struct CnstMaterial
     {
         float albedo[4];
@@ -106,10 +107,23 @@ void HWRTRenderBackend::InitScene()
     std::vector<CnstMaterial> cnstMaterialsVecData;
 
     std::vector<uint32_t> materialMasksVecData;
+    */
+
+    struct InstanceInfo
+    {
+        uint32_t instUintInfo0[4];
+        float instAlbedo[4];
+        float instMetallicRoughness[4];
+    };
+    std::vector<InstanceInfo> instInfoVecData;
 
     UINT instIdx = 0;
     for (int sMeshIdx = 0; sMeshIdx < staticMeshes.size(); sMeshIdx++)
     {
+        auto* pStaticMesh = staticMeshes[sMeshIdx];
+        std::vector<float> staticMeshCnstAlbedo = pStaticMesh->GetCnstAlbedo();
+        std::vector<float> staticMeshCnstMetallicRoughness = pStaticMesh->GetCnstMetallicRoughness();
+
         for (int primIdx = 0; primIdx < staticMeshes[sMeshIdx]->m_primitiveAssets.size(); primIdx++, instIdx++)
         {
             auto* pPrimAsset = staticMeshes[sMeshIdx]->m_primitiveAssets[primIdx];
@@ -124,6 +138,17 @@ void HWRTRenderBackend::InitScene()
             memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
 
             // We cannot directly change the material mask on the prim asset because it maybe shared by static meshes with different const materials.
+            // No... A prim asset is a blas, but there can be multiple instances refer to one blas and use different materials...
+            InstanceInfo instInfo{
+                .instUintInfo0 = {pPrimAsset->m_materialMask, 0, 0, 0},
+                .instAlbedo = {staticMeshCnstAlbedo[0], staticMeshCnstAlbedo[1], staticMeshCnstAlbedo[2], 0.f},
+                .instMetallicRoughness = {staticMeshCnstMetallicRoughness[0], staticMeshCnstMetallicRoughness[1], 0.f, 0.f}
+            };
+            instInfoVecData.push_back(instInfo);
+
+
+
+            /*
             uint32_t rtMaterialMask = 0;
             if (pPrimAsset->m_materialMask == 0)
             {
@@ -149,6 +174,7 @@ void HWRTRenderBackend::InitScene()
 
             // All primitives have their own material mask.
             materialMasksVecData.push_back(rtMaterialMask);
+            */
         }
     }
 
@@ -162,7 +188,19 @@ void HWRTRenderBackend::InitScene()
 
     UpdateCamera();
 
+    // Create and init instance info buffer
+    auto instInfoDesc = BASIC_BUFFER_DESC;
+    instInfoDesc.Width = sizeof(InstanceInfo) * instInfoVecData.size();
+    m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
+                                          &instInfoDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                          nullptr, IID_PPV_ARGS(&m_instInfoBuffer));
+    void* instInfoBufferMap;
+    m_instInfoBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instInfoBufferMap));
+    memcpy(instInfoBufferMap, instInfoVecData.data(), sizeof(InstanceInfo) * instInfoVecData.size());
+    m_instInfoBuffer->Unmap(0, nullptr);
+
     // Create and init material mask and material data
+    /*
     auto materialMaskDesc = BASIC_BUFFER_DESC;
     materialMaskDesc.Width = sizeof(uint32_t) * m_numInstances;
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
@@ -185,6 +223,7 @@ void HWRTRenderBackend::InitScene()
         memcpy(pCnstMaterialData, cnstMaterialsVecData.data(), sizeof(CnstMaterial) * cnstMaterialsVecData.size());
         m_cnstMaterialsBuffer->Unmap(0, nullptr);
     }
+    */
 }
 
 void HWRTRenderBackend::InitTopLevel()
@@ -377,18 +416,21 @@ void HWRTRenderBackend::CustomInit()
 
 void HWRTRenderBackend::CustomDeinit()
 {
-    if(m_uavHeap) { m_uavHeap->Release(); m_uavHeap = nullptr; }
-    if(m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
-    if(m_fence) { m_fence->Release(); m_fence = nullptr; }
-    if(m_instances) { m_instances->Release(); m_instances = nullptr; }
-    if(m_tlas) { m_tlas->Release(); m_tlas = nullptr; }
-    if(m_tlasUpdateScratch) { m_tlasUpdateScratch->Release(); m_tlasUpdateScratch = nullptr; }
-    if(m_rootSignature) { m_rootSignature->Release(); m_rootSignature = nullptr; }
-    if(m_pso) { m_pso->Release(); m_pso = nullptr; }
-    if(m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
-    if(m_cameraCnstBuffer){ m_cameraCnstBuffer->Release(); m_cameraCnstBuffer = nullptr; }
-    if(m_cnstMaterialsBuffer) { m_cnstMaterialsBuffer->Release(); m_cnstMaterialsBuffer = nullptr; }
-    if(m_materialMaskBuffer) { m_materialMaskBuffer->Release(); m_materialMaskBuffer = nullptr; }
+    if (m_uavHeap) { m_uavHeap->Release(); m_uavHeap = nullptr; }
+    if (m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
+    if (m_fence) { m_fence->Release(); m_fence = nullptr; }
+    if (m_instances) { m_instances->Release(); m_instances = nullptr; }
+    if (m_tlas) { m_tlas->Release(); m_tlas = nullptr; }
+    if (m_tlasUpdateScratch) { m_tlasUpdateScratch->Release(); m_tlasUpdateScratch = nullptr; }
+    if (m_rootSignature) { m_rootSignature->Release(); m_rootSignature = nullptr; }
+    if (m_pso) { m_pso->Release(); m_pso = nullptr; }
+    if (m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
+    if (m_cameraCnstBuffer) { m_cameraCnstBuffer->Release(); m_cameraCnstBuffer = nullptr; }
+    // if (m_cnstMaterialsBuffer) { m_cnstMaterialsBuffer->Release(); m_cnstMaterialsBuffer = nullptr; }
+    // if (m_materialMaskBuffer) { m_materialMaskBuffer->Release(); m_materialMaskBuffer = nullptr; }
+    if (m_sceneVertBuffer) { m_sceneVertBuffer->Release(); m_sceneVertBuffer = nullptr; }
+    if (m_sceneIdxBuffer) { m_sceneIdxBuffer->Release(); m_sceneIdxBuffer = nullptr; }
+    if (m_instInfoBuffer) { m_instInfoBuffer->Release(); m_instInfoBuffer = nullptr; }
 }
 
 void HWRTRenderBackend::UpdateCamera()
@@ -447,8 +489,9 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Ren
     pCommandList->SetComputeRootDescriptorTable(0, uavTable); // ?u0 ?t0
     pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
     pCommandList->SetComputeRootConstantBufferView(2, m_cameraCnstBuffer->GetGPUVirtualAddress());
-    pCommandList->SetComputeRootShaderResourceView(3, m_materialMaskBuffer->GetGPUVirtualAddress());
-    pCommandList->SetComputeRootShaderResourceView(4, m_cnstMaterialsBuffer->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(3, m_instInfoBuffer->GetGPUVirtualAddress());
+    // pCommandList->SetComputeRootShaderResourceView(3, m_materialMaskBuffer->GetGPUVirtualAddress());
+    // pCommandList->SetComputeRootShaderResourceView(4, m_cnstMaterialsBuffer->GetGPUVirtualAddress());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {
         .RayGenerationShaderRecord = {

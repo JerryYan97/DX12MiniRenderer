@@ -36,9 +36,20 @@ Milestone 1: (Done)
 Milestone 2:
 - Cornell box fully work path tracer rendering.
 -- Use the old-school Raytracing in one-weekend basic version.
+--- Design a new vert-idx structure to hold all data in one buffer to support inst diff materials/attr gen:
+--- Refactorize the vert buffer / idx buffer system --> All vert and idx in a scene need to stay in one buffer in a raytracing scene.
+--- Maybe I don't need to refactorize the system. We can just let the asset manager generate a big vert/idx buffer from the loaded primitive assets by gpu coping data/just loop through all models and re-upload/just don't do per-model gpu buffer upload for the rt scene.
+
+
+
+--- Implement the Diffuse Material Models.
+--- Mirror
+--- Glass
 
 Milestone 3:
- 
+- Support more complicated models -- bunny/dragon.
+- Design scenes for gallery presentation -- Show the multiple materials.
+- Gallery 
 
 Milestone 4:
 - Cornell box with some textured gltf PBR models and mirror 
@@ -48,7 +59,7 @@ Milestone 4+:
 - Sponza/Nv unreal Restir scene rendering.
 - FSR integration.
 - Refactorization...
-- Better GUI
+- Better GUI -- 
 - Volumetric Rendering...
 - Hair Rendering...
 - Arguments parsing -- Use exe's input arguments to determine which asset to use.
@@ -88,6 +99,7 @@ Integrate IBL, Cubemap Background Rendering.
 Misc TODOs:
 - Use singlenton, global variables and static to simplify programming patterns.
 - DXR, DLSS/FSR, mesh-shader Nanite, Restir, GPU-Workgraph examples are must for my further graphics career.
+- I need to decouple the model load to RAM and send RAM data to GPU. In this way, I can save memory when we are rendering the ray tracing scene by disable per-model GPU resources.
 
 Gallery Candidants -- Texture or no texture complicated objects:
 Avocado, BarramundiFish, Buggy(It needs too much self-shadow, so we give it up. Though we should support it sometime), Duck, Fox (Has animation, maybe not good), Water Bottle.

@@ -22,8 +22,11 @@ class HWRTRenderBackend : public RendererBackend
             m_numInstances(0),
             m_cameraCnstBuffer(nullptr),
             m_cameraCnstBufferMap(nullptr),
-            m_cnstMaterialsBuffer(nullptr),
-            m_materialMaskBuffer(nullptr)
+            // m_cnstMaterialsBuffer(nullptr),
+            // m_materialMaskBuffer(nullptr),
+            m_sceneVertBuffer(nullptr),
+            m_sceneIdxBuffer(nullptr),
+            m_instInfoBuffer(nullptr)
         {}
         
         ~HWRTRenderBackend() {}
@@ -52,8 +55,11 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_instances;
         UINT m_numInstances;
 
-        ID3D12Resource* m_cnstMaterialsBuffer;
-        ID3D12Resource* m_materialMaskBuffer;
+        // ID3D12Resource* m_cnstMaterialsBuffer;
+        // ID3D12Resource* m_materialMaskBuffer;
+        ID3D12Resource* m_instInfoBuffer;
+        ID3D12Resource* m_sceneVertBuffer;
+        ID3D12Resource* m_sceneIdxBuffer;
 
         // D3D12_RAYTRACING_INSTANCE_DESC* m_instanceData;
 

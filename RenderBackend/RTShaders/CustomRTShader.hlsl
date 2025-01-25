@@ -18,6 +18,15 @@ struct VertexReal
     float2 uv;
 };
 
+struct InstInfo
+{
+    uint4 instUintInfo0; // x: material mask, y: scene vert buffer start offset, z: scene index buffer start offset, w: unused.
+
+    // Constant material info. If material mask is 0, then we will use material here.
+    float4 instAlbedo;
+    float4 instMetallicRoughness;
+};
+
 cbuffer FrameConstantBuffer : register(b0)
 {
     float4 cameraPos;
@@ -28,11 +37,13 @@ cbuffer FrameConstantBuffer : register(b0)
     uint4  randomSeeds; // x: random number; y: current time in microseconds. 
 };
 
+/*
 struct ConstantMaterialData
 {
     float4 albedo;
     float4 metallicRoughness;
 };
+*/
 
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
 static const float3 skyBottom = float3(0.75, 0.86, 0.93);
@@ -45,13 +56,16 @@ static const uint SAMPLE_COUNT = 128;
 static const uint HIT_CHILD_RAY_COUNT = 4;
 
 RaytracingAccelerationStructure scene : register(t0);
-StructuredBuffer<dword> instsMaterialsMasks : register(t1);
-StructuredBuffer<ConstantMaterialData> cnstMaterials : register(t2);
-StructuredBuffer<VertexRaw> vertices : register(t3);
-ByteAddressBuffer Indices : register(t4);
+StructuredBuffer<InstInfo> instsInfo : register(t1);
+// StructuredBuffer<dword> instsMaterialsMasks : register(t1);
+// StructuredBuffer<ConstantMaterialData> cnstMaterials : register(t2);
+
+// StructuredBuffer<VertexRaw> sceneVertices : register(t2);
+// ByteAddressBuffer sceneIndices : register(t3);
 
 RWTexture2D<float4> uav : register(u0);
 
+/*
 void ParseVertex(in uint vertId, out float3 pos, out float3 normal, out float4 tangent, out float2 uv)
 {
     VertexRaw vert = vertices[vertId];
@@ -92,7 +106,7 @@ uint3 Load3x16BitIndices(uint offsetBytes)
 
     return indices;
 }
-
+*/
 float rand_1_05(in float2 uv)
 {
     float2 noise = (frac(sin(dot(uv ,float2(12.9898,78.233)*2.0)) * 43758.5453));
@@ -183,7 +197,9 @@ void ClosestHit(inout Payload payload,
                 BuiltInTriangleIntersectionAttributes attrib)
 {
     uint instId = InstanceID();
-    dword instMaterialMask = instsMaterialsMasks[instId];
+    InstInfo instInfo = instsInfo[instId];
+    uint instMaterialMask = instInfo.instUintInfo0.x;
+    // dword instMaterialMask = instsMaterialsMasks[instId];
 
     uint indexSizeInBytes = 2;
     uint indicesPerTriangle = 3;
@@ -191,27 +207,27 @@ void ClosestHit(inout Payload payload,
     uint baseIndex = PrimitiveIndex() * triangleIndexStride;
 
     // Load up 3 16 bit indices for the triangle.
-    const uint3 indices = Load3x16BitIndices(baseIndex);
+    // const uint3 indices = Load3x16BitIndices(baseIndex);
 
-    VertexReal vert0, vert1, vert2;
-    ParseVertex(indices.x, vert0.pos, vert0.normal, vert0.tangent, vert0.uv);
-    ParseVertex(indices.y, vert1.pos, vert1.normal, vert1.tangent, vert1.uv);
-    ParseVertex(indices.z, vert2.pos, vert2.normal, vert2.tangent, vert2.uv);
+    // VertexReal vert0, vert1, vert2;
+    // ParseVertex(indices.x, vert0.pos, vert0.normal, vert0.tangent, vert0.uv);
+    // ParseVertex(indices.y, vert1.pos, vert1.normal, vert1.tangent, vert1.uv);
+    // ParseVertex(indices.z, vert2.pos, vert2.normal, vert2.tangent, vert2.uv);
 
     // Retrieve corresponding vertex normals for the triangle vertices.
-    float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
-    float3 triangleNormal = HitAttribute(vertexNormals, attrib);
+    // float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
+    // float3 triangleNormal = HitAttribute(vertexNormals, attrib);
 
-    float3x4 objToWorld = ObjectToWorld3x4();
-    triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
+    // float3x4 objToWorld = ObjectToWorld3x4();
+    // triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
 
     // If there is any texture, then the material is not constant.
-    bool isConstantMaterial = ((instMaterialMask & MATERIAL_TEX_MASK) > 0) ? false : true;
-    if(isConstantMaterial)
+    // bool isConstantMaterial = ((instMaterialMask & MATERIAL_TEX_MASK) > 0) ? false : true;
+    if(instMaterialMask == 0)
     {
-        uint instMaterialIdx = instMaterialMask >> 8;
-        ConstantMaterialData cnstMaterialData = cnstMaterials[instMaterialIdx];
-        payload.color = cnstMaterialData.albedo.xyz;
+        // uint instMaterialIdx = instMaterialMask >> 8;
+        // ConstantMaterialData cnstMaterialData = cnstMaterials[instMaterialIdx];
+        payload.color = instInfo.instAlbedo.xyz;
     }
     else
     {
