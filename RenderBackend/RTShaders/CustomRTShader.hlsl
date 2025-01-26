@@ -213,6 +213,15 @@ void ClosestHit(inout Payload payload,
     float3x4 objToWorld = ObjectToWorld3x4();
     triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
 
+    // Test whether the normal and ray are at the same direction
+    float3 rayDir = WorldRayDirection();
+    float rayNormalDot = dot(rayDir, triangleNormal);
+    if(rayNormalDot >= 0.f)
+    {
+        // Need to flip the normal
+        triangleNormal = -triangleNormal;
+    }
+
     // If there is any texture, then the material is not constant.
     if(instMaterialMask == 0)
     {
