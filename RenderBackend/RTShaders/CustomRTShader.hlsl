@@ -55,10 +55,10 @@ ByteAddressBuffer sceneIndices : register(t3);
 
 RWTexture2D<float4> uav : register(u0);
 
-/*
+
 void ParseVertex(in uint vertId, out float3 pos, out float3 normal, out float4 tangent, out float2 uv)
 {
-    VertexRaw vert = vertices[vertId];
+    VertexRaw vert = sceneVertices[vertId];
     pos = vert.data[0].xyz;
     normal = float3(vert.data[0].w, vert.data[1].xy);
     tangent = float4(vert.data[1].zw, vert.data[2].xy);
@@ -78,7 +78,7 @@ uint3 Load3x16BitIndices(uint offsetBytes)
     //  Aligned:     { 0 1 | 2 - }
     //  Not aligned: { - 0 | 1 2 }
     const uint dwordAlignedOffset = offsetBytes & ~3;    
-    const uint2 four16BitIndices = Indices.Load2(dwordAlignedOffset);
+    const uint2 four16BitIndices = sceneIndices.Load2(dwordAlignedOffset);
  
     // Aligned: { 0 1 | 2 - } => retrieve first three 16bit indices
     if (dwordAlignedOffset == offsetBytes)
@@ -96,7 +96,7 @@ uint3 Load3x16BitIndices(uint offsetBytes)
 
     return indices;
 }
-*/
+
 float rand_1_05(in float2 uv)
 {
     float2 noise = (frac(sin(dot(uv ,float2(12.9898,78.233)*2.0)) * 43758.5453));
@@ -189,31 +189,36 @@ void ClosestHit(inout Payload payload,
     uint instId = InstanceID();
     InstInfo instInfo = instsInfo[instId];
     uint instMaterialMask = instInfo.instUintInfo0.x;
+    uint instVertStartFloat = instInfo.instUintInfo0.y;
+    uint instIdxStartInt = instInfo.instUintInfo0.z;
 
     uint indexSizeInBytes = 2;
     uint indicesPerTriangle = 3;
     uint triangleIndexStride = indicesPerTriangle * indexSizeInBytes;
-    uint baseIndex = PrimitiveIndex() * triangleIndexStride;
+    uint baseIndex = (PrimitiveIndex() + instIdxStartInt) * triangleIndexStride;
 
     // Load up 3 16 bit indices for the triangle.
-    // const uint3 indices = Load3x16BitIndices(baseIndex);
+    const uint3 indices = Load3x16BitIndices(baseIndex);
+    const uint vertOffsetId = instVertStartFloat / 12;
 
-    // VertexReal vert0, vert1, vert2;
-    // ParseVertex(indices.x, vert0.pos, vert0.normal, vert0.tangent, vert0.uv);
-    // ParseVertex(indices.y, vert1.pos, vert1.normal, vert1.tangent, vert1.uv);
-    // ParseVertex(indices.z, vert2.pos, vert2.normal, vert2.tangent, vert2.uv);
+    VertexReal vert0, vert1, vert2;
+    ParseVertex(indices.x + vertOffsetId, vert0.pos, vert0.normal, vert0.tangent, vert0.uv);
+    ParseVertex(indices.y + vertOffsetId, vert1.pos, vert1.normal, vert1.tangent, vert1.uv);
+    ParseVertex(indices.z + vertOffsetId, vert2.pos, vert2.normal, vert2.tangent, vert2.uv);
 
     // Retrieve corresponding vertex normals for the triangle vertices.
-    // float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
-    // float3 triangleNormal = HitAttribute(vertexNormals, attrib);
+    float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
+    float3 triangleNormal = HitAttribute(vertexNormals, attrib);
 
-    // float3x4 objToWorld = ObjectToWorld3x4();
-    // triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
+    float3x4 objToWorld = ObjectToWorld3x4();
+    triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
 
     // If there is any texture, then the material is not constant.
     if(instMaterialMask == 0)
     {
-        payload.color = instInfo.instAlbedo.xyz;
+        float3 normalToColor = (triangleNormal + 1.0) / 2.0;
+        // payload.color = instInfo.instAlbedo.xyz;
+        payload.color = normalToColor;
     }
     else
     {

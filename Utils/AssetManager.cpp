@@ -412,7 +412,7 @@ std::vector<PrimitiveAsset*> AssetManager::GenSceneVertIdxBuffer(std::vector<flo
 
     for (auto prim : prims)
     {
-        sceneVertBuffer.insert(sceneVertBuffer.end(), prim->m_posData.begin(), prim->m_posData.end());
+        sceneVertBuffer.insert(sceneVertBuffer.end(), prim->m_vertData.begin(), prim->m_vertData.end());
         sceneIdxBuffer.insert(sceneIdxBuffer.end(), prim->m_idxDataUint16.begin(), prim->m_idxDataUint16.end());
     }
 
