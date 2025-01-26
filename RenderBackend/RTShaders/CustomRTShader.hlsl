@@ -195,7 +195,7 @@ void ClosestHit(inout Payload payload,
     uint indexSizeInBytes = 2;
     uint indicesPerTriangle = 3;
     uint triangleIndexStride = indicesPerTriangle * indexSizeInBytes;
-    uint baseIndex = (PrimitiveIndex() + instIdxStartInt) * triangleIndexStride;
+    uint baseIndex = instIdxStartInt * indexSizeInBytes + PrimitiveIndex() * triangleIndexStride;
 
     // Load up 3 16 bit indices for the triangle.
     const uint3 indices = Load3x16BitIndices(baseIndex);
