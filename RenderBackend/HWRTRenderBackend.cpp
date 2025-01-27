@@ -339,12 +339,13 @@ void HWRTRenderBackend::InitPipeline()
                                      .ClosestHitShaderImport = L"ClosestHit"};
 
     D3D12_RAYTRACING_SHADER_CONFIG shaderCfg = {
-        .MaxPayloadSizeInBytes = 36,
+        .MaxPayloadSizeInBytes = 60,
         .MaxAttributeSizeInBytes = 8,
     };
 
     D3D12_GLOBAL_ROOT_SIGNATURE globalSig = {m_rootSignature};
 
+    // NOTE! If the ray recursion is more than 1, the GPU will be disconnected/TDR.
     D3D12_RAYTRACING_PIPELINE_CONFIG pipelineCfg = {.MaxTraceRecursionDepth = 1};
 
     D3D12_STATE_SUBOBJECT subobjects[] = {

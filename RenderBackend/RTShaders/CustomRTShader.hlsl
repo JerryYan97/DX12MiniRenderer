@@ -2,8 +2,10 @@ struct Payload
 {
     float3 color;
     float3 radiance;
+    float3 nextPos;
+    float3 nextDir;
     uint recursionDepth;
-    bool allowReflection;
+    bool hitLight;
     bool missed;
 };
 
@@ -47,8 +49,9 @@ static const float3 skyBottom = float3(0.75, 0.86, 0.93);
 // 8-31 bits are for material index.
 static dword MATERIAL_TEX_MASK = 0xFF;
 
-static const uint SAMPLE_COUNT = 1;
+static const uint SAMPLE_COUNT = 128;
 static const uint HIT_CHILD_RAY_COUNT = 4;
+static const uint MAX_BOUNCE_DEPTH = 6;
 
 RaytracingAccelerationStructure scene : register(t0);
 StructuredBuffer<InstInfo> instsInfo : register(t1);
@@ -112,11 +115,13 @@ float2 rand_2_10(in float2 uv) {
     return float2(noiseX, noiseY);
 }
 
+// NOTE! Frac is the frac part of a float. It's always from 0 to 1.
 float3 random3(in float3 p)
 {   
     float a = frac(cos(dot(p,float3(23.14069263277926,2.665144142690225,-27.90511001)))*12345.6789);
-    float2 bc = rand_2_10(float2(a, p.z));
-    float3 res = float3(a, bc.x, bc.y);
+    float2 bc = rand_2_10(float2(p.x + p.z, p.y));
+    float d = rand_1_05(float2(p.y * p.z, p.x));
+    float3 res = float3(a, bc.x, d);
     return res;
 }
 
@@ -164,23 +169,31 @@ void RayGeneration()
         ray.TMax = 1000;
 
         Payload payload;
-        payload.allowReflection = true;
+        payload.hitLight = false;
         payload.missed = false;
         payload.radiance = float3(0, 0, 0);
         payload.color = float3(1.0, 1.0, 1.0);
+        payload.nextDir = float3(0, 0, 0);
+        payload.nextPos = float3(0, 0, 0);
         payload.recursionDepth = 0;
 
-        if(idx.x == 440 && idx.y == 164)
+        while((payload.missed == false) &&
+              (payload.recursionDepth <= MAX_BOUNCE_DEPTH) &&
+              (payload.hitLight == false))
         {
-            payload.recursionDepth = 1;
+            TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
+            ray.Origin = payload.nextPos;
+            ray.Direction = payload.nextDir;
         }
-
-        TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
 
         res += float3(payload.radiance);
     } 
 
-    uav[idx] = float4(res / (float)SAMPLE_COUNT, 1);
+    float4 thisRes = float4(res / (float)SAMPLE_COUNT, 1);
+    thisRes += uav[idx];
+    thisRes /= 2.0;
+
+    uav[idx] = thisRes;
 }
 
 [shader("miss")]
@@ -197,39 +210,21 @@ void Miss(inout Payload payload)
 void ClosestHit(inout Payload payload,
                 BuiltInTriangleIntersectionAttributes attrib)
 {
-    
-    // if (!payload.allowReflection || !payload.missed)
-            // return;
     uint instId = InstanceID();
     InstInfo instInfo = instsInfo[instId];
     uint instMaterialMask = instInfo.instUintInfo0.x;
     uint instVertStartFloat = instInfo.instUintInfo0.y;
     uint instIdxStartInt = instInfo.instUintInfo0.z;
     float3 instEmissive = instInfo.instFloatInfo0.xyz;
+    payload.recursionDepth++;
 
-    // if(length(instEmissive) > 0.0)
+    if(length(instEmissive) > 0.0)
     {
-        // float3 pos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
-        // float3 normal = normalize(mul(float3(0, 1, 0), (float3x3)ObjectToWorld4x3()));
-        // float3 reflected = reflect(normalize(WorldRayDirection()), normal);
-
-        RayDesc mirrorRay;
-        mirrorRay.Origin = WorldRayOrigin();
-        mirrorRay.Direction = WorldRayDirection();
-        mirrorRay.TMin = 0.001;
-        mirrorRay.TMax = 1000;
-
-        payload.allowReflection=false;
-        if(payload.recursionDepth == 1)
-        {
-            payload.recursionDepth = 0;
-            TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, mirrorRay, payload);
-        }
-        
+        // Hit light. Stops the recursion.
+        payload.hitLight = true;        
         payload.radiance = instEmissive * payload.color;
     }
-    /*
-    else if(payload.recursionDepth < 1)
+    else
     {
         uint indexSizeInBytes = 2;
         uint indicesPerTriangle = 3;
@@ -267,7 +262,8 @@ void ClosestHit(inout Payload payload,
         if(instMaterialMask == 0)
         {
             // Randomly choose a out direction
-            float3 randDir = random3(hitPos + rayDir);
+            float3 randDir = random3(hitPos + rayDir * payload.recursionDepth);
+            randDir = randDir * 2.0 - 1.0;
             randDir = normalize(randDir + 0.0001);
             if(dot(randDir, triangleNormal) < 0)
             {
@@ -276,15 +272,15 @@ void ClosestHit(inout Payload payload,
 
             // Assembly the new out-going ray
             payload.color *= instInfo.instAlbedo.xyz;
-            payload.radiance = instInfo.instAlbedo.xyz;
-            
+            payload.nextPos = hitPos;
+            payload.nextDir = randDir;
         }
         else
         {
             payload.color *= float3(1, 0, 1);
         }
     }
-    */
+    
 }
 
 /*
