@@ -13,7 +13,9 @@ StaticMesh::StaticMesh()
     : m_loadedInRAM(false),
       m_loadedInVRAM(false),
       m_staticMeshConstantBuffer(nullptr),
-      m_staticMeshCbvDescHeap(nullptr)
+      m_staticMeshCbvDescHeap(nullptr),
+      m_isCnstMaterial(false),
+      m_isCnstEmissiveMaterial(false)
 {
     memset(m_position, 0, sizeof(float) * 3);
     memset(m_scale, 0, sizeof(float) * 3);
@@ -75,6 +77,13 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
         if (crc32(materialType.c_str()) == crc32("ConstMaterial"))
         {
             mesh->m_isCnstMaterial = true;
+            if (i_node["Material"]["Emissive"].IsDefined())
+            {
+                mesh->m_isCnstEmissiveMaterial = true;
+                std::vector<float> cnstEmissive = i_node["Material"]["Emissive"].as<std::vector<float>>();
+                memcpy(mesh->m_cnstEmissive, cnstEmissive.data(), sizeof(float) * 3);
+            }
+
             std::vector<float> cnstAlbedo = i_node["Material"]["Albedo"].as<std::vector<float>>();
             mesh->m_cnstMetallic = i_node["Material"]["Metallic"].as<float>();
             mesh->m_cnstRoughness = i_node["Material"]["Roughness"].as<float>();

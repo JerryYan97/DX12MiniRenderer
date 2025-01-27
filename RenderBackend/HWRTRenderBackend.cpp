@@ -121,6 +121,7 @@ void HWRTRenderBackend::InitScene()
     struct InstanceInfo
     {
         uint32_t instUintInfo0[4];
+        float instFloatInfo0[4];
         float instAlbedo[4];
         float instMetallicRoughness[4];
     };
@@ -150,8 +151,16 @@ void HWRTRenderBackend::InitScene()
             uint32_t vertStartFloat, idxStartInt;
             GetPrimStartVertIdxStart(pPrimAsset, vertStartFloat, idxStartInt);
 
+            float emissiveRadiance[3] = {0.f, 0.f, 0.f};
+            if (pStaticMesh->IsCnstEmissiveMaterial())
+            {
+                std::vector<float> emissiveRadianceVec = pStaticMesh->GetCnstEmissive();
+                memcpy(emissiveRadiance, emissiveRadianceVec.data(), sizeof(float) * 3);
+            }
+
             InstanceInfo instInfo{
                 .instUintInfo0 = {pPrimAsset->m_materialMask, vertStartFloat, idxStartInt, 0},
+                .instFloatInfo0 ={emissiveRadiance[0], emissiveRadiance[1], emissiveRadiance[2], 0.f},
                 .instAlbedo = {staticMeshCnstAlbedo[0], staticMeshCnstAlbedo[1], staticMeshCnstAlbedo[2], 0.f},
                 .instMetallicRoughness = {staticMeshCnstMetallicRoughness[0], staticMeshCnstMetallicRoughness[1], 0.f, 0.f}
             };
@@ -330,13 +339,13 @@ void HWRTRenderBackend::InitPipeline()
                                      .ClosestHitShaderImport = L"ClosestHit"};
 
     D3D12_RAYTRACING_SHADER_CONFIG shaderCfg = {
-        .MaxPayloadSizeInBytes = 20,
+        .MaxPayloadSizeInBytes = 36,
         .MaxAttributeSizeInBytes = 8,
     };
 
     D3D12_GLOBAL_ROOT_SIGNATURE globalSig = {m_rootSignature};
 
-    D3D12_RAYTRACING_PIPELINE_CONFIG pipelineCfg = {.MaxTraceRecursionDepth = 3};
+    D3D12_RAYTRACING_PIPELINE_CONFIG pipelineCfg = {.MaxTraceRecursionDepth = 1};
 
     D3D12_STATE_SUBOBJECT subobjects[] = {
         {.Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, .pDesc = &lib},

@@ -1,6 +1,8 @@
 struct Payload
 {
     float3 color;
+    float3 radiance;
+    uint recursionDepth;
     bool allowReflection;
     bool missed;
 };
@@ -21,6 +23,7 @@ struct VertexReal
 struct InstInfo
 {
     uint4 instUintInfo0; // x: material mask, y: scene vert buffer starts float, z: scene index buffer starts int, w: unused.
+    float4 instFloatInfo0; // xyz: emissive radiance, w: unused.
 
     // Constant material info. If material mask is 0, then we will use material here.
     float4 instAlbedo;
@@ -44,7 +47,7 @@ static const float3 skyBottom = float3(0.75, 0.86, 0.93);
 // 8-31 bits are for material index.
 static dword MATERIAL_TEX_MASK = 0xFF;
 
-static const uint SAMPLE_COUNT = 128;
+static const uint SAMPLE_COUNT = 1;
 static const uint HIT_CHILD_RAY_COUNT = 4;
 
 RaytracingAccelerationStructure scene : register(t0);
@@ -163,10 +166,18 @@ void RayGeneration()
         Payload payload;
         payload.allowReflection = true;
         payload.missed = false;
+        payload.radiance = float3(0, 0, 0);
+        payload.color = float3(1.0, 1.0, 1.0);
+        payload.recursionDepth = 0;
+
+        if(idx.x == 440 && idx.y == 164)
+        {
+            payload.recursionDepth = 1;
+        }
 
         TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
 
-        res += float3(payload.color);
+        res += float3(payload.radiance);
     } 
 
     uav[idx] = float4(res / (float)SAMPLE_COUNT, 1);
@@ -186,51 +197,108 @@ void Miss(inout Payload payload)
 void ClosestHit(inout Payload payload,
                 BuiltInTriangleIntersectionAttributes attrib)
 {
+    
+    // if (!payload.allowReflection || !payload.missed)
+            // return;
     uint instId = InstanceID();
     InstInfo instInfo = instsInfo[instId];
     uint instMaterialMask = instInfo.instUintInfo0.x;
     uint instVertStartFloat = instInfo.instUintInfo0.y;
     uint instIdxStartInt = instInfo.instUintInfo0.z;
+    float3 instEmissive = instInfo.instFloatInfo0.xyz;
 
-    uint indexSizeInBytes = 2;
-    uint indicesPerTriangle = 3;
-    uint triangleIndexStride = indicesPerTriangle * indexSizeInBytes;
-    uint baseIndex = instIdxStartInt * indexSizeInBytes + PrimitiveIndex() * triangleIndexStride;
-
-    // Load up 3 16 bit indices for the triangle.
-    const uint3 indices = Load3x16BitIndices(baseIndex);
-    const uint vertOffsetId = instVertStartFloat / 12;
-
-    VertexReal vert0, vert1, vert2;
-    ParseVertex(indices.x + vertOffsetId, vert0.pos, vert0.normal, vert0.tangent, vert0.uv);
-    ParseVertex(indices.y + vertOffsetId, vert1.pos, vert1.normal, vert1.tangent, vert1.uv);
-    ParseVertex(indices.z + vertOffsetId, vert2.pos, vert2.normal, vert2.tangent, vert2.uv);
-
-    // Retrieve corresponding vertex normals for the triangle vertices.
-    float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
-    float3 triangleNormal = HitAttribute(vertexNormals, attrib);
-
-    float3x4 objToWorld = ObjectToWorld3x4();
-    triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
-
-    // Test whether the normal and ray are at the same direction
-    float3 rayDir = WorldRayDirection();
-    float rayNormalDot = dot(rayDir, triangleNormal);
-    if(rayNormalDot >= 0.f)
+    // if(length(instEmissive) > 0.0)
     {
-        // Need to flip the normal
-        triangleNormal = -triangleNormal;
-    }
+        // float3 pos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
+        // float3 normal = normalize(mul(float3(0, 1, 0), (float3x3)ObjectToWorld4x3()));
+        // float3 reflected = reflect(normalize(WorldRayDirection()), normal);
 
-    // If there is any texture, then the material is not constant.
-    if(instMaterialMask == 0)
-    {
-        float3 normalToColor = (triangleNormal + 1.0) / 2.0;
-        // payload.color = instInfo.instAlbedo.xyz;
-        payload.color = normalToColor;
+        RayDesc mirrorRay;
+        mirrorRay.Origin = WorldRayOrigin();
+        mirrorRay.Direction = WorldRayDirection();
+        mirrorRay.TMin = 0.001;
+        mirrorRay.TMax = 1000;
+
+        payload.allowReflection=false;
+        if(payload.recursionDepth == 1)
+        {
+            payload.recursionDepth = 0;
+            TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, mirrorRay, payload);
+        }
+        
+        payload.radiance = instEmissive * payload.color;
     }
-    else
+    /*
+    else if(payload.recursionDepth < 1)
     {
-        payload.color = float3(1, 0, 1);
+        uint indexSizeInBytes = 2;
+        uint indicesPerTriangle = 3;
+        uint triangleIndexStride = indicesPerTriangle * indexSizeInBytes;
+        uint baseIndex = instIdxStartInt * indexSizeInBytes + PrimitiveIndex() * triangleIndexStride;
+
+        // Load up 3 16 bit indices for the triangle.
+        const uint3 indices = Load3x16BitIndices(baseIndex);
+        const uint vertOffsetId = instVertStartFloat / 12;
+
+        VertexReal vert0, vert1, vert2;
+        ParseVertex(indices.x + vertOffsetId, vert0.pos, vert0.normal, vert0.tangent, vert0.uv);
+        ParseVertex(indices.y + vertOffsetId, vert1.pos, vert1.normal, vert1.tangent, vert1.uv);
+        ParseVertex(indices.z + vertOffsetId, vert2.pos, vert2.normal, vert2.tangent, vert2.uv);
+
+        // Retrieve corresponding vertex normals for the triangle vertices.
+        float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
+        float3 vertexPos[3] = { vert0.pos, vert1.pos, vert2.pos };
+        float3 triangleNormal = HitAttribute(vertexNormals, attrib);
+        float3 hitPos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
+
+        float3x4 objToWorld = ObjectToWorld3x4();
+        triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
+
+        // Test whether the normal and ray are at the same direction
+        float3 rayDir = WorldRayDirection();
+        float rayNormalDot = dot(rayDir, triangleNormal);
+        if(rayNormalDot >= 0.f)
+        {
+            // Need to flip the normal
+            triangleNormal = -triangleNormal;
+        }
+
+        // If there is any texture, then the material is not constant.
+        if(instMaterialMask == 0)
+        {
+            // Randomly choose a out direction
+            float3 randDir = random3(hitPos + rayDir);
+            randDir = normalize(randDir + 0.0001);
+            if(dot(randDir, triangleNormal) < 0)
+            {
+                randDir = -randDir;
+            }
+
+            // Assembly the new out-going ray
+            payload.color *= instInfo.instAlbedo.xyz;
+            payload.radiance = instInfo.instAlbedo.xyz;
+            
+        }
+        else
+        {
+            payload.color *= float3(1, 0, 1);
+        }
     }
+    */
 }
+
+/*
+            RayDesc ray;
+            ray.Origin = hitPos + randDir * 0.001;
+            ray.Direction = randDir;
+            ray.TMin = 0.001;
+            ray.TMax = 1000;
+
+            payload.color *= instInfo.instAlbedo.xyz;
+            payload.recursionDepth++;
+            if(instId == 0 && triangleNormal.y > 2.0)
+            {
+                TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
+            }
+            payload.radiance = float3(payload.recursionDepth, 0.0, 0.0) / 2;
+            */

@@ -21,6 +21,13 @@ public:
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
     void SendModelMatrixToGpuBuffer();
 
+    bool IsCnstEmissiveMaterial() const { return m_isCnstEmissiveMaterial; }
+    std::vector<float> GetCnstEmissive() const
+    {
+        std::vector<float> res = {m_cnstEmissive[0], m_cnstEmissive[1], m_cnstEmissive[2]};
+        return res;
+    }
+
     std::vector<float> GetCnstAlbedo() const
     {
         std::vector<float> res = {m_cnstAlbedo[0], m_cnstAlbedo[1], m_cnstAlbedo[2]};
@@ -59,6 +66,9 @@ private:
     float m_cnstAlbedo[3];
     float m_cnstMetallic;
     float m_cnstRoughness;
+
+    bool m_isCnstEmissiveMaterial;
+    float m_cnstEmissive[3];
 
     bool m_loadedInRAM;
     bool m_loadedInVRAM;
