@@ -170,13 +170,13 @@ void HWRTRenderBackend::InitScene()
 
     // Create and init the camera constant buffer
     auto cameraCnstDesc = BASIC_BUFFER_DESC;
-    cameraCnstDesc.Width = sizeof(float) * 20;
+    cameraCnstDesc.Width = sizeof(FrameConstBuffer);
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
                                           &cameraCnstDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                                          nullptr, IID_PPV_ARGS(&m_cameraCnstBuffer));
-    m_cameraCnstBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_cameraCnstBufferMap));
+                                          nullptr, IID_PPV_ARGS(&m_frameCnstBuffer));
+    m_frameCnstBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_frameCnstBufferMap));
 
-    UpdateCamera();
+    UpdateFrameConstBuffer();
 
     // Create and init instance info buffer
     auto instInfoDesc = BASIC_BUFFER_DESC;
@@ -418,13 +418,13 @@ void HWRTRenderBackend::CustomDeinit()
     if (m_rootSignature) { m_rootSignature->Release(); m_rootSignature = nullptr; }
     if (m_pso) { m_pso->Release(); m_pso = nullptr; }
     if (m_shaderIDs) { m_shaderIDs->Release(); m_shaderIDs = nullptr; }
-    if (m_cameraCnstBuffer) { m_cameraCnstBuffer->Release(); m_cameraCnstBuffer = nullptr; }
+    if (m_frameCnstBuffer) { m_frameCnstBuffer->Release(); m_frameCnstBuffer = nullptr; }
     if (m_sceneVertBuffer) { m_sceneVertBuffer->Release(); m_sceneVertBuffer = nullptr; }
     if (m_sceneIdxBuffer) { m_sceneIdxBuffer->Release(); m_sceneIdxBuffer = nullptr; }
     if (m_instInfoBuffer) { m_instInfoBuffer->Release(); m_instInfoBuffer = nullptr; }
 }
 
-void HWRTRenderBackend::UpdateCamera()
+void HWRTRenderBackend::UpdateFrameConstBuffer()
 {
     Camera* pCamera = nullptr;
     m_pLevel->RetriveActiveCamera(&pCamera);
@@ -432,20 +432,22 @@ void HWRTRenderBackend::UpdateCamera()
     CrossProductVec3(pCamera->m_view, pCamera->m_up, right);
     NormalizeVec(right, 3);
 
-    float cameraData[20] = {
-        pCamera->m_pos[0], pCamera->m_pos[1], pCamera->m_pos[2], 0.f,
-        pCamera->m_view[0], pCamera->m_view[1], pCamera->m_view[2], 0.f,
-        pCamera->m_up[0], pCamera->m_up[1], pCamera->m_up[2], 0.f,
-        right[0], right[0], right[2], 0.f,
-        pCamera->m_fov, pCamera->m_near, pCamera->m_far, 0.f
+    FrameConstBuffer frameCnstBuffer
+    {
+        .cameraPos = {pCamera->m_pos[0], pCamera->m_pos[1], pCamera->m_pos[2], 0.f},
+        .cameraDir = {pCamera->m_view[0], pCamera->m_view[1], pCamera->m_view[2], 0.f},
+        .cameraUp = {pCamera->m_up[0], pCamera->m_up[1], pCamera->m_up[2], 0.f},
+        .cameraRight = {right[0], right[1], right[2], 0.f},
+        .cameraInfo = {pCamera->m_fov, pCamera->m_near, pCamera->m_far, 0.f},
+        .frameUintInfo = {0, 0, 0, 0}
     };
 
-    memcpy(m_cameraCnstBufferMap, cameraData, sizeof(cameraData));
+    memcpy(m_frameCnstBufferMap, &frameCnstBuffer, sizeof(FrameConstBuffer));
 }
 
 void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
 {
-    UpdateCamera();
+    UpdateFrameConstBuffer();
     /*
     UpdateTransforms();
 
@@ -479,7 +481,7 @@ void HWRTRenderBackend::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Ren
     auto uavTable = m_uavHeap->GetGPUDescriptorHandleForHeapStart();
     pCommandList->SetComputeRootDescriptorTable(0, uavTable); // ?u0 ?t0
     pCommandList->SetComputeRootShaderResourceView(1, m_tlas->GetGPUVirtualAddress());
-    pCommandList->SetComputeRootConstantBufferView(2, m_cameraCnstBuffer->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootConstantBufferView(2, m_frameCnstBuffer->GetGPUVirtualAddress());
     pCommandList->SetComputeRootShaderResourceView(3, m_instInfoBuffer->GetGPUVirtualAddress());
     pCommandList->SetComputeRootShaderResourceView(4, m_sceneVertBuffer->GetGPUVirtualAddress());
     pCommandList->SetComputeRootShaderResourceView(5, m_sceneIdxBuffer->GetGPUVirtualAddress());

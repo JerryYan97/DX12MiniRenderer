@@ -19,8 +19,8 @@ class HWRTRenderBackend : public RendererBackend
             m_pso(nullptr),
             m_shaderIDs(nullptr),
             m_numInstances(0),
-            m_cameraCnstBuffer(nullptr),
-            m_cameraCnstBufferMap(nullptr),
+            m_frameCnstBuffer(nullptr),
+            m_frameCnstBufferMap(nullptr),
             m_sceneVertBuffer(nullptr),
             m_sceneIdxBuffer(nullptr),
             m_instInfoBuffer(nullptr)
@@ -69,7 +69,17 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_shaderIDs;
 
         void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
-        void UpdateCamera();
-        ID3D12Resource* m_cameraCnstBuffer;
-        void*           m_cameraCnstBufferMap;
+        void UpdateFrameConstBuffer();
+
+        struct FrameConstBuffer
+        {
+            float    cameraPos[4];
+            float    cameraDir[4];
+            float    cameraUp[4];
+            float    cameraRight[4];
+            float    cameraInfo[4]; // x: fov, y: near, z: far.
+            uint32_t frameUintInfo[4]; // x: frame count; y: random number.
+        };
+        ID3D12Resource* m_frameCnstBuffer;
+        void*           m_frameCnstBufferMap;
 };

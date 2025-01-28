@@ -39,7 +39,7 @@ cbuffer FrameConstantBuffer : register(b0)
     float4 cameraUp;
     float4 cameraRight;
     float4 cameraInfo; // x: fov, y: near, z: far.
-    uint4  randomSeeds; // x: random number; y: current time in microseconds. 
+    uint4  frameUintInfo; // x: frame count; y: random number.
 };
 
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
