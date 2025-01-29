@@ -14,6 +14,10 @@
 #include <algorithm>     // For std::size, typed std::max, etc.
 #include <DirectXMath.h> // For XMMATRIX
 #include <d3d12.h>
+#include <iostream>
+#include <cstdlib> // for rand() and srand()
+#include <ctime>   // for time()
+#include <chrono>
 
 extern AssetManager* g_pAssetManager;
 
@@ -432,6 +436,15 @@ void HWRTRenderBackend::UpdateFrameConstBuffer()
     CrossProductVec3(pCamera->m_view, pCamera->m_up, right);
     NormalizeVec(right, 3);
 
+    srand(time(0));
+    // Generate a random number between 1 and 100
+    uint32_t random_number = rand() % 100 + 1;
+
+    auto now = std::chrono::high_resolution_clock::now();
+    auto nanoseconds = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+    uint64_t currentTime = nanoseconds.time_since_epoch().count();
+    uint32_t currentTimeLow = static_cast<uint32_t>(currentTime & 0xFFFFFFFF);
+
     FrameConstBuffer frameCnstBuffer
     {
         .cameraPos = {pCamera->m_pos[0], pCamera->m_pos[1], pCamera->m_pos[2], 0.f},
@@ -439,7 +452,7 @@ void HWRTRenderBackend::UpdateFrameConstBuffer()
         .cameraUp = {pCamera->m_up[0], pCamera->m_up[1], pCamera->m_up[2], 0.f},
         .cameraRight = {right[0], right[1], right[2], 0.f},
         .cameraInfo = {pCamera->m_fov, pCamera->m_near, pCamera->m_far, 0.f},
-        .frameUintInfo = {0, 0, 0, 0}
+        .frameUintInfo = {m_frameCount++, random_number, currentTimeLow, 0}
     };
 
     memcpy(m_frameCnstBufferMap, &frameCnstBuffer, sizeof(FrameConstBuffer));

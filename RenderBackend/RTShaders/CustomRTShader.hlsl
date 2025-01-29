@@ -39,7 +39,7 @@ cbuffer FrameConstantBuffer : register(b0)
     float4 cameraUp;
     float4 cameraRight;
     float4 cameraInfo; // x: fov, y: near, z: far.
-    uint4  frameUintInfo; // x: frame count; y: random number.
+    uint4  frameUintInfo; // x: frame count; y: random number (0-100); z: low-32 current time in nanosecond.
 };
 
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
@@ -103,6 +103,11 @@ uint3 Load3x16BitIndices(uint offsetBytes)
     return indices;
 }
 
+float rand_1(in float seed)
+{
+    return frac(sin(seed * -652.125) * 1234.9898);
+}
+
 float rand_1_05(in float2 uv)
 {
     float2 noise = (frac(sin(dot(uv ,float2(12.9898,78.233)*2.0)) * 43758.5453));
@@ -153,7 +158,7 @@ void RayGeneration()
     float3 res = float3(0, 0, 0);
     for(uint i = 0; i < SAMPLE_COUNT; i++)
     {
-        float2 noiseInput = uv * (i + 1);
+        float2 noiseInput = uv * (float(i) / float(SAMPLE_COUNT) + rand_1(frameUintInfo.x));
         float2 noise = rand_2_10(noiseInput) - float2(0.5, 0.5);
         // float2 noise = float2(0, 0);
         float2 jitteredUV = uv + (noise / size);
@@ -190,8 +195,8 @@ void RayGeneration()
     } 
 
     float4 thisRes = float4(res / (float)SAMPLE_COUNT, 1);
-    thisRes += uav[idx];
-    thisRes /= 2.0;
+    thisRes += (uav[idx] * frameUintInfo.x);
+    thisRes /= float(frameUintInfo.x + 1);
 
     uav[idx] = thisRes;
 }
@@ -262,7 +267,7 @@ void ClosestHit(inout Payload payload,
         if(instMaterialMask == 0)
         {
             // Randomly choose a out direction
-            float3 randDir = random3(hitPos + rayDir * payload.recursionDepth);
+            float3 randDir = random3(hitPos + rayDir * payload.recursionDepth + triangleNormal * rand_1(frameUintInfo.x));
             randDir = randDir * 2.0 - 1.0;
             randDir = normalize(randDir + 0.0001);
             if(dot(randDir, triangleNormal) < 0)

@@ -23,7 +23,8 @@ class HWRTRenderBackend : public RendererBackend
             m_frameCnstBufferMap(nullptr),
             m_sceneVertBuffer(nullptr),
             m_sceneIdxBuffer(nullptr),
-            m_instInfoBuffer(nullptr)
+            m_instInfoBuffer(nullptr),
+            m_frameCount(0)
         {}
         
         ~HWRTRenderBackend() {}
@@ -82,4 +83,5 @@ class HWRTRenderBackend : public RendererBackend
         };
         ID3D12Resource* m_frameCnstBuffer;
         void*           m_frameCnstBufferMap;
+        uint32_t        m_frameCount;
 };
