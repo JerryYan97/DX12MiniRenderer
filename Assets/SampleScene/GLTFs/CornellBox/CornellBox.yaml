@@ -8,7 +8,7 @@ SceneGraph:
     Type: StaticMesh
     Position: [-2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
-    Rotation: [0, 0, 0]
+    Rotation: [0, -0.261799, 0]
     AssetPath: cube.gltf
     Material:
       Type: ConstMaterial
@@ -19,11 +19,11 @@ SceneGraph:
     Type: StaticMesh
     Position: [2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
-    Rotation: [0, 0, 0]
+    Rotation: [0, 0.610865, 0]
     AssetPath: tallBox.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.63, 0.065, 0.05]
+      Albedo: [0.725, 0.71, 0.68]
       Roughness: 0.05
       Metallic: 0.0
   BottomWall:

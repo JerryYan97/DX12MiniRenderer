@@ -270,10 +270,14 @@ void ClosestHit(inout Payload payload,
             float3 randDir = random3(hitPos + rayDir * payload.recursionDepth + triangleNormal * rand_1(frameUintInfo.x));
             randDir = randDir * 2.0 - 1.0;
             randDir = normalize(randDir + 0.0001);
+            triangleNormal = normalize(triangleNormal);
+            randDir += triangleNormal;
+            /*
             if(dot(randDir, triangleNormal) < 0)
             {
                 randDir = -randDir;
             }
+            */
 
             // Assembly the new out-going ray
             payload.color *= instInfo.instAlbedo.xyz;
