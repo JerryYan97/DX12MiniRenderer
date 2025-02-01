@@ -138,6 +138,16 @@ float3 HitAttribute(float3 vertexAttribute[3], BuiltInTriangleIntersectionAttrib
         attr.barycentrics.y * (vertexAttribute[2] - vertexAttribute[0]);
 }
 
+float3 DiffuseScatter(in float3 normal, in float3 hitPos)
+{
+    return float3(0.0, 0.0, 0.0);
+}
+
+float3 MetalScatter(in float3 normal, in float3 hitPos)
+{
+    return float3(0.0, 0.0, 0.0);
+}
+
 [shader("raygeneration")]
 void RayGeneration()
 {
@@ -272,16 +282,44 @@ void ClosestHit(inout Payload payload,
         // If there is any texture, then the material is not constant.
         if(instMaterialMask == 0)
         {
-            // Randomly choose a out direction
-            float3 randDir = random3(random3(hitPos) * 3.412 + rayDir * rand_1(payload.recursionDepth) * -12.7 + triangleNormal * rand_1(frameUintInfo.x) * 5.12145);
-            randDir = randDir * 2.0 - 1.0;
-            randDir = normalize(randDir + 0.000001);
-            triangleNormal = normalize(triangleNormal);
-            randDir += triangleNormal;
-            if(length(randDir) < 0.000001)
+            if(instInfo.instMetallicRoughness.x == 1.0)
             {
-                randDir = triangleNormal;
+                // Metal material
+                // Reflect the ray according to the roughness
+                float roughness = clamp(instInfo.instMetallicRoughness.y, 0.0, 0.8);
+                float3 randDir = random3(random3(hitPos) * 3.412 + rayDir * rand_1(payload.recursionDepth) * -12.7 + triangleNormal * rand_1(frameUintInfo.x) * 5.12145);
+                randDir = randDir * 2.0 - 1.0;
+                if(length(randDir) == 0.0)
+                {
+                    randDir += 0.000001;
+                }
+                randDir = normalize(randDir) * roughness;
+
+                float3 reflectDir = reflect(rayDir, triangleNormal);
+                payload.nextPos = hitPos + (triangleNormal * 0.00001);
+                payload.nextDir = normalize(reflectDir) + randDir;
             }
+            else
+            {
+                // Diffuse random scatter material
+                // Randomly choose a out direction
+                float3 randDir = random3(random3(hitPos) * 3.412 + rayDir * rand_1(payload.recursionDepth) * -12.7 + triangleNormal * rand_1(frameUintInfo.x) * 5.12145);
+                randDir = randDir * 2.0 - 1.0;
+                if(length(randDir) == 0.0)
+                {
+                    randDir += 0.000001;
+                }
+                randDir = normalize(randDir);
+                triangleNormal = normalize(triangleNormal);
+                randDir += triangleNormal;
+                if(length(randDir) < 0.000001)
+                {
+                    randDir = triangleNormal;
+                }
+                payload.nextPos = hitPos;
+                payload.nextDir = randDir;
+            }
+            
             // hitPos += (triangleNormal * 0.001);
             /*
             if(dot(randDir, triangleNormal) < 0)
@@ -292,8 +330,6 @@ void ClosestHit(inout Payload payload,
 
             // Assembly the new out-going ray
             payload.color *= instInfo.instAlbedo.xyz;
-            payload.nextPos = hitPos;
-            payload.nextDir = randDir;
         }
         else
         {

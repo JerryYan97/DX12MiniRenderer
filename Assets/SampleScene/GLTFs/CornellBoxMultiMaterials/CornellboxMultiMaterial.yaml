@@ -9,12 +9,12 @@ SceneGraph:
     Position: [-2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
-    AssetPath: isoSphere.gltf
+    AssetPath: isoSphereHighFaceNum.gltf
     Material:
       Type: ConstMaterial
       Albedo: [0.725, 0.71, 0.68]
-      Roughness: 0.05
-      Metallic: 0.0
+      Roughness: 0.0
+      Metallic: 1.0
   BottomWall:
     Type: StaticMesh
     Position: [0.0, -1.0, 0.0]

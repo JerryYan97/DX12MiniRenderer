@@ -77,7 +77,7 @@ SceneGraph:
       Emissive: [10.0, 10.0, 10.0]
       Albedo: [1.0, 1.0, 0.0]
       Roughness: 0.05
-      Metallic: 0.0
+      Metallic: 0.5
   CameraInst:
     Type: Camera
     Position: [0.0, 3.0, -20.0]
