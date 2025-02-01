@@ -24,7 +24,8 @@ class HWRTRenderBackend : public RendererBackend
             m_sceneVertBuffer(nullptr),
             m_sceneIdxBuffer(nullptr),
             m_instInfoBuffer(nullptr),
-            m_frameCount(0)
+            m_frameCount(0),
+            m_renderTargetRadiance(nullptr)
         {}
         
         ~HWRTRenderBackend() {}
@@ -37,7 +38,8 @@ class HWRTRenderBackend : public RendererBackend
         virtual void CustomDeinit() override;
     private:
         ID3D12DescriptorHeap* m_uavHeap;
-        ID3D12Resource* m_renderTarget;
+        ID3D12Resource* m_renderTarget; // With Gamma Correction.
+        ID3D12Resource* m_renderTargetRadiance;
 
         ID3D12Fence* m_fence;
 

@@ -51,7 +51,7 @@ static dword MATERIAL_TEX_MASK = 0xFF;
 
 static const uint SAMPLE_COUNT = 128;
 static const uint HIT_CHILD_RAY_COUNT = 4;
-static const uint MAX_BOUNCE_DEPTH = 6;
+static const uint MAX_BOUNCE_DEPTH = 4;
 
 RaytracingAccelerationStructure scene : register(t0);
 StructuredBuffer<InstInfo> instsInfo : register(t1);
@@ -59,8 +59,8 @@ StructuredBuffer<InstInfo> instsInfo : register(t1);
 StructuredBuffer<VertexRaw> sceneVertices : register(t2);
 ByteAddressBuffer sceneIndices : register(t3);
 
-RWTexture2D<float4> uav : register(u0);
-
+RWTexture2D<float4> uavRTPresent : register(u0);
+RWTexture2D<float4> uavRTRadiance : register(u1);
 
 void ParseVertex(in uint vertId, out float3 pos, out float3 normal, out float4 tangent, out float2 uv)
 {
@@ -195,10 +195,15 @@ void RayGeneration()
     } 
 
     float4 thisRes = float4(res / (float)SAMPLE_COUNT, 1);
-    thisRes += (uav[idx] * frameUintInfo.x);
+    thisRes += (uavRTRadiance[idx] * frameUintInfo.x);
     thisRes /= float(frameUintInfo.x + 1);
 
-    uav[idx] = thisRes;
+    uavRTRadiance[idx] = thisRes;
+
+    // Gamma Correction
+    float3 colorPresent = thisRes.xyz / (thisRes.xyz + float3(1.0, 1.0, 1.0));
+    colorPresent = pow(colorPresent, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+    uavRTPresent[idx] = float4(colorPresent, 1.0);
 }
 
 [shader("miss")]
@@ -249,6 +254,7 @@ void ClosestHit(inout Payload payload,
         float3 vertexNormals[3] = { vert0.normal, vert1.normal, vert2.normal };
         float3 vertexPos[3] = { vert0.pos, vert1.pos, vert2.pos };
         float3 triangleNormal = HitAttribute(vertexNormals, attrib);
+        // float3 triangleNormal = vert0.normal;
         float3 hitPos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
         float3x4 objToWorld = ObjectToWorld3x4();
@@ -267,11 +273,16 @@ void ClosestHit(inout Payload payload,
         if(instMaterialMask == 0)
         {
             // Randomly choose a out direction
-            float3 randDir = random3(hitPos + rayDir * payload.recursionDepth + triangleNormal * rand_1(frameUintInfo.x));
+            float3 randDir = random3(random3(hitPos) * 3.412 + rayDir * rand_1(payload.recursionDepth) * -12.7 + triangleNormal * rand_1(frameUintInfo.x) * 5.12145);
             randDir = randDir * 2.0 - 1.0;
-            randDir = normalize(randDir + 0.0001);
+            randDir = normalize(randDir + 0.000001);
             triangleNormal = normalize(triangleNormal);
             randDir += triangleNormal;
+            if(length(randDir) < 0.000001)
+            {
+                randDir = triangleNormal;
+            }
+            // hitPos += (triangleNormal * 0.001);
             /*
             if(dot(randDir, triangleNormal) < 0)
             {

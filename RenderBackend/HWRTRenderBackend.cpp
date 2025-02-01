@@ -292,7 +292,7 @@ void HWRTRenderBackend::InitRootSignature()
 {
     D3D12_DESCRIPTOR_RANGE uavRange = {
         .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
-        .NumDescriptors = 1,
+        .NumDescriptors = 2,
     };
     D3D12_ROOT_PARAMETER params[] = {
         {.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
@@ -396,7 +396,7 @@ void HWRTRenderBackend::CustomInit()
 
     D3D12_DESCRIPTOR_HEAP_DESC uavHeapDesc = {
         .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-        .NumDescriptors = 1,
+        .NumDescriptors = 2,
         .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE};
     m_pD3dDevice->CreateDescriptorHeap(&uavHeapDesc, IID_PPV_ARGS(&m_uavHeap));
 
@@ -415,6 +415,7 @@ void HWRTRenderBackend::CustomDeinit()
 {
     if (m_uavHeap) { m_uavHeap->Release(); m_uavHeap = nullptr; }
     if (m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
+    if (m_renderTargetRadiance) { m_renderTargetRadiance->Release(); m_renderTargetRadiance = nullptr; }
     if (m_fence) { m_fence->Release(); m_fence = nullptr; }
     if (m_instances) { m_instances->Release(); m_instances = nullptr; }
     if (m_tlas) { m_tlas->Release(); m_tlas = nullptr; }
@@ -555,14 +556,23 @@ void HWRTRenderBackend::CustomResize(uint32_t width, uint32_t height)
         .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
         .SampleDesc = NO_AA,
         .Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS};
+
     m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &rtDesc,
                                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                     nullptr, IID_PPV_ARGS(&m_renderTarget));
 
+    m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &rtDesc,
+                                    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                    nullptr, IID_PPV_ARGS(&m_renderTargetRadiance));
+
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {
         .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
         .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D};
-    m_pD3dDevice->CreateUnorderedAccessView(
-        m_renderTarget, nullptr, &uavDesc,
-        m_uavHeap->GetCPUDescriptorHandleForHeapStart());
+
+    const uint32_t uavDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE uavHeapHandle = m_uavHeap->GetCPUDescriptorHandleForHeapStart();
+
+    m_pD3dDevice->CreateUnorderedAccessView(m_renderTarget, nullptr, &uavDesc, uavHeapHandle);
+    uavHeapHandle.ptr += uavDescHandleOffset;
+    m_pD3dDevice->CreateUnorderedAccessView(m_renderTargetRadiance, nullptr, &uavDesc, uavHeapHandle);
 }
