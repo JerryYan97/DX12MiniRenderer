@@ -4,18 +4,18 @@ PathTracing Settings:
   MaxDepth: 1
 SceneType: GLTF
 SceneGraph:
-  # MirrorSphere:
-  #   Type: StaticMesh
-  #   Position: [-2.0, 0.0, 0.0]
-  #   Scale: [1, 1, 1]
-  #   Rotation: [0, 0, 0]
-  #   AssetPath: isoSphereHighFaceNum.gltf
-  #   Material:
-  #     Type: ConstMaterial
-  #     Albedo: [0.725, 0.71, 0.68]
-  #     Roughness: 0.0
-  #     Metallic: 1.0
-  #     IsDoubleFace: false
+  MirrorSphere:
+    Type: StaticMesh
+    Position: [-2.0, 0.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.725, 0.71, 0.68]
+      Roughness: 0.0
+      Metallic: 1.0
+      IsDoubleFace: false
   GlassSphere:
     Type: StaticMesh
     Position: [2.0, 0.0, 0.0]

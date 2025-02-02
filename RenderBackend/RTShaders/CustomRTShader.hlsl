@@ -62,7 +62,7 @@ static const dword MATERIAL_TEX_MASK = 0x1F;
 static const dword DIELECTRIC_MASK   = 32;
 static const dword DOUBLE_SIDE_MASK  = 64;
 
-static const uint SAMPLE_COUNT = 1;
+static const uint SAMPLE_COUNT = 128;
 static const uint HIT_CHILD_RAY_COUNT = 4;
 static const uint MAX_BOUNCE_DEPTH = 4;
 
@@ -166,6 +166,13 @@ float3 refract(in float3 uv, in float3 n, in float etai_over_etat) {
     float3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
     float3 r_out_parallel = -sqrt(abs(1.0 - length(r_out_perp) * length(r_out_perp))) * n;
     return r_out_perp + r_out_parallel;
+}
+
+float reflectance(in float cosine, in float refraction_index) {
+    // Use Schlick's approximation for reflectance.
+    float r0 = (1 - refraction_index) / (1 + refraction_index);
+    r0 = r0*r0;
+    return r0 + (1-r0)*pow((1 - cosine),5);
 }
 
 [shader("raygeneration")]
@@ -293,6 +300,12 @@ void ClosestHit(inout Payload payload,
 
         // Test whether the normal and ray are at the same direction
         float3 rayDir = WorldRayDirection();
+        if(length(rayDir) == 0.0)
+        {
+            rayDir = triangleNormal;
+        }
+        rayDir = normalize(rayDir);
+
         float rayNormalDot = dot(rayDir, triangleNormal);
         if((instMaterialMask & DOUBLE_SIDE_MASK) > 0)
         {
@@ -317,7 +330,10 @@ void ClosestHit(inout Payload payload,
 
                 bool cannot_refract = refractIdx * sin_theta > 1.0;
 
-                if(cannot_refract)
+                if(cannot_refract || reflectance(cos_theta, refractIdx) > rand_1(rand_1(payload.recursionDepth) +
+                                                                                 rand_1(hitPos.x + hitPos.y + hitPos.z) +
+                                                                                 rand_1(triangleNormal.x + triangleNormal.y + triangleNormal.z) +
+                                                                                 rand_1(rayDir.x + rayDir.y + rayDir.z)))
                 {
                     float3 reflectDir = reflect(rayDir, triangleNormal);
                     payload.nextPos = hitPos + (triangleNormal * 0.00001);
@@ -331,7 +347,6 @@ void ClosestHit(inout Payload payload,
                 }
             }
             else if (instInfo.instMetallicRoughness.x == 1.0)
-            // if(instInfo.instMetallicRoughness.x == 1.0)
             {
                 // Metal material
                 // Reflect the ray according to the roughness
@@ -369,14 +384,6 @@ void ClosestHit(inout Payload payload,
                 payload.nextDir = randDir;
             }
             
-            // hitPos += (triangleNormal * 0.001);
-            /*
-            if(dot(randDir, triangleNormal) < 0)
-            {
-                randDir = -randDir;
-            }
-            */
-
             // Assembly the new out-going ray
             payload.color *= instInfo.instAlbedo.xyz;
         }
@@ -385,21 +392,4 @@ void ClosestHit(inout Payload payload,
             payload.color *= float3(1, 0, 1);
         }
     }
-    
 }
-
-/*
-            RayDesc ray;
-            ray.Origin = hitPos + randDir * 0.001;
-            ray.Direction = randDir;
-            ray.TMin = 0.001;
-            ray.TMax = 1000;
-
-            payload.color *= instInfo.instAlbedo.xyz;
-            payload.recursionDepth++;
-            if(instId == 0 && triangleNormal.y > 2.0)
-            {
-                TraceRay(scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
-            }
-            payload.radiance = float3(payload.recursionDepth, 0.0, 0.0) / 2;
-            */
