@@ -62,7 +62,7 @@ static const dword MATERIAL_TEX_MASK = 0x1F;
 static const dword DIELECTRIC_MASK   = 32;
 static const dword DOUBLE_SIDE_MASK  = 64;
 
-static const uint SAMPLE_COUNT = 128;
+static const uint SAMPLE_COUNT = 1;
 static const uint HIT_CHILD_RAY_COUNT = 4;
 static const uint MAX_BOUNCE_DEPTH = 4;
 
@@ -311,7 +311,7 @@ void ClosestHit(inout Payload payload,
                 // Glass material that needs to refract and reflect
                 float refractIdx = rayNormalDot >= 0.f ? REFRACTION_INDEX : (1.0 / REFRACTION_INDEX);
                 triangleNormal = rayNormalDot >= 0.f ? -triangleNormal : triangleNormal;
-                float3 nextDir = refract(normalize(rayDir), triangleNormal, 1.0 / refractIdx);
+                float3 nextDir = refract(normalize(rayDir), triangleNormal, refractIdx);
                 payload.nextPos = hitPos;
                 payload.nextDir = nextDir;
             }
