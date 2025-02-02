@@ -24,7 +24,7 @@ SceneGraph:
     AssetPath: isoSphereHighFaceNum.gltf
     Material:
       Type: ConstMaterial
-      Albedo: [0.98, 0.97, 0.92]
+      Albedo: [1.0, 1.0, 1.0]
       Roughness: 0.0
       Metallic: 1.0
       IsDielectrics: true

@@ -200,7 +200,7 @@ void RayGeneration()
         RayDesc ray;
         ray.Origin = cameraPos.xyz;
         ray.Direction = targetOffset - cameraPos.xyz;
-        ray.TMin = 0.001;
+        ray.TMin = 0.0001;
         ray.TMax = 1000;
 
         Payload payload;
@@ -288,6 +288,7 @@ void ClosestHit(inout Payload payload,
         float3 hitPos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
         float3x4 objToWorld = ObjectToWorld3x4();
+        triangleNormal = normalize(triangleNormal);
         triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
 
         // Test whether the normal and ray are at the same direction
@@ -305,13 +306,17 @@ void ClosestHit(inout Payload payload,
         // If there is any texture, then the material is not constant.
         if((instMaterialMask & MATERIAL_TEX_MASK) == 0)
         {
-            // if((instMaterialMask & DIELECTRIC_MASK) > 0)
+            if((instMaterialMask & DIELECTRIC_MASK) > 0)
             {
                 // Glass material that needs to refract and reflect
-                
+                float refractIdx = rayNormalDot >= 0.f ? REFRACTION_INDEX : (1.0 / REFRACTION_INDEX);
+                triangleNormal = rayNormalDot >= 0.f ? -triangleNormal : triangleNormal;
+                float3 nextDir = refract(normalize(rayDir), triangleNormal, 1.0 / refractIdx);
+                payload.nextPos = hitPos;
+                payload.nextDir = nextDir;
             }
-            // else if(instInfo.instMetallicRoughness.x == 1.0)
-            if(instInfo.instMetallicRoughness.x == 1.0)
+            else if (instInfo.instMetallicRoughness.x == 1.0)
+            // if(instInfo.instMetallicRoughness.x == 1.0)
             {
                 // Metal material
                 // Reflect the ray according to the roughness
