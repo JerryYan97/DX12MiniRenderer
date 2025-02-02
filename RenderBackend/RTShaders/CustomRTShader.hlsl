@@ -193,7 +193,7 @@ void RayGeneration()
     float3 res = float3(0, 0, 0);
     for(uint i = 0; i < SAMPLE_COUNT; i++)
     {
-        float2 noiseInput = uv * (float(i) / float(SAMPLE_COUNT) + rand_1(frameUintInfo.x));
+        float2 noiseInput = uv * (float(i) / float(SAMPLE_COUNT) + rand_1(frameUintInfo.x) + rand_1(frameUintInfo.y));
         float2 noise = rand_2_10(noiseInput) - float2(0.5, 0.5);
         // float2 noise = float2(0, 0);
         float2 jitteredUV = uv + (noise / size);
