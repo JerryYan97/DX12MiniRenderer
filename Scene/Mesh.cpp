@@ -15,7 +15,9 @@ StaticMesh::StaticMesh()
       m_staticMeshConstantBuffer(nullptr),
       m_staticMeshCbvDescHeap(nullptr),
       m_isCnstMaterial(false),
-      m_isCnstEmissiveMaterial(false)
+      m_isCnstEmissiveMaterial(false),
+      m_isDoubleFace(true),
+      m_isDielectric(false)
 {
     memset(m_position, 0, sizeof(float) * 3);
     memset(m_scale, 0, sizeof(float) * 3);
@@ -82,6 +84,16 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
                 mesh->m_isCnstEmissiveMaterial = true;
                 std::vector<float> cnstEmissive = i_node["Material"]["Emissive"].as<std::vector<float>>();
                 memcpy(mesh->m_cnstEmissive, cnstEmissive.data(), sizeof(float) * 3);
+            }
+
+            if (i_node["Material"]["IsDielectrics"].IsDefined())
+            {
+                mesh->m_isDielectric = i_node["Material"]["IsDielectrics"].as<bool>();
+            }
+
+            if (i_node["Material"]["IsDoubleFace"].IsDefined())
+            {
+                mesh->m_isDoubleFace = i_node["Material"]["IsDoubleFace"].as<bool>();
             }
 
             std::vector<float> cnstAlbedo = i_node["Material"]["Albedo"].as<std::vector<float>>();

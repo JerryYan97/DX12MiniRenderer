@@ -15,6 +15,8 @@ const uint32_t NORMAL_MASK            = 2;
 const uint32_t ROUGHNESS_METALIC_MASK = 4;
 const uint32_t AO_MASK                = 8;
 const uint32_t EMISSIVE_MASK          = 16;
+const uint32_t DIELECTRIC_MASK        = 32;
+const uint32_t DOUBLE_FACE_MASK       = 64;
 
 constexpr int VERT_SIZE_FLOAT = (3 + 3 + 4 + 2); // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
 

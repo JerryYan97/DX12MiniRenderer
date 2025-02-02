@@ -22,6 +22,16 @@ struct VertexReal
     float2 uv;
 };
 
+/*
+const uint32_t ALBEDO_MASK            = 1;
+const uint32_t NORMAL_MASK            = 2;
+const uint32_t ROUGHNESS_METALIC_MASK = 4;
+const uint32_t AO_MASK                = 8;
+const uint32_t EMISSIVE_MASK          = 16;
+const uint32_t DIELECTRIC_MASK        = 32;
+const uint32_t DOUBLE_SIDE_MASK       = 64;
+*/
+
 struct InstInfo
 {
     uint4 instUintInfo0; // x: material mask, y: scene vert buffer starts float, z: scene index buffer starts int, w: unused.
@@ -44,10 +54,13 @@ cbuffer FrameConstantBuffer : register(b0)
 
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
 static const float3 skyBottom = float3(0.75, 0.86, 0.93);
+static const float REFRACTION_INDEX = 1.5;
 
-// 0-7 bits are for material textures mask. E.g. Reused from PBRShaders.hlsl.
+// 0-7 bits are for material states mask. E.g. Reused from PBRShaders.hlsl.
 // 8-31 bits are for material index.
-static dword MATERIAL_TEX_MASK = 0xFF;
+static const dword MATERIAL_TEX_MASK = 0x1F;
+static const dword DIELECTRIC_MASK   = 32;
+static const dword DOUBLE_SIDE_MASK  = 64;
 
 static const uint SAMPLE_COUNT = 128;
 static const uint HIT_CHILD_RAY_COUNT = 4;
@@ -146,6 +159,13 @@ float3 DiffuseScatter(in float3 normal, in float3 hitPos)
 float3 MetalScatter(in float3 normal, in float3 hitPos)
 {
     return float3(0.0, 0.0, 0.0);
+}
+
+float3 refract(in float3 uv, in float3 n, in float etai_over_etat) {
+    float cos_theta = min(dot(-uv, n), 1.0);
+    float3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
+    float3 r_out_parallel = -sqrt(abs(1.0 - length(r_out_perp) * length(r_out_perp))) * n;
+    return r_out_perp + r_out_parallel;
 }
 
 [shader("raygeneration")]
@@ -273,15 +293,24 @@ void ClosestHit(inout Payload payload,
         // Test whether the normal and ray are at the same direction
         float3 rayDir = WorldRayDirection();
         float rayNormalDot = dot(rayDir, triangleNormal);
-        if(rayNormalDot >= 0.f)
+        if((instMaterialMask & DOUBLE_SIDE_MASK) > 0)
         {
-            // Need to flip the normal
-            triangleNormal = -triangleNormal;
+            if(rayNormalDot >= 0.f)
+            {
+                // Need to flip the normal
+                triangleNormal = -triangleNormal;
+            }
         }
 
         // If there is any texture, then the material is not constant.
-        if(instMaterialMask == 0)
+        if((instMaterialMask & MATERIAL_TEX_MASK) == 0)
         {
+            // if((instMaterialMask & DIELECTRIC_MASK) > 0)
+            {
+                // Glass material that needs to refract and reflect
+                
+            }
+            // else if(instInfo.instMetallicRoughness.x == 1.0)
             if(instInfo.instMetallicRoughness.x == 1.0)
             {
                 // Metal material

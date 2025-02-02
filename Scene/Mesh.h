@@ -22,6 +22,15 @@ public:
     void SendModelMatrixToGpuBuffer();
 
     bool IsCnstEmissiveMaterial() const { return m_isCnstEmissiveMaterial; }
+
+    uint32_t GetStaticMeshMaterialMask() const
+    {
+        uint32_t mask = 0;
+        mask |= m_isDielectric ? DIELECTRIC_MASK : 0;
+        mask |= m_isDoubleFace ? DOUBLE_FACE_MASK : 0;
+        return mask;
+    }
+
     std::vector<float> GetCnstEmissive() const
     {
         std::vector<float> res = {m_cnstEmissive[0], m_cnstEmissive[1], m_cnstEmissive[2]};
@@ -66,6 +75,8 @@ private:
     float m_cnstAlbedo[3];
     float m_cnstMetallic;
     float m_cnstRoughness;
+    bool  m_isDielectric;
+    bool  m_isDoubleFace;
 
     bool m_isCnstEmissiveMaterial;
     float m_cnstEmissive[3];

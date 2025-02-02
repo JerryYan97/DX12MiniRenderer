@@ -137,6 +137,7 @@ void HWRTRenderBackend::InitScene()
         auto* pStaticMesh = staticMeshes[sMeshIdx];
         std::vector<float> staticMeshCnstAlbedo = pStaticMesh->GetCnstAlbedo();
         std::vector<float> staticMeshCnstMetallicRoughness = pStaticMesh->GetCnstMetallicRoughness();
+        uint32_t meshMaterialMask = pStaticMesh->GetStaticMeshMaterialMask();
 
         for (int primIdx = 0; primIdx < staticMeshes[sMeshIdx]->m_primitiveAssets.size(); primIdx++, instIdx++)
         {
@@ -163,7 +164,7 @@ void HWRTRenderBackend::InitScene()
             }
 
             InstanceInfo instInfo{
-                .instUintInfo0 = {pPrimAsset->m_materialMask, vertStartFloat, idxStartInt, 0},
+                .instUintInfo0 = {pPrimAsset->m_materialMask | meshMaterialMask, vertStartFloat, idxStartInt, 0},
                 .instFloatInfo0 ={emissiveRadiance[0], emissiveRadiance[1], emissiveRadiance[2], 0.f},
                 .instAlbedo = {staticMeshCnstAlbedo[0], staticMeshCnstAlbedo[1], staticMeshCnstAlbedo[2], 0.f},
                 .instMetallicRoughness = {staticMeshCnstMetallicRoughness[0], staticMeshCnstMetallicRoughness[1], 0.f, 0.f}
