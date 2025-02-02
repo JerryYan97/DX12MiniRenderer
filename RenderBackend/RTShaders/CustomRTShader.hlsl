@@ -311,9 +311,24 @@ void ClosestHit(inout Payload payload,
                 // Glass material that needs to refract and reflect
                 float refractIdx = rayNormalDot >= 0.f ? REFRACTION_INDEX : (1.0 / REFRACTION_INDEX);
                 triangleNormal = rayNormalDot >= 0.f ? -triangleNormal : triangleNormal;
-                float3 nextDir = refract(normalize(rayDir), triangleNormal, refractIdx);
-                payload.nextPos = hitPos;
-                payload.nextDir = nextDir;
+
+                float cos_theta = min(dot(-rayDir, triangleNormal), 1.0);
+                double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+
+                bool cannot_refract = refractIdx * sin_theta > 1.0;
+
+                if(cannot_refract)
+                {
+                    float3 reflectDir = reflect(rayDir, triangleNormal);
+                    payload.nextPos = hitPos + (triangleNormal * 0.00001);
+                    payload.nextDir = normalize(reflectDir);
+                }
+                else
+                {
+                    float3 nextDir = refract(normalize(rayDir), triangleNormal, refractIdx);
+                    payload.nextPos = hitPos;
+                    payload.nextDir = nextDir;
+                }
             }
             else if (instInfo.instMetallicRoughness.x == 1.0)
             // if(instInfo.instMetallicRoughness.x == 1.0)
