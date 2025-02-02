@@ -42,6 +42,14 @@ struct InstInfo
     float4 instMetallicRoughness;
 };
 
+/*
+Background mask:
+0: Default Black
+1: Default Sky
+*/
+
+static const dword BACKGROUND_DEFAULT_SKY_MASK = 0x1;
+
 cbuffer FrameConstantBuffer : register(b0)
 {
     float4 cameraPos;
@@ -49,7 +57,7 @@ cbuffer FrameConstantBuffer : register(b0)
     float4 cameraUp;
     float4 cameraRight;
     float4 cameraInfo; // x: fov, y: near, z: far.
-    uint4  frameUintInfo; // x: frame count; y: random number (0-100); z: low-32 current time in nanosecond.
+    uint4  frameUintInfo; // x: frame count; y: random number (0-100); z: low-32 current time in nanosecond; w: background mask.
 };
 
 static const float3 skyTop = float3(0.24, 0.44, 0.72);
@@ -151,16 +159,6 @@ float3 HitAttribute(float3 vertexAttribute[3], BuiltInTriangleIntersectionAttrib
         attr.barycentrics.y * (vertexAttribute[2] - vertexAttribute[0]);
 }
 
-float3 DiffuseScatter(in float3 normal, in float3 hitPos)
-{
-    return float3(0.0, 0.0, 0.0);
-}
-
-float3 MetalScatter(in float3 normal, in float3 hitPos)
-{
-    return float3(0.0, 0.0, 0.0);
-}
-
 float3 refract(in float3 uv, in float3 n, in float etai_over_etat) {
     float cos_theta = min(dot(-uv, n), 1.0);
     float3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
@@ -246,9 +244,13 @@ void RayGeneration()
 [shader("miss")]
 void Miss(inout Payload payload)
 {
-    float slope = normalize(WorldRayDirection()).y;
-    float t = saturate(slope * 5 + 0.5);
-    payload.color = lerp(skyBottom, skyTop, t);
+    dword backgroundMask = frameUintInfo.w;
+    if(backgroundMask == BACKGROUND_DEFAULT_SKY_MASK)
+    {
+        float slope = normalize(WorldRayDirection()).y;
+        float t = saturate(slope * 5 + 0.5);
+        payload.radiance = payload.color * lerp(skyBottom, skyTop, t);
+    }
 
     payload.missed = true;
 }
@@ -297,6 +299,7 @@ void ClosestHit(inout Payload payload,
         float3x4 objToWorld = ObjectToWorld3x4();
         triangleNormal = normalize(triangleNormal);
         triangleNormal = mul(objToWorld, float4(triangleNormal, 0)).xyz;
+        triangleNormal = normalize(triangleNormal);
 
         // Test whether the normal and ray are at the same direction
         float3 rayDir = WorldRayDirection();

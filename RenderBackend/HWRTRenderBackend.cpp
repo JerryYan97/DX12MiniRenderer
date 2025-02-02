@@ -454,7 +454,7 @@ void HWRTRenderBackend::UpdateFrameConstBuffer()
         .cameraUp = {pCamera->m_up[0], pCamera->m_up[1], pCamera->m_up[2], 0.f},
         .cameraRight = {right[0], right[1], right[2], 0.f},
         .cameraInfo = {pCamera->m_fov, pCamera->m_near, pCamera->m_far, 0.f},
-        .frameUintInfo = {m_frameCount++, random_number, currentTimeLow, 0}
+        .frameUintInfo = {m_frameCount++, random_number, currentTimeLow, m_pLevel->m_backgroundType}
     };
 
     memcpy(m_frameCnstBufferMap, &frameCnstBuffer, sizeof(FrameConstBuffer));

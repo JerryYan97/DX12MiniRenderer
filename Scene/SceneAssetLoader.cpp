@@ -34,6 +34,8 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
     std::string sceneType = config["SceneType"].as<std::string>();
     std::string rendererType = config["Renderer"].as<std::string>();
 
+    o_pLevel->m_backgroundType = BackgroundType::BLACK;
+
     if (rendererType.compare("PathTracer") == 0)
     {
         o_pLevel->m_rendererBackendType = RendererBackendType::PathTracing;
@@ -41,6 +43,19 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
     else
     {
         o_pLevel->m_rendererBackendType = RendererBackendType::Forward;
+    }
+
+    if (config["PathTracing Settings"].IsDefined())
+    {
+        YAML::Node pathTracingSettings = config["PathTracing Settings"];
+        if (pathTracingSettings["Background"].IsDefined())
+        {
+            std::string backgroundType = pathTracingSettings["Background"]["Type"].as<std::string>();
+            if (backgroundType.compare("DefaultInCodeSkybox") == 0)
+            {
+                o_pLevel->m_backgroundType = BackgroundType::DEFAULT_SKY;
+            }
+        }
     }
 
     YAML::Node sceneGraph = config["SceneGraph"];

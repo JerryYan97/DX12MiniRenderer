@@ -15,6 +15,13 @@ namespace YAML
 
 typedef Object* (*PFN_CustomSerlizeObject)(const std::string& objName, const YAML::Node& i_node);
 
+enum BackgroundType : uint32_t
+{
+    BLACK,
+    DEFAULT_SKY,
+    CONST_COLOR
+};
+
 class Level
 {
 public:
@@ -31,6 +38,7 @@ public:
     float m_backgroundColor[3];
 
     RendererBackendType m_rendererBackendType;
+    BackgroundType m_backgroundType;
 
 private:
     std::vector<Object*> m_objects;

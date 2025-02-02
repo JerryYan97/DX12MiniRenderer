@@ -1,0 +1,58 @@
+SceneName: DXRMilestoneScene
+Renderer: PathTracer
+PathTracing Settings:
+  MaxDepth: 1
+  SamplesPerPixel: 1
+  Background:
+    Type: DefaultInCodeSkybox
+SceneType: GLTF
+SceneGraph:
+  MirrorSphere:
+    Type: StaticMesh
+    Position: [-2.0, 0.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [0.725, 0.71, 0.68]
+      Roughness: 0.0
+      Metallic: 1.0
+      IsDoubleFace: false
+  GlassSphere:
+    Type: StaticMesh
+    Position: [2.0, 0.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 1.0]
+      Roughness: 0.0
+      Metallic: 1.0
+      IsDielectrics: true
+      IsDoubleFace: false
+  BottomBox:
+    Type: StaticMesh
+    Position: [0.0, -6.0, 0.0]
+    Scale: [1, 1, 1]
+    Rotation: [0, 0, 0]
+    AssetPath: tallBox.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 0.0, 0.0]
+      Roughness: 0.05
+      Metallic: 0.0
+  CameraInst:
+    Type: Camera
+    Position: [0.0, 3.0, -20.0]
+    View: [0.0, 0.0, 1.0]
+    Up: [0.0, 1.0, 0.0]
+    fov: 0.820304751
+    far: 1000
+    near: 0.1
+    isActive: true
+CameraInputControl:
+  Type: Orbit
+  Target: [0.0, 0.0, 0.0]
+  Radius: 3.0
