@@ -1,0 +1,2030 @@
+CameraInputControl:
+  Radius: 3.0
+  Target:
+  - 0.0
+  - 0.0
+  - 0.0
+  Type: Orbit
+PathTracing Settings:
+  Background:
+    Type: DefaultInCodeSkybox
+  MaxDepth: 1
+  SamplesPerPixel: 1
+Renderer: PathTracer
+SceneGraph:
+  BottomB1L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8201121259777827
+      - 0.18220517457808794
+      - 0.7920890905945175
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -4.409115017356941
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.42931471061430393
+      - 0.023034158529091187
+      - 0.886358989133669
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -4.129728162554067
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.36630696987668887
+      - 0.5622317056003416
+      - 0.5895137776520633
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -3.845313252504119
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.7161856102688968
+      - 0.14576639485199006
+      - 0.463685058186569
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -3.845576133870092
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5941739357792541
+      - 0.7037190770017416
+      - 0.9288106839891009
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -4.315973434636028
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8179497928723684
+      - 0.7003132394932858
+      - 0.8826897505470078
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -4.19674015386238
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5180701178037164
+      - 0.3611159433077452
+      - 0.5033069897507554
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -3.792434891308548
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB1R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6173349386136765
+      - 0.526443228331277
+      - 0.13471685836924985
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.056856045030374
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9085375181465419
+      - 0.6487870375618059
+      - 0.5061488849943926
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -4.394999870976495
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.08801030484972583
+      - 0.4206850889351609
+      - 0.2477484196440075
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -4.238385908212463
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.18977480170866345
+      - 0.7789120891169685
+      - 0.23656619002693202
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -3.5192841145432627
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.048666668246076794
+      - 0.4970351191997652
+      - 0.8133306739800008
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -4.352363839862318
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.24777033751327915
+      - 0.709456927621748
+      - 0.047421010190767277
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -4.134927455556481
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8206291111896434
+      - 0.5773518440227338
+      - 0.9803794192361538
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -3.6182930026684885
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8552827750922694
+      - 0.9275618790313289
+      - 0.9706491767844023
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -3.560333541436851
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB2R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.37023576931509317
+      - 0.5083644979265294
+      - 0.1478940032466869
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.455270562880344
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4117373593943058
+      - 0.4797822441001366
+      - 0.5762431201177973
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -3.9798136580555976
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5835235438823599
+      - 0.5142399849427053
+      - 0.17874331448098635
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -4.290206777644475
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.1250863185510821
+      - 0.30726728786586743
+      - 0.5461067480406977
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -4.024286031353447
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9403094895552356
+      - 0.3933369556566809
+      - 0.5642197895326984
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -4.3206934759865145
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9423452044960305
+      - 0.4129357876217541
+      - 0.2074464234699095
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -3.9902293648555727
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8561960927169115
+      - 0.37010296986185887
+      - 0.5623971795602519
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -4.185639480563851
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6065081077038355
+      - 0.5662424232424549
+      - 0.4818290080435452
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -4.386439917990476
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB3R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.33634417747600076
+      - 0.924693612084615
+      - 0.1257275194335482
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.316470059245923
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.2968783538910381
+      - 0.5232766318796844
+      - 0.19712790989620754
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -3.8827749269524183
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.7457594319590091
+      - 0.0852894908150631
+      - 0.21206441053891267
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -3.7365587026782445
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.634623134342647
+      - 0.05685671987903507
+      - 0.9714306356618431
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -4.266306117589231
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9166176152831182
+      - 0.6687549115078333
+      - 0.9072849390189384
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -3.662809004897833
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4251168843064036
+      - 0.4493388358689363
+      - 0.28725659246365665
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -3.7408315174403333
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.14332728675359518
+      - 0.4058881826859101
+      - 0.1320968233822597
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -4.4369526545159665
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.004524266249184783
+      - 0.9036905257417386
+      - 0.9550193702316667
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -4.076299886371375
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomB4R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.7460730322291329
+      - 0.6303798249615591
+      - 0.24087634675137137
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -3.8575445805033164
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomBoxRowF0Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4336044755074473
+      - 0.15265959690432152
+      - 0.8337525330026331
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -3.851005007016668
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.47148251564507504
+      - 0.3311968624908821
+      - 0.28759024411062695
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -4.22182876008395
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.3817938275233884
+      - 0.8574458962960995
+      - 0.6742101784359827
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -4.220187322274883
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.501176691340432
+      - 0.4056227214482887
+      - 0.23924998944031906
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -3.867586082747272
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.24632354834515302
+      - 0.27970154697886973
+      - 0.006245019739665736
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -4.367382611204844
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9095388302483159
+      - 0.45661977686774347
+      - 0.3443050971906646
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -3.8751893520997984
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6544665207287845
+      - 0.3614493892509111
+      - 0.9316987801683605
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -4.024552573822772
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6534038975966334
+      - 0.4761996482999413
+      - 0.6454609280850001
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -3.746971609405646
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF0R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.18865655032550843
+      - 0.7867229579278471
+      - 0.5128365512812539
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.229346793165567
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5847689952644076
+      - 0.7544567940594594
+      - 0.30798217688594354
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -4.288628975100179
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5515403363910526
+      - 0.9081734077694417
+      - 0.9093831760597286
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -3.5948891755577836
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.10927929711746576
+      - 0.8697426585707142
+      - 0.7257300006713854
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -4.327554766305649
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.14148261626165293
+      - 0.47045976284133795
+      - 0.09847707977842057
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -4.460415509083654
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.3305664708872985
+      - 0.16081020493776343
+      - 0.48452701247230345
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -3.889361863068752
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9926344633445774
+      - 0.9448513059428608
+      - 0.13109952642927458
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -3.6348106858993505
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8457971139697021
+      - 0.35811615905096117
+      - 0.21734635784287992
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -4.178782917716509
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF1R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4126424660560313
+      - 0.2284717597413377
+      - 0.4427317795262333
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.1259024531916735
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.33074939336457865
+      - 0.398280721113241
+      - 0.8080182144708683
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -3.986040333485649
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.15020186879658892
+      - 0.8522309878062678
+      - 0.04241930235728808
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -3.8263984030261566
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.13751812350211867
+      - 0.9419457640738453
+      - 0.06534403696647872
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -3.665659970128623
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9067621834556221
+      - 0.59947952351149
+      - 0.9037528475021988
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -4.213850296222573
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8309022920085034
+      - 0.6539684507993476
+      - 0.663334269897565
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -4.315449527976966
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.7291392876484968
+      - 0.5482764018183155
+      - 0.16236984699969026
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -4.17597951978148
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.05736438748776762
+      - 0.8179700159799383
+      - 0.6876871736313436
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -3.874790635004838
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF2R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6896066962476997
+      - 0.9190215429649273
+      - 0.9927997602009502
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.020255262815425
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5538908541129594
+      - 0.9759069754661274
+      - 0.6657161997246493
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -4.426792499084753
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.1454599639820915
+      - 0.8334947067585597
+      - 0.9017149121341373
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -3.6458969225135687
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.38646785675459117
+      - 0.2537004713569597
+      - 0.10112767014576363
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -3.620431217468363
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9705463764207942
+      - 0.5983809126332313
+      - 0.8430552917845309
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -3.7354322819634005
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.44722425186919923
+      - 0.19243744261570217
+      - 0.4998258309965544
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -4.066736447779309
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 2.950724783012948e-05
+      - 0.8790627638576627
+      - 0.6170417129666589
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -3.9357454395977096
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.8547224818947002
+      - 0.3681332029411527
+      - 0.15371338599216633
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -4.233615058414397
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF3R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.21279519900807708
+      - 0.33301631560280875
+      - 0.6961975263846439
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -3.955343346941894
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4L1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.310031494714053
+      - 0.11794876581202318
+      - 0.6444898926665122
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - -4.172331179255464
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4L2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6366673905582184
+      - 0.8816321423215127
+      - 0.6858869828383283
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -4.0
+    - -4.193242722732957
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4L3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.9690104408058852
+      - 0.3686735110661684
+      - 0.9070172712906159
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -6.0
+    - -4.402428550375937
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4L4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4896017733856727
+      - 0.18557255042441356
+      - 0.5672598950300726
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - -8.0
+    - -3.8430161077986758
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4R1:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.7419582115611031
+      - 0.8376300130854281
+      - 0.3243590945713285
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - -3.9243747343664133
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4R2:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4733597915060247
+      - 0.6446956149369037
+      - 0.7097222640039718
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 4.0
+    - -4.05410636621732
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4R3:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.27629631818356515
+      - 0.07761699999440796
+      - 0.7547100715901749
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 6.0
+    - -4.316221667740315
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomF4R4:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.0315070495920422
+      - 0.5200399666738961
+      - 0.023343284705445444
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 8.0
+    - -4.290657295581445
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowB1Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.49760188912856207
+      - 0.2845402768932451
+      - 0.5987244472660512
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -4.277933775990581
+    - -2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowB2Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.6343601896191121
+      - 0.36104373799126777
+      - 0.9008653217068519
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -3.549574142998101
+    - -4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowB3Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.4340433865203185
+      - 0.4138322701105478
+      - 0.036623584591413794
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -4.227503496531948
+    - -6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowB4Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.06635638568255153
+      - 0.7136705626731225
+      - 0.35345487974163603
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -3.6721642084108375
+    - -8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowF1Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.5313971928530659
+      - 0.6936461693650172
+      - 0.7079326550749554
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -4.32981711861413
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowF2Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.2744941230808924
+      - 0.7956397001938876
+      - 0.15918217531068135
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -4.069357493837705
+    - 4.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowF3Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.3961979198827883
+      - 0.7155467050265704
+      - 0.15347760284601508
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -4.2065610547547765
+    - 6.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  BottomRowF4Center:
+    AssetPath: tallBox.gltf
+    Material:
+      Albedo:
+      - 0.16564730718966358
+      - 0.3565034815918593
+      - 0.6870213385785415
+      Metallic: 0.0
+      Roughness: 0.05
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - -4.270576922480426
+    - 8.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  CameraInst:
+    Position:
+    - 0.0
+    - 2.0
+    - -15.0
+    Type: Camera
+    Up:
+    - 0.0
+    - 1.0
+    - 0.0
+    View:
+    - 0.0
+    - 0.0
+    - 1.0
+    far: 1000
+    fov: 0.820304751
+    isActive: true
+    near: 0.1
+  EmissiveSphere1:
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Albedo:
+      - 0.725
+      - 0.71
+      - 0.68
+      Emissive:
+      - 60.0
+      - 0.0
+      - 0.0
+      IsDoubleFace: false
+      Metallic: 1.0
+      Roughness: 0.0
+      Type: ConstMaterial
+    Position:
+    - 0.0
+    - 0.6
+    - -5.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 0.2
+    - 0.2
+    - 0.2
+    Type: StaticMesh
+  EmissiveSphere2:
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Albedo:
+      - 0.725
+      - 0.71
+      - 0.68
+      Emissive:
+      - 0.0
+      - 60.0
+      - 0.0
+      IsDoubleFace: false
+      Metallic: 1.0
+      Roughness: 0.0
+      Type: ConstMaterial
+    Position:
+    - 5.0
+    - 0.5
+    - -5.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 0.1
+    - 0.1
+    - 0.1
+    Type: StaticMesh
+  EmissiveSphere3:
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Albedo:
+      - 0.725
+      - 0.71
+      - 0.68
+      Emissive:
+      - 0.0
+      - 0.0
+      - 60.0
+      IsDoubleFace: false
+      Metallic: 1.0
+      Roughness: 0.0
+      Type: ConstMaterial
+    Position:
+    - -5.0
+    - 0.5
+    - -5.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 0.1
+    - 0.1
+    - 0.1
+    Type: StaticMesh
+  GlassSphere:
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Albedo:
+      - 1.0
+      - 1.0
+      - 1.0
+      IsDielectrics: true
+      IsDoubleFace: false
+      Metallic: 1.0
+      Roughness: 0.0
+      Type: ConstMaterial
+    Position:
+    - 2.0
+    - 0.5
+    - 0.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 1
+    - 1
+    - 1
+    Type: StaticMesh
+  MirrorSphere:
+    AssetPath: isoSphereHighFaceNum.gltf
+    Material:
+      Albedo:
+      - 0.725
+      - 0.71
+      - 0.68
+      IsDoubleFace: false
+      Metallic: 1.0
+      Roughness: 0.0
+      Type: ConstMaterial
+    Position:
+    - -2.0
+    - 1.5
+    - 2.0
+    Rotation:
+    - 0
+    - 0
+    - 0
+    Scale:
+    - 2
+    - 2
+    - 2
+    Type: StaticMesh
+SceneName: DXRMilestoneScene
+SceneType: GLTF

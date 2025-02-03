@@ -190,7 +190,8 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\DXRMilestone.yaml", m_pLevel);
+    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\data.yaml", m_pLevel);
+    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\DXRMilestone.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBoxMultiMaterials\\CornellboxMultiMaterial.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBox\\CornellBox.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Fish\\Fish.yaml", m_pLevel);

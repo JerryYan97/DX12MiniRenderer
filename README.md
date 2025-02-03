@@ -4,7 +4,12 @@ This is a Dx12 renderer practice project to experiment DX12 programming and vari
 
 ![Front Page](./Gallery/DX12MiniRenderer_FrontPage.png)
 
+![DXR Cornell Boxes](./Gallery/CornellBoxes.png)
+
+![RTMilestone1](./Gallery/RTMilestone1.PNG)
+
 ## Current Features
-* GLTF Loaderer and GLTF PBR support
-* Point Lights
-* Yaml Based Scene Definiation
+* DXR Path Tracer Backend and Rasterization Forward Backend.
+* DXR Path Tracer: Diffuse, Metal, Glass Materials; Area Lights.
+* Rasterization Forward Render: GLTF PBR support, Point Lights, etc.
+* Base Framework: GLTF Loaderer, Yaml Based Scene Definiation, etc.
