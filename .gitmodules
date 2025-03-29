@@ -13,3 +13,6 @@
 [submodule "ThirdParty/TinyGltf"]
 	path = ThirdParty/TinyGltf
 	url = https://github.com/syoyo/tinygltf.git
+[submodule "ThirdParty/DLSS"]
+	path = ThirdParty/DLSS
+	url = https://github.com/NVIDIA/DLSS.git
