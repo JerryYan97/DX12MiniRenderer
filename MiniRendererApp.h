@@ -8,6 +8,8 @@ class UIManager;
 class Level;
 class RendererBackend;
 class AssetManager;
+class TimePerfManager;
+enum class RendererBackendType;
 
 // It's possible to just use one fence like the ImGUI example but I prefer to use multiple fences for readability, which is more similar to Vulkan Fence.
 // The custom rule for sync is that the fence value = 0 means the fence is not signaled and is waiting for something or is ready to be used.
@@ -30,7 +32,7 @@ public:
     * Create UIManager.
     * Create DX12 Device.
     */
-    void Init();
+    void Init(std::string sceneYaml);
 
     /*
     * The main loop of the application.
@@ -53,6 +55,7 @@ private:
     HEventManager    m_eventManager;
     SceneAssetLoader m_sceneAssetLoader;
     AssetManager*    m_pAssetManager = nullptr;
+    TimePerfManager* m_pTimePerfManager = nullptr;
 
     static DX12MiniRenderer* m_pThis;
 
@@ -77,4 +80,23 @@ private:
     static bool show_demo_window;
     static bool show_another_window;
     static bool clear_color;
+};
+
+class InputInfoManager {
+public:
+    InputInfoManager() {}
+    ~InputInfoManager() {}
+
+    void GatherInfo();
+    std::string GetCurrentScenesBackendInfoStr();
+    std::string GetBackendSceneFilePath(int idx);
+    
+    struct SceneInfo
+    {
+        std::string presentStr;
+        std::string sceneYmlFilePath;
+    };
+
+private:
+    std::vector<SceneInfo> m_sceneInfoList;
 };

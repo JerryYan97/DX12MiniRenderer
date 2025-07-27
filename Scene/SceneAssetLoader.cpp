@@ -31,8 +31,17 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
 {
     // Load the scene file into the level
     YAML::Node config = YAML::LoadFile(fileNamePath.c_str());
-    std::string sceneType = config["SceneType"].as<std::string>();
-    std::string rendererType = config["Renderer"].as<std::string>();
+    std::string sceneType = "";
+    if (config["SceneType"].IsDefined())
+    {
+        sceneType = config["SceneType"].as<std::string>();
+    }
+
+    std::string rendererType = "";
+    if(config["Renderer"].IsDefined())
+    {
+        rendererType = config["Renderer"].as<std::string>();
+    }    
 
     o_pLevel->m_backgroundType = BackgroundType::BLACK;
 
@@ -68,6 +77,7 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
 
     memcpy(o_pLevel->m_backgroundColor, bgColor.data(), sizeof(o_pLevel->m_backgroundColor));
 
+    // m_currentScenePath = GetFileDir(fileNamePath);
     m_currentScenePath = fileNamePath;
 
     uint32_t ambientLightCnt = 0;

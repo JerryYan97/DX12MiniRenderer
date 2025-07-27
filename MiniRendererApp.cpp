@@ -2,10 +2,14 @@
 #include "UI/UIManager.h"
 #include "Utils/AssetManager.h"
 #include "Scene/Level.h"
+#include "TimePerfManager/TimePerfManager.h"
 #include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
 #include <dxgidebug.h>
+#include <filesystem>
 #pragma comment(lib, "dxguid.lib")
+
+namespace fs = std::filesystem;
 
 bool DX12MiniRenderer::show_demo_window = true;
 bool DX12MiniRenderer::show_another_window = true;
@@ -176,7 +180,7 @@ void DX12MiniRenderer::CleanupTempRendererInfarstructure()
     }
 }
 
-void DX12MiniRenderer::Init()
+void DX12MiniRenderer::Init(std::string sceneYaml)
 {
     InitDevice();
     InitTempRendererInfarstructure();
@@ -190,7 +194,8 @@ void DX12MiniRenderer::Init()
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\data.yaml", m_pLevel);
+    m_sceneAssetLoader.LoadAsLevel(sceneYaml, m_pLevel);
+    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\data.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\DXRMilestone.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBoxMultiMaterials\\CornellboxMultiMaterial.yaml", m_pLevel);
     // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBox\\CornellBox.yaml", m_pLevel);
@@ -339,5 +344,57 @@ void DX12MiniRenderer::Finalize()
     {
         pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
         pDebug->Release();
+    }
+}
+
+void InputInfoManager::GatherInfo()
+{
+    std::string scenePath = SOURCE_PATH;
+    scenePath += "/Assets/SampleScene/GLTFs";
+
+    try {
+        // Iterate over the entries in the directory
+        for (const auto& entry : fs::directory_iterator(scenePath)) {
+            SceneInfo sceneInfo;
+            sceneInfo.presentStr = entry.path().string();
+            sceneInfo.sceneYmlFilePath = scenePath + "/" + entry.path().filename().string() + "/" + entry.path().filename().string() + ".yaml";
+            // std::cout << entry.path() << std::endl;
+            m_sceneInfoList.push_back(sceneInfo);
+        }
+    } catch (const fs::filesystem_error& e) {
+        // Handle potential errors, e.g., if the directory doesn't exist
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+std::string InputInfoManager::GetCurrentScenesBackendInfoStr()
+{
+    std::string res;
+    for (int i = 0; i < m_sceneInfoList.size(); i++)
+    {
+        res += ("(" + std::to_string(i));
+        res += "):";
+        res += m_sceneInfoList[i].presentStr;
+        res += "\n";
+    }
+    return res;
+}
+
+std::string InputInfoManager::GetBackendSceneFilePath(int idx)
+{
+    if ((idx > 0) && (idx < m_sceneInfoList.size()))
+    {
+        return m_sceneInfoList[idx].sceneYmlFilePath;
+    }
+    else
+    {
+        if (m_sceneInfoList.size() > 0)
+        {
+            return m_sceneInfoList[0].sceneYmlFilePath;
+        }
+        else
+        {
+            return "";
+        }
     }
 }

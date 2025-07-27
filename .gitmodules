@@ -16,3 +16,6 @@
 [submodule "ThirdParty/DLSS"]
 	path = ThirdParty/DLSS
 	url = https://github.com/NVIDIA/DLSS.git
+[submodule "ThirdParty/arg"]
+	path = ThirdParty/arg
+	url = https://github.com/Taywee/args.git

@@ -4,7 +4,8 @@ project(DX12MiniRenderer VERSION 0.1 LANGUAGES CXX)
 set(DearImGUIPath ./ThirdParty/imgui)
 include_directories(${DearImGUIPath}
                     ${DearImGUIPath}/backends
-                    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/TinyGltf)
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/TinyGltf
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/arg)
 
 set(IMGUI_FILES_LIST ${DearImGUIPath}/imgui.cpp 
                      ${DearImGUIPath}/imgui_draw.cpp
@@ -29,6 +30,7 @@ add_subdirectory(./UI)
 add_subdirectory(./EventSystem)
 add_subdirectory(./RenderBackend)
 add_subdirectory(./Utils)
+add_subdirectory(./TimePerfManager)
 
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/YamlCpp/include/yaml-cpp)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/YamlCpp

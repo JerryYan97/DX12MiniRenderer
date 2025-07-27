@@ -2,11 +2,26 @@
 #include <vector>
 #include <filesystem>
 #include <algorithm>
+#include <math.h>
 
 std::string GetFileDir(
     const std::string& pathName)
 {
-    size_t pos = pathName.rfind("\\");
+    size_t pos = 0;
+
+    size_t p1 = pathName.rfind("\\");
+    size_t p2 = pathName.rfind("/");
+
+    if (p1 != std::string::npos)
+    {
+        pos = std::max(pos, p1);
+    }
+
+    if (p2 != std::string::npos)
+    {
+        pos = std::max(pos, p2);
+    }
+
     return pathName.substr(0, pos);
 }
 
