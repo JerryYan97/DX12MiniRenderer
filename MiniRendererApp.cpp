@@ -356,7 +356,7 @@ void InputInfoManager::GatherInfo()
         // Iterate over the entries in the directory
         for (const auto& entry : fs::directory_iterator(scenePath)) {
             SceneInfo sceneInfo;
-            sceneInfo.presentStr = entry.path().string();
+            sceneInfo.presentStr = entry.path().filename().string();
             sceneInfo.sceneYmlFilePath = scenePath + "/" + entry.path().filename().string() + "/" + entry.path().filename().string() + ".yaml";
             // std::cout << entry.path() << std::endl;
             m_sceneInfoList.push_back(sceneInfo);
