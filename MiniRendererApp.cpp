@@ -110,9 +110,17 @@ void DX12MiniRenderer::GenerateImGUIStates()
     */
     // 3. Show another simple window.
     // if (show_another_window)
+    float fps = 0.f;
+    float cpuTime = 0.f;
+    float gpuTime = 0.f;
+    uint32_t displayWidth = 100;
+    uint32_t displayHeight = 100;
+    uint32_t renderWidth = 100;
+    uint32_t renderHeight = 100;
     {
-        ImGui::Begin("Debug Menu", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        // ImGui::Text("Hello from another window!");
+        ImGui::Begin("Debug Menu", &show_another_window, ImGuiWindowFlags_AlwaysAutoResize);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        ImGui::Text("FPS: %.1f, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);
+        ImGui::Text("Display res: %d x %d, Render Res: %d x %d", displayWidth, displayHeight, renderWidth, renderHeight);
         // if (ImGui::Button("Close Me"))
             // show_another_window = false;
         ImGui::End();
