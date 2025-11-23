@@ -84,7 +84,17 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
     //ImGui_ImplWin32_EnableDpiAwareness();
     m_wc = { sizeof(m_wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"DX12MiniRenderer", nullptr };
     ::RegisterClassExW(&m_wc);
-    m_hWnd = ::CreateWindowW(m_wc.lpszClassName, m_windowTitle.c_str(), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, m_wc.hInstance, nullptr);
+
+    // NOTE: The window has a title bar by default no matter whether the style includes WS_CAPTION or not,
+    // but ::AdjustWindowRect() needs WS_CAPTION to calculate the correct window size.
+    // Use content area size to calculate the desired window size.
+    const auto WS_NO_RESIZE = WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION;
+    RECT rc = { 100, 100, 100 + 1280, 100 + 800 };
+    BOOL bAdjWind = ::AdjustWindowRect(&rc, WS_NO_RESIZE, FALSE);
+    LONG windowWidth = rc.right - rc.left;
+    LONG windowHeight = rc.bottom - rc.top;
+
+    m_hWnd = ::CreateWindowW(m_wc.lpszClassName, m_windowTitle.c_str(), WS_NO_RESIZE, rc.left, rc.top, windowWidth, windowHeight, nullptr, nullptr, m_wc.hInstance, nullptr);
     m_windowWidth = 1280;
     m_windowHeight = 800;
 
