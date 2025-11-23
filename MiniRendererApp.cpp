@@ -117,6 +117,12 @@ void DX12MiniRenderer::GenerateImGUIStates()
     uint32_t displayHeight = 100;
     uint32_t renderWidth = 100;
     uint32_t renderHeight = 100;
+
+    if (g_pUIManager)
+    {
+        g_pUIManager->GetSwapchainRenderTargetSize(displayWidth, displayHeight);
+    }
+
     {
         ImGui::Begin("Debug Menu", &show_another_window, ImGuiWindowFlags_AlwaysAutoResize);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         ImGui::Text("FPS: %.1f, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);

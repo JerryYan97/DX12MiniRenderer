@@ -54,6 +54,12 @@ public:
     friend LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void GetWindowSize(uint32_t& oWidth, uint32_t& oHeight) { oWidth = m_windowWidth; oHeight = m_windowHeight; }
+    void GetSwapchainRenderTargetSize(uint32_t& oWidth, uint32_t& oHeight)
+    {
+        D3D12_RESOURCE_DESC rtDesc = m_mainRenderTargetResources[0]->GetDesc();
+        oWidth = static_cast<uint32_t>(rtDesc.Width);
+        oHeight = rtDesc.Height;
+    }
 
     // Member Variables
     const static unsigned int NUM_BACK_BUFFERS = 2;
