@@ -1,17 +1,18 @@
-target_sources(
-    DX12MiniRenderer PRIVATE
-    Level.cpp
-    Level.h
-    Camera.cpp
-    Camera.h
-    SceneAssetLoader.cpp
-    SceneAssetLoader.h
-    LevelManager.cpp
-    LevelManager.h
-    Mesh.cpp
-    Mesh.h
-    Lights.cpp
-    Lights.h
-    Object.cpp
-    Object.h
-)
+set(SCENE_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/Level.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Level.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Camera.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Camera.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SceneAssetLoader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SceneAssetLoader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/LevelManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/LevelManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lights.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lights.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Object.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Object.h
+    PARENT_SCOPE)
+
+target_sources(DX12MiniRenderer PRIVATE ${SCENE_SRC})

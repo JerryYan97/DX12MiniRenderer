@@ -1,7 +1,7 @@
-target_sources(
-    DX12MiniRenderer PRIVATE
+set(UI_SRC
     InputHandler.cpp
     InputHandler.h
     UIManager.cpp
-    UIManager.h
-)
+    UIManager.h)
+
+target_sources(DX12MiniRenderer PRIVATE ${UI_SRC})

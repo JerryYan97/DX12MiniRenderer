@@ -15,14 +15,18 @@ set(IMGUI_FILES_LIST ${DearImGUIPath}/imgui.cpp
                      ${DearImGUIPath}/backends/imgui_impl_win32.cpp 
                      ${DearImGUIPath}/backends/imgui_impl_dx12.cpp)
 
+set(APP_SRC
+    main.cpp
+    MiniRendererApp.h
+    MiniRendererApp.cpp)
+
 add_definitions(-DSOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\")
 
 # Category the source files
 source_group(ImGUI FILES ${IMGUI_FILES_LIST})
+source_group(App FILES ${APP_SRC})
 
-add_executable(DX12MiniRenderer "main.cpp"
-                                "MiniRendererApp.h"
-                                "MiniRendererApp.cpp"
+add_executable(DX12MiniRenderer ${APP_SRC}
                                 ${IMGUI_FILES_LIST})
 
 add_subdirectory(./Scene)

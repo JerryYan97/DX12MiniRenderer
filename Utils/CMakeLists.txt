@@ -1,5 +1,4 @@
-target_sources(
-    DX12MiniRenderer PRIVATE
+set(UTILS_SRC
     crc32.h
     GltfUtils.cpp
     GltfUtils.h
@@ -12,5 +11,6 @@ target_sources(
     DescriptorManager.cpp
     DescriptorManager.h
     AssetManager.h
-    AssetManager.cpp
-)
+    AssetManager.cpp)
+
+target_sources(DX12MiniRenderer PRIVATE ${UTILS_SRC})
