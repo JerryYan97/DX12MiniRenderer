@@ -1,6 +1,4 @@
 set(EVENTSYSTEM_SRC
-    EventManager.cpp
-    EventManager.h
-    PARENT_SCO)
-
-target_sources(DX12MiniRenderer PRIVATE ${EVENTSYSTEM_SRC})
+    ${CMAKE_CURRENT_SOURCE_DIR}/EventManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/EventManager.h
+    PARENT_SCOPE)

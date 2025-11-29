@@ -8,7 +8,3 @@ set(RENDERBACKEND_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/GpuPipeline.h
     ${CMAKE_CURRENT_SOURCE_DIR}/GpuPipeline.cpp
     PARENT_SCOPE)
-
-target_sources(DX12MiniRenderer PRIVATE ${RENDERBACKEND_SRC})
-
-add_subdirectory(./RTShaders)

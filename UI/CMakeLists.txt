@@ -1,7 +1,6 @@
 set(UI_SRC
-    InputHandler.cpp
-    InputHandler.h
-    UIManager.cpp
-    UIManager.h)
-
-target_sources(DX12MiniRenderer PRIVATE ${UI_SRC})
+    ${CMAKE_CURRENT_SOURCE_DIR}/InputHandler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/InputHandler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/UIManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/UIManager.h
+    PARENT_SCOPE)

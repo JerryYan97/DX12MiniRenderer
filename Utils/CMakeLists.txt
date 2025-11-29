@@ -1,16 +1,15 @@
 set(UTILS_SRC
-    crc32.h
-    GltfUtils.cpp
-    GltfUtils.h
-    StrPathUtils.cpp
-    StrPathUtils.h
-    MathUtils.cpp
-    MathUtils.h
-    DX12Utils.cpp
-    DX12Utils.h
-    DescriptorManager.cpp
-    DescriptorManager.h
-    AssetManager.h
-    AssetManager.cpp)
-
-target_sources(DX12MiniRenderer PRIVATE ${UTILS_SRC})
+    ${CMAKE_CURRENT_SOURCE_DIR}/crc32.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/GltfUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GltfUtils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/StrPathUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/StrPathUtils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/MathUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MathUtils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DX12Utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DX12Utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/AssetManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/AssetManager.cpp
+    PARENT_SCOPE)

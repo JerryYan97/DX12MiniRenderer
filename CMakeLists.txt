@@ -16,9 +16,9 @@ set(IMGUI_FILES_LIST ${DearImGUIPath}/imgui.cpp
                      ${DearImGUIPath}/backends/imgui_impl_dx12.cpp)
 
 set(APP_SRC
-    main.cpp
-    MiniRendererApp.h
-    MiniRendererApp.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MiniRendererApp.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/MiniRendererApp.cpp)
 
 add_definitions(-DSOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\")
 
@@ -26,15 +26,31 @@ add_definitions(-DSOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\")
 source_group(ImGUI FILES ${IMGUI_FILES_LIST})
 source_group(App FILES ${APP_SRC})
 
-add_executable(DX12MiniRenderer ${APP_SRC}
-                                ${IMGUI_FILES_LIST})
-
 add_subdirectory(./Scene)
 add_subdirectory(./UI)
 add_subdirectory(./EventSystem)
 add_subdirectory(./RenderBackend)
 add_subdirectory(./Utils)
 add_subdirectory(./TimePerfManager)
+add_subdirectory(./RenderBackend/RTShaders)
+
+source_group(Scene FILES ${SCENE_SRC})
+source_group(UI FILES ${UI_SRC})
+source_group(EventSystem FILES ${EVENTSYSTEM_SRC})
+source_group(RenderBackend FILES ${RENDERBACKEND_SRC})
+source_group(Utils FILES ${UTILS_SRC})
+source_group(TimePerfManager FILES ${TIMEPERF_SRC})
+source_group(RTShaders FILES ${RT_SHADERS_SRC})
+
+add_executable(DX12MiniRenderer ${APP_SRC}
+                                ${IMGUI_FILES_LIST}
+                                ${SCENE_SRC}
+                                ${UI_SRC}
+                                ${EVENTSYSTEM_SRC}
+                                ${RENDERBACKEND_SRC}
+                                ${UTILS_SRC}
+                                ${TIMEPERF_SRC}
+                                ${RT_SHADERS_SRC})
 
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/YamlCpp/include/yaml-cpp)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/YamlCpp

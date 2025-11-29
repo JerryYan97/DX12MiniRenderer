@@ -14,5 +14,3 @@ set(SCENE_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/Object.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Object.h
     PARENT_SCOPE)
-
-target_sources(DX12MiniRenderer PRIVATE ${SCENE_SRC})
