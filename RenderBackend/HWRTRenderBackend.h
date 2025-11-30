@@ -31,6 +31,7 @@ class HWRTRenderBackend : public RendererBackend
         ~HWRTRenderBackend() {}
 
         virtual void RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo) override;
+        virtual void GetMainRenderTargetSize(uint32_t& oWidth, uint32_t& oHeight) override { oWidth = 100; oHeight = 100; } // TODO: Placeholder
 
     protected:
         virtual void CustomResize(uint32_t width, uint32_t height) override;

@@ -59,6 +59,7 @@ public:
     RendererBackendType GetType() { return m_type; }
 
     virtual void Resize(uint32_t width, uint32_t height) {}
+    virtual void GetMainRenderTargetSize(uint32_t& oWidth, uint32_t& oHeight) = 0;
 
 protected:
     virtual void CustomResize(uint32_t width, uint32_t height) {}

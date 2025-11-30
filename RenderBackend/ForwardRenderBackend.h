@@ -8,6 +8,7 @@ public:
     ~ForwardRenderer();
 
     virtual void RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo) override;
+    virtual void GetMainRenderTargetSize(uint32_t& oWidth, uint32_t& oHeight) override { oWidth = 100; oHeight = 100; } // TODO: Placeholder
 
 protected:
     virtual void CustomInit();

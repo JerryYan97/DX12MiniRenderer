@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "imgui.h"
+#include "InputHandler.h"
 
 class HEventManager;
 
@@ -90,6 +91,8 @@ private:
     std::wstring    m_windowTitle;
     HWND            m_hWnd;
     ImGUIGenFuncPtr m_pCustomImGUIGenFunc;
+
+    InputHandler m_inputHandler;
 
     // Self Reference
     static UIManager* m_pThis;

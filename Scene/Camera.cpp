@@ -5,6 +5,7 @@
 #include "../Utils/crc32.h"
 
 extern UIManager* g_pUIManager;
+Camera* Camera::m_pActiveCamera = nullptr;
 
 Camera::Camera(
     float* pPos,
@@ -52,6 +53,8 @@ Object* Camera::Deseralize(const std::string& objName, const YAML::Node& i_node)
     g_pUIManager->GetWindowSize(winWidth, winHeight);
     pCamera->m_aspect = (float)winHeight / (float)winWidth;
 
+    m_pActiveCamera = pCamera;
+
     return pCamera;
 }
 
@@ -65,4 +68,53 @@ void Camera::CameraUpdate()
     GenViewMat(m_view, m_pos, m_up, m_viewMat);
 
     MatMulMat(m_projMat, m_viewMat, m_vpMat, 4);
+}
+
+void Camera::BindKeyboardMouseInput(InputHandler* pInputHandler)
+{
+    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_W, MoveForward);
+    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_S, MoveBackward);
+    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_D, MoveRight);
+    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_A, MoveLeft);
+    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_E, MoveUp);
+    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_Q, MoveDown);
+}
+
+void Camera::MoveForward(StBindingInput input)
+{
+    if (m_pActiveCamera)
+    {
+        m_pActiveCamera->m_pos[0] += m_pActiveCamera->m_view[0] * input.fVals[0]; // Assuming fVals[0] corresponds to forward movement delta
+    }
+}
+
+void Camera::MoveBackward(StBindingInput input)
+{
+    MoveForward(StBindingInput{-input.fVals[0], 0, 0, 0}); // Assuming fVals[0] corresponds to backward movement delta
+}
+
+void Camera::MoveRight(StBindingInput input)
+{
+    if (m_pActiveCamera)
+    {
+        m_pActiveCamera->m_pos[0] += m_pActiveCamera->m_view[1] * input.fVals[0]; // Assuming fVals[0] corresponds to right movement delta
+    }
+}
+
+void Camera::MoveLeft(StBindingInput input)
+{
+    MoveRight(StBindingInput{-input.fVals[0], 0, 0, 0}); // Assuming fVals[0] corresponds to left movement delta
+}
+
+void Camera::MoveUp(StBindingInput input)
+{
+    if (m_pActiveCamera)
+    {
+        m_pActiveCamera->m_pos[1] += m_pActiveCamera->m_view[2] * input.fVals[0]; // Assuming fVals[0] corresponds to upward movement delta
+    }
+}
+
+void Camera::MoveDown(StBindingInput input)
+{
+    MoveUp(StBindingInput{-input.fVals[0], 0, 0, 0}); // Assuming fVals[0] corresponds to downward movement delta
 }

@@ -2,6 +2,7 @@
 #include "UI/UIManager.h"
 #include "Utils/AssetManager.h"
 #include "Scene/Level.h"
+#include "Scene/Camera.h"
 #include "TimePerfManager/TimePerfManager.h"
 #include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
@@ -121,6 +122,11 @@ void DX12MiniRenderer::GenerateImGUIStates()
     if (g_pUIManager)
     {
         g_pUIManager->GetSwapchainRenderTargetSize(displayWidth, displayHeight);
+    }
+
+    if (DX12MiniRenderer::m_pThis != nullptr && DX12MiniRenderer::m_pThis->m_pRendererBackend)
+    {
+        DX12MiniRenderer::m_pThis->m_pRendererBackend->GetMainRenderTargetSize(renderWidth, renderHeight);
     }
 
     {

@@ -5,6 +5,7 @@
 #include "imgui_impl_dx12.h"
 #include "../Utils/crc32.h"
 #include "../Utils/DX12Utils.h"
+#include "../Scene/Camera.h"
 
 UIManager* UIManager::m_pThis = nullptr;
 
@@ -203,6 +204,10 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
         DXGI_FORMAT_R8G8B8A8_UNORM, m_pD3dImGUISrvDescHeap,
         m_pD3dImGUISrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
         m_pD3dImGUISrvDescHeap->GetGPUDescriptorHandleForHeapStart());
+
+    m_inputHandler.Init();
+    
+    Camera::BindKeyboardMouseInput(&m_inputHandler);
 }
 
 void UIManager::FrameStart()
@@ -221,6 +226,8 @@ void UIManager::RecordDrawData(ID3D12GraphicsCommandList* iCmdList)
 void UIManager::Tick(float deltaTime)
 {
     FrameStart();
+
+    m_inputHandler.Tick(deltaTime);
 
     // UIManager can serve to execute custom ImGUI generation functions.
     // It will be called until the served renderer component reset it to nullptr.
