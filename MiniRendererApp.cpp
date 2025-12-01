@@ -8,6 +8,7 @@
 #include "RenderBackend/ForwardRenderBackend.h"
 #include <dxgidebug.h>
 #include <filesystem>
+#include <chrono>
 #pragma comment(lib, "dxguid.lib")
 
 namespace fs = std::filesystem;
@@ -258,10 +259,16 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
 
 void DX12MiniRenderer::Run()
 {
+    auto timeStamp = std::chrono::high_resolution_clock::now();
+
     while (m_pUIManager->ContinueRunning())
     {
-        float tempDeltaTime = 0.0f;
-        m_pUIManager->Tick(tempDeltaTime);
+        auto nowTimeStamp = std::chrono::high_resolution_clock::now();
+        auto elapsedSec = std::chrono::duration_cast<std::chrono::milliseconds>(nowTimeStamp - timeStamp);
+        timeStamp = nowTimeStamp;
+
+        float deltaSec = float(elapsedSec.count()) / 1000.0f;
+        m_pUIManager->Tick(deltaSec);
 
         // Temp Renderer
         FrameContext* frameCtx = WaitForCurrentFrameResources();
