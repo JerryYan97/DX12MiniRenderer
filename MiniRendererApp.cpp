@@ -20,6 +20,7 @@ DX12MiniRenderer* DX12MiniRenderer::m_pThis = nullptr;
 ID3D12Device* g_pD3dDevice = nullptr;
 UIManager* g_pUIManager = nullptr;
 AssetManager* g_pAssetManager = nullptr;
+TimePerfManager* g_pTimePerfManager = nullptr;
 
 DX12MiniRenderer::DX12MiniRenderer()
     : m_pD3dDevice(nullptr),
@@ -112,7 +113,7 @@ void DX12MiniRenderer::GenerateImGUIStates()
     */
     // 3. Show another simple window.
     // if (show_another_window)
-    float fps = 0.f;
+    int fps = 0.f;
     float cpuTime = 0.f;
     float gpuTime = 0.f;
     uint32_t displayWidth = 100;
@@ -130,9 +131,16 @@ void DX12MiniRenderer::GenerateImGUIStates()
         DX12MiniRenderer::m_pThis->m_pRendererBackend->GetMainRenderTargetSize(renderWidth, renderHeight);
     }
 
+    if (TimePerfManager::GetInstance())
+    {
+        fps = TimePerfManager::GetInstance()->GetFPS();
+        cpuTime = TimePerfManager::GetInstance()->GetAverageCPUFrameTime();
+        gpuTime = TimePerfManager::GetInstance()->GetAverageGPUFrameTime();
+    }
+
     {
         ImGui::Begin("Debug Menu", &show_another_window, ImGuiWindowFlags_AlwaysAutoResize);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("FPS: %.1f, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);
+        ImGui::Text("FPS: %d, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);
         ImGui::Text("Display res: %d x %d, Render Res: %d x %d", displayWidth, displayHeight, renderWidth, renderHeight);
         // if (ImGui::Button("Close Me"))
             // show_another_window = false;
@@ -210,6 +218,9 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     m_pUIManager->SetCustomImGUIFunc(GenerateImGUIStates);
     g_pUIManager = m_pUIManager;
 
+    m_pTimePerfManager = new TimePerfManager();
+    g_pTimePerfManager = m_pTimePerfManager;
+
     m_pAssetManager = new AssetManager();
     g_pAssetManager = m_pAssetManager;
 
@@ -268,6 +279,7 @@ void DX12MiniRenderer::Run()
         timeStamp = nowTimeStamp;
 
         float deltaSec = float(elapsedSec.count()) / 1000.0f;
+        m_pTimePerfManager->AddCPUTime(deltaSec);
         m_pUIManager->Tick(deltaSec);
 
         // Temp Renderer
@@ -362,6 +374,7 @@ void DX12MiniRenderer::Finalize()
 
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
     if (m_pAssetManager) { m_pAssetManager->Deinit(); delete m_pAssetManager; m_pAssetManager = nullptr; }
+    if (m_pTimePerfManager) { delete m_pTimePerfManager; m_pTimePerfManager = nullptr; }
     CleanupTempRendererInfarstructure();
     if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
     if (m_pRendererBackend) { m_pRendererBackend->Deinit(); delete m_pRendererBackend; m_pRendererBackend = nullptr; }
