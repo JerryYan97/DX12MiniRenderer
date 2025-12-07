@@ -84,7 +84,12 @@ void Camera::MoveForward(StBindingInput input)
 {
     if (m_pActiveCamera)
     {
-        m_pActiveCamera->m_pos[0] += m_pActiveCamera->m_view[0] * input.fVals[0]; // Assuming fVals[0] corresponds to forward movement delta
+        float delta[3] = {
+            m_pActiveCamera->m_view[0] * input.fVals[0],
+            m_pActiveCamera->m_view[1] * input.fVals[0],
+            m_pActiveCamera->m_view[2] * input.fVals[0]
+        };
+        VecAdd(m_pActiveCamera->m_pos, delta, 3, m_pActiveCamera->m_pos);
     }
 }
 
@@ -97,7 +102,11 @@ void Camera::MoveRight(StBindingInput input)
 {
     if (m_pActiveCamera)
     {
-        m_pActiveCamera->m_pos[0] += m_pActiveCamera->m_view[1] * input.fVals[0]; // Assuming fVals[0] corresponds to right movement delta
+        float right[3] = {};
+        CrossProductVec3(m_pActiveCamera->m_view, m_pActiveCamera->m_up, right);
+        NormalizeVec(right, 3);
+        ScalarMul(-input.fVals[0], right, 3);
+        VecAdd(m_pActiveCamera->m_pos, right, 3, m_pActiveCamera->m_pos);
     }
 }
 
@@ -110,7 +119,11 @@ void Camera::MoveUp(StBindingInput input)
 {
     if (m_pActiveCamera)
     {
-        m_pActiveCamera->m_pos[1] += m_pActiveCamera->m_view[2] * input.fVals[0]; // Assuming fVals[0] corresponds to upward movement delta
+        float upDelta[3] = {};
+        memcpy(upDelta, m_pActiveCamera->m_up, 3 * sizeof(float));
+        NormalizeVec(upDelta, 3);
+        ScalarMul(input.fVals[0], upDelta, 3);
+        VecAdd(m_pActiveCamera->m_pos, upDelta, 3, m_pActiveCamera->m_pos);
     }
 }
 
