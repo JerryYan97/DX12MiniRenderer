@@ -89,7 +89,7 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
     // NOTE: The window has a title bar by default no matter whether the style includes WS_CAPTION or not,
     // but ::AdjustWindowRect() needs WS_CAPTION to calculate the correct window size.
     // Use content area size to calculate the desired window size.
-    const auto WS_NO_RESIZE = WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION;
+    const auto WS_NO_RESIZE = WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION | WS_MAXIMIZEBOX | WS_SYSMENU;
     RECT rc = { 100, 100, 100 + 1280, 100 + 800 };
     BOOL bAdjWind = ::AdjustWindowRect(&rc, WS_NO_RESIZE, FALSE);
     LONG windowWidth = rc.right - rc.left;
