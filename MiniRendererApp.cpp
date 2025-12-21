@@ -220,6 +220,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
 
     m_pTimePerfManager = new TimePerfManager();
     g_pTimePerfManager = m_pTimePerfManager;
+    m_pTimePerfManager->Init(m_pD3dDevice);
 
     m_pAssetManager = new AssetManager();
     g_pAssetManager = m_pAssetManager;
@@ -336,8 +337,10 @@ void DX12MiniRenderer::Run()
 
         // Render Scene
         RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
+        m_pTimePerfManager->GPUTimeStampStart(m_pD3dCommandList);
         m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
-        
+        m_pTimePerfManager->GPUTimeStampEnd(m_pD3dCommandList);
+
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
         m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);
@@ -374,7 +377,7 @@ void DX12MiniRenderer::Finalize()
 
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
     if (m_pAssetManager) { m_pAssetManager->Deinit(); delete m_pAssetManager; m_pAssetManager = nullptr; }
-    if (m_pTimePerfManager) { delete m_pTimePerfManager; m_pTimePerfManager = nullptr; }
+    if (m_pTimePerfManager) { m_pTimePerfManager->Finalize(); delete m_pTimePerfManager; m_pTimePerfManager = nullptr; }
     CleanupTempRendererInfarstructure();
     if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
     if (m_pRendererBackend) { m_pRendererBackend->Deinit(); delete m_pRendererBackend; m_pRendererBackend = nullptr; }

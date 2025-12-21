@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <queue>
+#include <d3d12.h>
 // https://learn.microsoft.com/en-us/windows/win32/direct3d12/queries
 
 class TimePerfManager
@@ -10,11 +11,13 @@ public:
     ~TimePerfManager();
 
     static TimePerfManager* GetInstance() { return m_pThis; }
+    void Init(ID3D12Device* pDevice);
+    void Finalize();
 
     void AddCPUTime(float deltaTimeSec); // In seconds. The delta time comes from the main loop, which drives the whole system. Thus, we don't need to query the time again.
-    void AddGPUTimeStamp();
-    void GPUTimeStampStart();
-    void GPUTimeStampEnd();
+    void GPUTimeStampStart(ID3D12GraphicsCommandList* pCmdList);
+    void GPUTimeStampEnd(ID3D12GraphicsCommandList* pCmdList);
+    void ResolveQuery();
 
     int GetFPS() const;
     float GetAverageCPUFrameTime() const; // In milliseconds.
@@ -22,6 +25,8 @@ public:
 
 private:
     static TimePerfManager* m_pThis;
+    ID3D12Device* m_pD3dDevice = nullptr;
+    ID3D12QueryHeap* m_pQueryHeap = nullptr;
 
     std::queue<float> m_cpuFrameTimes; // In seconds.
 
