@@ -86,10 +86,12 @@ float TimePerfManager::GetAverageGPUFrameTime() const // In milliseconds.
 {
     // Implement GPU frame time calculation here.
     float avgGpuTime = 0.f;
+    int size = static_cast<int>(m_gpuFrameTimes.size());
     if (m_gpuFrameTimes.size() > 0) {
         UINT64 avgGpuTicks = m_totalGPUTicks / static_cast<UINT64>(m_gpuFrameTimes.size());
         avgGpuTime = static_cast<float>(avgGpuTicks) / static_cast<float>(m_gpuTimeStampFrequency) * 1000.0f;
     }
+    // printf("GPU Frame Count: %d, Avg GPU Time: %.3f ms\n", size, avgGpuTime);
     return avgGpuTime;
 }
 

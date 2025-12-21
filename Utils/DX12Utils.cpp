@@ -79,6 +79,17 @@ D3D12_RESOURCE_BARRIER TransitionStateBarrier(ID3D12Resource* pResource, D3D12_R
     return barrier;
 }
 
+D3D12_RESOURCE_BARRIER UAVBarrier(ID3D12Resource* pResource)
+{
+    D3D12_RESOURCE_BARRIER barrier = {};
+    {
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.UAV.pResource = pResource;
+    }
+    return barrier;
+}
+
 ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState)
 {
     assert(accessType == GPU_ONLY || accessType == READBACK, "Please use CreateUploadBufferAndInit to create UPLOAD buffers.");
