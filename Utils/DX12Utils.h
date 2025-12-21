@@ -5,6 +5,12 @@
 #include <sstream>
 #include <iomanip>
 
+enum DX12_GPU_CPU_ACCESS_ENUM {
+    UPLOAD = 0, // CPU TO GPU
+    READBACK = 1, // GPU TO CPU
+    GPU_ONLY = 2 // Default
+};
+
 // Assign a name to the object to aid with debugging.
 #if defined(_DEBUG) || defined(DBG)
 inline void SetName(ID3D12Object* pObject, LPCWSTR name)
@@ -280,8 +286,9 @@ inline void GpuQueueWaitIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pCmdQueu
 }
 
 void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes);
-ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device* pDevice, uint32_t sizeBytes);
 
+D3D12_RESOURCE_BARRIER TransitionStateBarrier(ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState);
+ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
 
 inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode)
 {

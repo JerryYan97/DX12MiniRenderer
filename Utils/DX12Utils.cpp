@@ -65,6 +65,68 @@ ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device* pDevice, uint32_t sizeBy
     return pUploadBuffer;
 }
 
+D3D12_RESOURCE_BARRIER TransitionStateBarrier(ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState)
+{
+    D3D12_RESOURCE_BARRIER barrier = {};
+    {
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.Transition.pResource = pResource;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        barrier.Transition.StateBefore = curState;
+        barrier.Transition.StateAfter = destState;
+    }
+    return barrier;
+}
+
+ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState)
+{
+    assert(accessType == GPU_ONLY || accessType == READBACK, "Please use CreateUploadBufferAndInit to create UPLOAD buffers.");
+    if (accessType == READBACK) { initialResourceState = D3D12_RESOURCE_STATE_COPY_DEST; } // READBACK buffers must be in COPY DEST state.
+
+    ID3D12Resource* pBuffer;
+    D3D12_HEAP_PROPERTIES heapProperties{};
+    {
+        if (accessType == GPU_ONLY)
+        {
+            heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        }
+        else if (accessType == READBACK)
+        {
+            heapProperties.Type = D3D12_HEAP_TYPE_READBACK;
+        }
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 1;
+        heapProperties.VisibleNodeMask = 1;
+    }
+
+    D3D12_RESOURCE_DESC bufferRsrcDesc{};
+    {
+        bufferRsrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        bufferRsrcDesc.Alignment = 0;
+        bufferRsrcDesc.Width = sizeBytes;
+        bufferRsrcDesc.Height = 1;
+        bufferRsrcDesc.DepthOrArraySize = 1;
+        bufferRsrcDesc.MipLevels = 1;
+        bufferRsrcDesc.Format = DXGI_FORMAT_UNKNOWN;
+        bufferRsrcDesc.SampleDesc.Count = 1;
+        bufferRsrcDesc.SampleDesc.Quality = 0;
+        bufferRsrcDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        bufferRsrcDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    }
+
+    ThrowIfFailed(pDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferRsrcDesc,
+            initialResourceState,
+            nullptr,
+        IID_PPV_ARGS(&pBuffer)));
+
+    return pBuffer;
+}
+
 // Assume the input texture is COPY DEST and the texture is PIXEL SHADER RESOURCE after copying.
 void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes)
 {

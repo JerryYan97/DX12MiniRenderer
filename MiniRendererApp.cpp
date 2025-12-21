@@ -220,7 +220,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
 
     m_pTimePerfManager = new TimePerfManager();
     g_pTimePerfManager = m_pTimePerfManager;
-    m_pTimePerfManager->Init(m_pD3dDevice);
+    m_pTimePerfManager->Init(m_pD3dDevice, m_pD3dCommandQueue);
 
     m_pAssetManager = new AssetManager();
     g_pAssetManager = m_pAssetManager;
@@ -358,6 +358,8 @@ void DX12MiniRenderer::Run()
 
         // If hEvent is a null handle, then this API will not return until the specified fence value(s) have been reached.
         frameCtx->Fence->SetEventOnCompletion(1, nullptr);
+
+        m_pTimePerfManager->ReadBackGPUTimeStampResults();
 
         // It looks like the Present() put works on the command queue, which means we need to use the command queue signal to wait for GPU to finish the work.
         m_pUIManager->Present();
