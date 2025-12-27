@@ -34,6 +34,8 @@ public:
     void RetriveActiveCamera(Camera** o_camera);
     void RetriveLights(std::vector<Light*>& o_lights);
 
+    void SetLevelCenter(float center[3]) { m_levelCenter[0] = center[0]; m_levelCenter[1] = center[1]; m_levelCenter[2] = center[2]; }
+
     std::string m_sceneName;
     float m_backgroundColor[3];
 
@@ -42,4 +44,5 @@ public:
 
 private:
     std::vector<Object*> m_objects;
+    float m_levelCenter[3] = {};
 };

@@ -105,6 +105,24 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
             o_pLevel->LoadObject(objName, itr.second, Camera::Deseralize);
         }
     }
+
+    // Calculate the meshes center of the level
+    std::vector<StaticMesh*> staticMeshes;
+    float levelCenter[3] = { 0.f, 0.f, 0.f };
+    o_pLevel->RetriveStaticMeshes(staticMeshes);
+    for(int i = 0; i < staticMeshes.size(); i++)
+    {
+        std::vector<float> meshCenter = staticMeshes[i]->GetMeshCenter();
+        levelCenter[0] += meshCenter[0];
+        levelCenter[1] += meshCenter[1];
+        levelCenter[2] += meshCenter[2];
+    }
+    levelCenter[0] = levelCenter[0] / staticMeshes.size();
+    levelCenter[1] = levelCenter[1] / staticMeshes.size();
+    levelCenter[2] = levelCenter[2] / staticMeshes.size();
+
+    o_pLevel->SetLevelCenter(levelCenter);
+    //
 }
 
 void SceneAssetLoader::LoadStaticMesh(const std::string& fileNamePath, StaticMesh* pStaticMesh)

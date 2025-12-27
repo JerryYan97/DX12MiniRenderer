@@ -18,7 +18,8 @@ set(IMGUI_FILES_LIST ${DearImGUIPath}/imgui.cpp
 set(APP_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MiniRendererApp.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/MiniRendererApp.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/MiniRendererApp.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Settings.h)
 
 add_definitions(-DSOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\")
 

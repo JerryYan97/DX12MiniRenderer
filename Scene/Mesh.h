@@ -49,6 +49,12 @@ public:
         return res;
     }
 
+    std::vector<float> GetMeshCenter() const
+    {
+        std::vector<float> res = {m_meshCenter[0], m_meshCenter[1], m_meshCenter[2]};
+        return res;
+    }
+
     std::string m_assetPath;
 
     // std::vector<MeshPrimitive> m_meshPrimitives;
