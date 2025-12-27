@@ -89,7 +89,7 @@ float TimePerfManager::GetAverageGPUFrameTime() const // In milliseconds.
     int size = static_cast<int>(m_gpuFrameTimes.size());
     if (m_gpuFrameTimes.size() > 0) {
         UINT64 avgGpuTicks = m_totalGPUTicks / static_cast<UINT64>(m_gpuFrameTimes.size());
-        avgGpuTime = static_cast<float>(avgGpuTicks) / static_cast<float>(m_gpuTimeStampFrequency) * 1000.0f;
+        avgGpuTime = static_cast<float>(avgGpuTicks * 1000) / static_cast<float>(m_gpuTimeStampFrequency);
     }
     // printf("GPU Frame Count: %d, Avg GPU Time: %.3f ms\n", size, avgGpuTime);
     return avgGpuTime;
@@ -142,6 +142,10 @@ void TimePerfManager::ReadBackGPUTimeStampResults() // Call after GPU finishes t
         m_gpuFrameTimes.push(gpuTimeInerval);
         m_totalGPUTicks += gpuTimeInerval;
     }
+
+    // Debug
+    // float gpuTime = static_cast<float>(gpuTimeInerval * 1000) / static_cast<float>(m_gpuTimeStampFrequency);
+    // printf("GPU Time: %.3f ms\n", gpuTime);
 }
 
 void TimePerfManager::Finalize()

@@ -83,4 +83,6 @@ private:
 
     bool m_loadedInRAM;
     bool m_loadedInVRAM;
+
+    float m_meshCenter[3] = {}; // In the world space.
 };

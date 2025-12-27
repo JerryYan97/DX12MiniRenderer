@@ -21,8 +21,13 @@ enum CAMERA_MOVEMENT
     UP,
     DOWN,
     ROTATE, // Counter-clockwise. Right Hande. Around Top-Down Axis. Self-Rotate.
-    CUSTOM_ANIM,
     MAX_CAMERA_MOVEMENT
+};
+
+enum CAMERA_MODE
+{
+    USER_CONTROLLED,
+    ANIMATION
 };
 
 class Camera : public Object
@@ -31,6 +36,7 @@ public:
     Camera(float* pPos, float* pView, float* pUp, float  fov, float near, float far);
 
     void CameraUpdate(); // Update projection matrix according to current window size and camera position every frame.
+    void SetCameraMode(CAMERA_MODE mode) { m_cameraMode = mode; }
 
     static void BindKeyboardMouseInput(InputHandler* pInputHandler);
 
@@ -54,8 +60,12 @@ public:
     float m_aspect; // Width / Height;
     float m_far;  // Far and near are positive and m_far > m_near > 0.
     float m_near;
+
+    float m_viewDist = 100.f; // By combining with m_pos and m_view, we get the current 'look-at' point.
+
     bool  m_active;
 
 private:
     static Camera* m_pActiveCamera;
+    CAMERA_MODE m_cameraMode = CAMERA_MODE::USER_CONTROLLED;
 };

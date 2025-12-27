@@ -116,6 +116,36 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
                 mesh->m_rotation[2], mesh->m_rotation[0], mesh->m_rotation[1],
                 mesh->m_scale, mesh->m_modelMat);
 
+    // Calculating center point
+    printf("Calculating center point\n");
+    for (int primId = 0; primId < mesh->m_primitiveAssets.size(); primId++)
+    {
+        PrimitiveAsset* primAsset = mesh->m_primitiveAssets[primId];
+        size_t    vertCnt = primAsset->m_posData.size() / 3;
+        float     center[3] = { 0.f, 0.f, 0.f };
+        for (size_t vId = 0; vId < vertCnt; vId++)
+        {
+            center[0] += primAsset->m_posData[vId * 3 + 0];
+            center[1] += primAsset->m_posData[vId * 3 + 1];
+            center[2] += primAsset->m_posData[vId * 3 + 2];
+        }
+        center[0] /= static_cast<float>(vertCnt);
+        center[1] /= static_cast<float>(vertCnt);
+        center[2] /= static_cast<float>(vertCnt);
+        mesh->m_meshCenter[0] += center[0];
+        mesh->m_meshCenter[1] += center[1];
+        mesh->m_meshCenter[2] += center[2];
+    }
+    mesh->m_meshCenter[0] /= static_cast<float>(mesh->m_primitiveAssets.size());
+
+    float meshCenterLocal[4] = { mesh->m_meshCenter[0], mesh->m_meshCenter[1], mesh->m_meshCenter[2], 1.f };
+    float meshCenterWorld[4] = { 0.f, 0.f, 0.f, 0.f };
+    MatMulVec(mesh->m_modelMat, meshCenterLocal, 4, meshCenterWorld);
+    mesh->m_meshCenter[0] = meshCenterWorld[0]; mesh->m_meshCenter[1] = meshCenterWorld[1]; mesh->m_meshCenter[2] = meshCenterWorld[2];
+
+    printf("Mesh center point: (%f, %f, %f)\n", mesh->m_meshCenter[0], mesh->m_meshCenter[1], mesh->m_meshCenter[2]);
+    //
+
     mesh->GenAndInitGpuBufferRsrc();
     mesh->SendModelMatrixToGpuBuffer();
 
