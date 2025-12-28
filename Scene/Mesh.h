@@ -55,6 +55,14 @@ public:
         return res;
     }
 
+    std::vector<float> GetMeshBBX() const
+    {
+        std::vector<float> res = {
+            m_meshBBXMin[0], m_meshBBXMin[1], m_meshBBXMin[2],
+            m_meshBBXMax[0], m_meshBBXMax[1], m_meshBBXMax[2]};
+        return res;
+    }
+
     std::string m_assetPath;
 
     // std::vector<MeshPrimitive> m_meshPrimitives;
@@ -91,4 +99,6 @@ private:
     bool m_loadedInVRAM;
 
     float m_meshCenter[3] = {}; // In the world space.
+    float m_meshBBXMin[3] = {};
+    float m_meshBBXMax[3] = {};
 };

@@ -106,9 +106,11 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
         }
     }
 
-    // Calculate the meshes center of the level
+    // Calculate the meshes center and bounding box of the level
     std::vector<StaticMesh*> staticMeshes;
     float levelCenter[3] = { 0.f, 0.f, 0.f };
+    float bbxMin[3] = { FLT_MAX, FLT_MAX, FLT_MAX };
+    float bbxMax[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
     o_pLevel->RetriveStaticMeshes(staticMeshes);
     for(int i = 0; i < staticMeshes.size(); i++)
     {
@@ -116,13 +118,22 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
         levelCenter[0] += meshCenter[0];
         levelCenter[1] += meshCenter[1];
         levelCenter[2] += meshCenter[2];
+
+        std::vector<float> meshBBXMinMax = staticMeshes[i]->GetMeshBBX();
+        bbxMin[0] = min(bbxMin[0], meshBBXMinMax[0]);
+        bbxMin[1] = min(bbxMin[1], meshBBXMinMax[1]);
+        bbxMin[2] = min(bbxMin[2], meshBBXMinMax[2]);
+
+        bbxMax[0] = max(bbxMax[0], meshBBXMinMax[3]);
+        bbxMax[1] = max(bbxMax[1], meshBBXMinMax[4]);
+        bbxMax[2] = max(bbxMax[2], meshBBXMinMax[5]);
     }
     levelCenter[0] = levelCenter[0] / staticMeshes.size();
     levelCenter[1] = levelCenter[1] / staticMeshes.size();
     levelCenter[2] = levelCenter[2] / staticMeshes.size();
 
     o_pLevel->SetLevelCenter(levelCenter);
-    //
+    o_pLevel->SetBoundingBox(bbxMin, bbxMax);
 }
 
 void SceneAssetLoader::LoadStaticMesh(const std::string& fileNamePath, StaticMesh* pStaticMesh)

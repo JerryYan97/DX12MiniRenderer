@@ -80,6 +80,8 @@ private:
     static bool show_demo_window;
     static bool show_another_window;
     static bool clear_color;
+
+    bool m_bCamAnim = false;
 };
 
 class InputInfoManager {

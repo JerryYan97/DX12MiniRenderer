@@ -116,8 +116,11 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
                 mesh->m_rotation[2], mesh->m_rotation[0], mesh->m_rotation[1],
                 mesh->m_scale, mesh->m_modelMat);
 
-    // Calculating center point
-    printf("Calculating center point\n");
+    // Calculating center point and bounding box.
+    printf("Calculating center point and bounding box\n");
+    mesh->m_meshBBXMin[0] = FLT_MAX; mesh->m_meshBBXMin[1] = FLT_MAX; mesh->m_meshBBXMin[2] = FLT_MAX;
+    mesh->m_meshBBXMax[0] = -FLT_MAX; mesh->m_meshBBXMax[1] = -FLT_MAX; mesh->m_meshBBXMax[2] = -FLT_MAX;
+
     for (int primId = 0; primId < mesh->m_primitiveAssets.size(); primId++)
     {
         PrimitiveAsset* primAsset = mesh->m_primitiveAssets[primId];
@@ -128,6 +131,14 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
             center[0] += primAsset->m_posData[vId * 3 + 0];
             center[1] += primAsset->m_posData[vId * 3 + 1];
             center[2] += primAsset->m_posData[vId * 3 + 2];
+
+            mesh->m_meshBBXMin[0] = min(mesh->m_meshBBXMin[0], primAsset->m_posData[vId * 3 + 0]);
+            mesh->m_meshBBXMin[1] = min(mesh->m_meshBBXMin[1], primAsset->m_posData[vId * 3 + 1]);
+            mesh->m_meshBBXMin[2] = min(mesh->m_meshBBXMin[2], primAsset->m_posData[vId * 3 + 2]);
+
+            mesh->m_meshBBXMax[0] = max(mesh->m_meshBBXMax[0], primAsset->m_posData[vId * 3 + 0]);
+            mesh->m_meshBBXMax[1] = max(mesh->m_meshBBXMax[1], primAsset->m_posData[vId * 3 + 1]);
+            mesh->m_meshBBXMax[2] = max(mesh->m_meshBBXMax[2], primAsset->m_posData[vId * 3 + 2]);
         }
         center[0] /= static_cast<float>(vertCnt);
         center[1] /= static_cast<float>(vertCnt);
@@ -143,7 +154,10 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     MatMulVec(mesh->m_modelMat, meshCenterLocal, 4, meshCenterWorld);
     mesh->m_meshCenter[0] = meshCenterWorld[0]; mesh->m_meshCenter[1] = meshCenterWorld[1]; mesh->m_meshCenter[2] = meshCenterWorld[2];
 
-    printf("Mesh center point: (%f, %f, %f)\n", mesh->m_meshCenter[0], mesh->m_meshCenter[1], mesh->m_meshCenter[2]);
+    printf("Mesh center point: (%f, %f, %f); Bounding Box: (%f, %f, %f) to (%f, %f, %f)\n", 
+           mesh->m_meshCenter[0], mesh->m_meshCenter[1], mesh->m_meshCenter[2],
+           mesh->m_meshBBXMin[0], mesh->m_meshBBXMin[1], mesh->m_meshBBXMin[2],
+           mesh->m_meshBBXMax[0], mesh->m_meshBBXMax[1], mesh->m_meshBBXMax[2]);
     //
 
     mesh->GenAndInitGpuBufferRsrc();

@@ -35,6 +35,19 @@ public:
     void RetriveLights(std::vector<Light*>& o_lights);
 
     void SetLevelCenter(float center[3]) { m_levelCenter[0] = center[0]; m_levelCenter[1] = center[1]; m_levelCenter[2] = center[2]; }
+    void GetLevelCenter(float* outCenter) { outCenter[0] = m_levelCenter[0]; outCenter[1] = m_levelCenter[1]; outCenter[2] = m_levelCenter[2]; }
+
+    void SetBoundingBox(float bbxMin[3], float bbxMax[3])
+    {
+        memcpy(m_bbxMin, bbxMin, sizeof(float) * 3);
+        memcpy(m_bbxMax, bbxMax, sizeof(float) * 3);
+    }
+
+    void GetBoundingBox(float* outBbxMin, float* outBbxMax)
+    {
+        memcpy(outBbxMin, m_bbxMin, sizeof(float) * 3);
+        memcpy(outBbxMax, m_bbxMax, sizeof(float) * 3);
+    }
 
     std::string m_sceneName;
     float m_backgroundColor[3];
@@ -45,4 +58,7 @@ public:
 private:
     std::vector<Object*> m_objects;
     float m_levelCenter[3] = {};
+
+    float m_bbxMin[3] = {};
+    float m_bbxMax[3] = {};
 };

@@ -59,4 +59,22 @@ void InputHandler::TickKeyboardMouseInputBindings(float deltaTime)
         HEvent event(args, "MoveUp");
         pEventManager->SendEvent(event);
     }
+
+    // Z: Zoom In, X: Zoom Out.
+    if (ImGui::IsKeyDown(ImGuiKey_Z))
+    {
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "ZoomCamera");
+        pEventManager->SendEvent(event);
+    }
+
+    if (ImGui::IsKeyDown(ImGuiKey_X))
+    {
+        HEventArguments args;
+        args[crc32("delta")] = -deltaTime;
+        HEvent event(args, "ZoomCamera");
+        pEventManager->SendEvent(event);
+    }
 }
+

@@ -50,6 +50,8 @@ public:
     static void MoveUp(HEventArguments args);
     static void MoveDown(HEventArguments args);
     static void RotateCamera(HEventArguments args);
+    static void ZoomCamera(HEventArguments args); // It's different from moving forward/backward. It changes the view distance to the look-at point.
+    static void CenterCamera(HEventArguments args);
 
     float m_projMat[16];
     float m_viewMat[16];

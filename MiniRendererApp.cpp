@@ -145,16 +145,36 @@ void DX12MiniRenderer::GenerateImGUIStates()
         ImGui::Text("Display res: %d x %d, Render Res: %d x %d", displayWidth, displayHeight, renderWidth, renderHeight);
         if (ImGui::Button("Center Camera"))
         {
+            HEventManager* pEventManager = HEventManager::HEventManagerInstance();
+            HEventArguments args;
+            float levelCenter[3] = {};
+            DX12MiniRenderer::m_pThis->m_pLevel->GetLevelCenter(levelCenter);
 
+            args[crc32("centerX")] = levelCenter[0];
+            args[crc32("centerY")] = levelCenter[1];
+            args[crc32("centerZ")] = levelCenter[2];
+
+            float bbxMin[3] = {};
+            float bbxMax[3] = {};
+            DX12MiniRenderer::m_pThis->m_pLevel->GetBoundingBox(bbxMin, bbxMax);
+            args[crc32("bbxMinX")] = bbxMin[0];
+            args[crc32("bbxMinY")] = bbxMin[1];
+            args[crc32("bbxMinZ")] = bbxMin[2];
+            args[crc32("bbxMaxX")] = bbxMax[0];
+            args[crc32("bbxMaxY")] = bbxMax[1];
+            args[crc32("bbxMaxZ")] = bbxMax[2];
+
+            HEvent centerCameraEvent(args, "CenterCamera");
+            pEventManager->SendEvent(centerCameraEvent);
         }
 
         ImGui::SameLine();
 
         if (ImGui::Button("Camera Anim"))
         {
-
+            DX12MiniRenderer::m_pThis->m_bCamAnim = !DX12MiniRenderer::m_pThis->m_bCamAnim;
         }
-            // show_another_window = false;
+        
         ImGui::End();
     }
 }
@@ -294,6 +314,18 @@ void DX12MiniRenderer::Run()
         float deltaSec = float(elapsedSec.count()) / 1000.0f;
         m_pTimePerfManager->AddCPUTime(deltaSec);
         m_pUIManager->Tick(deltaSec);
+
+        // Camera Animation
+        if (m_bCamAnim)
+        {
+            HEventManager* pEventManager = HEventManager::HEventManagerInstance();
+            HEventArguments args;
+            args[crc32("delta")] = 0.1f;
+
+            HEvent rotateCameraEvent(args, "RotateCamera");
+            pEventManager->SendEvent(rotateCameraEvent);
+        }
+        //
 
         // Temp Renderer
         FrameContext* frameCtx = WaitForCurrentFrameResources();

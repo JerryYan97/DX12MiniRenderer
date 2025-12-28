@@ -79,6 +79,9 @@ void Camera::BindKeyboardMouseInput(InputHandler* pInputHandler)
     pEventManager->RegisterListener("MoveLeft", MoveLeft);
     pEventManager->RegisterListener("MoveUp", MoveUp);
     pEventManager->RegisterListener("MoveDown", MoveDown);
+    pEventManager->RegisterListener("RotateCamera", RotateCamera);
+    pEventManager->RegisterListener("ZoomCamera", ZoomCamera);
+    pEventManager->RegisterListener("CenterCamera", CenterCamera);
 }
 
 void Camera::MoveForward(HEventArguments args)
@@ -169,5 +172,113 @@ void Camera::RotateCamera(HEventArguments args)
         ScalarMul(-m_pActiveCamera->m_viewDist, newView, 3);
         VecAdd(viewPt, newView, 3, newCamPos);
         memcpy(m_pActiveCamera->m_pos, newCamPos, 3 * sizeof(float));
+    }
+}
+
+void Camera::ZoomCamera(HEventArguments args) // It's different from moving forward/backward. It changes the view distance to the look-at point.
+{
+    if (m_pActiveCamera && (m_pActiveCamera->m_viewDist > 0))
+    {
+        float camToViewPt[3] = { m_pActiveCamera->m_view[0], m_pActiveCamera->m_view[1], m_pActiveCamera->m_view[2] };
+        ScalarMul(m_pActiveCamera->m_viewDist, camToViewPt, 3);
+        float viewPt[3] = {};
+        VecAdd(m_pActiveCamera->m_pos, camToViewPt, 3, viewPt);
+
+        float delta = std::any_cast<float>(args[crc32("delta")]);
+        const float zoomSpeed = 0.5f;
+        m_pActiveCamera->m_viewDist += zoomSpeed * delta;
+
+        float newCamPos[3] = {};
+        float viewPtToCam[3] = { -m_pActiveCamera->m_view[0], -m_pActiveCamera->m_view[1], -m_pActiveCamera->m_view[2] };
+        ScalarMul(m_pActiveCamera->m_viewDist, viewPtToCam, 3);
+        VecAdd(viewPt, viewPtToCam, 3, newCamPos);
+        memcpy(m_pActiveCamera->m_pos, newCamPos, 3 * sizeof(float));
+    }
+}
+
+void Camera::CenterCamera(HEventArguments args)
+{
+    if (m_pActiveCamera)
+    {
+        float centerX = std::any_cast<float>(args[crc32("centerX")]);
+        float centerY = std::any_cast<float>(args[crc32("centerY")]);
+        float centerZ = std::any_cast<float>(args[crc32("centerZ")]);
+        float center[3] = { centerX, centerY, centerZ };
+
+        float camAdjustPos[3] = { m_pActiveCamera->m_view[0], m_pActiveCamera->m_view[1], m_pActiveCamera->m_view[2] };
+        ScalarMul(-1.f * m_pActiveCamera->m_viewDist, camAdjustPos, 3);
+        VecAdd(center, camAdjustPos, 3, m_pActiveCamera->m_pos);
+
+        float bbxMinX = std::any_cast<float>(args[crc32("bbxMinX")]);
+        float bbxMinY = std::any_cast<float>(args[crc32("bbxMinY")]);
+        float bbxMinZ = std::any_cast<float>(args[crc32("bbxMinZ")]);
+        float bbxMaxX = std::any_cast<float>(args[crc32("bbxMaxX")]);
+        float bbxMaxY = std::any_cast<float>(args[crc32("bbxMaxY")]);
+        float bbxMaxZ = std::any_cast<float>(args[crc32("bbxMaxZ")]);
+
+        float levelBBXMin[4] = {bbxMinX, bbxMinY, bbxMinZ, 1.f};
+        float levelBBXMax[4] = {bbxMaxX, bbxMaxY, bbxMaxZ, 1.f};
+        float viewMat[16] = {};
+        float projMat[16] = {};
+        float vpMat[16] = {};
+        // float camNewPos[3] = {};
+        // memcpy(camNewPos, m_pActiveCamera->m_pos, 3 * sizeof(float));
+
+        bool bIsWidthGreater = true;
+        
+        // TODO: Need to experiment the 8 points screen space occupation calculation.
+        auto pfnClipLevelBBXOccRatio = [&]() -> float {
+            float clipSpaceBBXMin[4] = {};
+            float clipSpaceBBXMax[4] = {};
+
+            GenPerspectiveProjMat(m_pActiveCamera->m_near,
+                                  m_pActiveCamera->m_far,
+                                  m_pActiveCamera->m_fov,
+                                  m_pActiveCamera->m_aspect,
+                                  projMat);
+
+            GenViewMat(m_pActiveCamera->m_view, m_pActiveCamera->m_pos, m_pActiveCamera->m_up, viewMat);
+            MatMulMat(projMat, viewMat, vpMat, 4);
+            MatMulVec(vpMat, levelBBXMin, 4, clipSpaceBBXMin);
+            MatMulVec(vpMat, levelBBXMax, 4, clipSpaceBBXMax);
+
+            clipSpaceBBXMax[0] /= clipSpaceBBXMax[3];
+            clipSpaceBBXMax[1] /= clipSpaceBBXMax[3];
+            clipSpaceBBXMax[2] /= clipSpaceBBXMax[3];
+
+            clipSpaceBBXMin[0] /= clipSpaceBBXMin[3];
+            clipSpaceBBXMin[1] /= clipSpaceBBXMin[3];
+            clipSpaceBBXMin[2] /= clipSpaceBBXMin[3];
+
+            printf("min: <%f, %f, %f>. max: <%f, %f, %f>\n", clipSpaceBBXMin[0], clipSpaceBBXMin[1], clipSpaceBBXMin[2],
+                                                             clipSpaceBBXMax[0], clipSpaceBBXMax[1], clipSpaceBBXMax[2]);
+
+            float levelBBXWidth = abs(clipSpaceBBXMax[0] - clipSpaceBBXMin[0]);
+            float levelBBXHeight = abs(clipSpaceBBXMax[1] - clipSpaceBBXMin[1]);
+            if (levelBBXWidth > levelBBXHeight)
+            {
+                bIsWidthGreater = true;
+            }
+            else
+            {
+                bIsWidthGreater = false;
+            }
+
+            // Adjust view distance.
+            float occupyRatio = bIsWidthGreater ? levelBBXWidth / 2.f : levelBBXHeight / 2.f;
+            return occupyRatio;
+        };
+        
+        float stepping = 0.3f;
+        float occupyRatio = pfnClipLevelBBXOccRatio();
+        while (occupyRatio < 0.05f)
+        {
+            HEventArguments args;
+            args[crc32("delta")] = -stepping;
+            ZoomCamera(args);
+            occupyRatio = pfnClipLevelBBXOccRatio();
+
+            printf("Occupy Radio: %f\n", occupyRatio);
+        }
     }
 }
