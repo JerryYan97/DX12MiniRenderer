@@ -3,6 +3,7 @@
 #include <string>
 #include "Object.h"
 #include "../UI/InputHandler.h"
+#include "../EventSystem/EventManager.h"
 
 class InputHandler;
 
@@ -42,12 +43,13 @@ public:
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
 
-    static void MoveForward(StBindingInput input);
-    static void MoveBackward(StBindingInput input);
-    static void MoveRight(StBindingInput input);
-    static void MoveLeft(StBindingInput input);
-    static void MoveUp(StBindingInput input);
-    static void MoveDown(StBindingInput input);
+    static void MoveForward(HEventArguments args);
+    static void MoveBackward(HEventArguments args);
+    static void MoveRight(HEventArguments args);
+    static void MoveLeft(HEventArguments args);
+    static void MoveUp(HEventArguments args);
+    static void MoveDown(HEventArguments args);
+    static void RotateCamera(HEventArguments args);
 
     float m_projMat[16];
     float m_viewMat[16];

@@ -2,6 +2,8 @@
 #include <vector>
 #include <unordered_map>
 
+// Input Handler interacts with input devices and generates events for event manager.
+
 enum INPUT_TYPE
 {
     KEYBOARD_MOUSE,

@@ -72,62 +72,102 @@ void Camera::CameraUpdate()
 
 void Camera::BindKeyboardMouseInput(InputHandler* pInputHandler)
 {
-    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_W, MoveForward);
-    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_S, MoveBackward);
-    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_D, MoveRight);
-    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_A, MoveLeft);
-    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_E, MoveUp);
-    pInputHandler->BindKeyboardMouseHandler(KM_INPUT_KEY_Q, MoveDown);
+    HEventManager* pEventManager = HEventManager::HEventManagerInstance();
+    pEventManager->RegisterListener("MoveForward", MoveForward);
+    pEventManager->RegisterListener("MoveBackward", MoveBackward);
+    pEventManager->RegisterListener("MoveRight", MoveRight);
+    pEventManager->RegisterListener("MoveLeft", MoveLeft);
+    pEventManager->RegisterListener("MoveUp", MoveUp);
+    pEventManager->RegisterListener("MoveDown", MoveDown);
 }
 
-void Camera::MoveForward(StBindingInput input)
+void Camera::MoveForward(HEventArguments args)
 {
     if (m_pActiveCamera)
     {
+        float fVals = std::any_cast<float>(args[crc32("delta")]);
+
         float delta[3] = {
-            m_pActiveCamera->m_view[0] * input.fVals[0],
-            m_pActiveCamera->m_view[1] * input.fVals[0],
-            m_pActiveCamera->m_view[2] * input.fVals[0]
+            m_pActiveCamera->m_view[0] * fVals,
+            m_pActiveCamera->m_view[1] * fVals,
+            m_pActiveCamera->m_view[2] * fVals
         };
         VecAdd(m_pActiveCamera->m_pos, delta, 3, m_pActiveCamera->m_pos);
     }
 }
 
-void Camera::MoveBackward(StBindingInput input)
+void Camera::MoveBackward(HEventArguments args)
 {
-    MoveForward(StBindingInput{-input.fVals[0], 0, 0, 0}); // Assuming fVals[0] corresponds to backward movement delta
+    args[crc32("delta")] = -1.f * std::any_cast<float>(args[crc32("delta")]);
+    MoveForward(args);
 }
 
-void Camera::MoveRight(StBindingInput input)
+void Camera::MoveRight(HEventArguments args)
 {
     if (m_pActiveCamera)
     {
         float right[3] = {};
         CrossProductVec3(m_pActiveCamera->m_view, m_pActiveCamera->m_up, right);
         NormalizeVec(right, 3);
-        ScalarMul(-input.fVals[0], right, 3);
+
+        float fVals = std::any_cast<float>(args[crc32("delta")]);
+        ScalarMul(-fVals, right, 3);
         VecAdd(m_pActiveCamera->m_pos, right, 3, m_pActiveCamera->m_pos);
     }
 }
 
-void Camera::MoveLeft(StBindingInput input)
+void Camera::MoveLeft(HEventArguments args)
 {
-    MoveRight(StBindingInput{-input.fVals[0], 0, 0, 0}); // Assuming fVals[0] corresponds to left movement delta
+    args[crc32("delta")] = -1.f * std::any_cast<float>(args[crc32("delta")]);
+    MoveRight(args);
 }
 
-void Camera::MoveUp(StBindingInput input)
+void Camera::MoveUp(HEventArguments args)
 {
     if (m_pActiveCamera)
     {
         float upDelta[3] = {};
         memcpy(upDelta, m_pActiveCamera->m_up, 3 * sizeof(float));
         NormalizeVec(upDelta, 3);
-        ScalarMul(input.fVals[0], upDelta, 3);
+
+        float fVals = std::any_cast<float>(args[crc32("delta")]);
+        ScalarMul(fVals, upDelta, 3);
         VecAdd(m_pActiveCamera->m_pos, upDelta, 3, m_pActiveCamera->m_pos);
     }
 }
 
-void Camera::MoveDown(StBindingInput input)
+void Camera::MoveDown(HEventArguments args)
 {
-    MoveUp(StBindingInput{-input.fVals[0], 0, 0, 0}); // Assuming fVals[0] corresponds to downward movement delta
+    args[crc32("delta")] = -1.f * std::any_cast<float>(args[crc32("delta")]);
+    MoveUp(args); // Assuming fVals[0] corresponds to downward movement delta
+}
+
+void Camera::RotateCamera(HEventArguments args)
+{
+    if (m_pActiveCamera)
+    {
+        // Implement camera rotation logic here based on input.fVals
+        // This is a placeholder for actual rotation logic
+        float deltaTime = std::any_cast<float>(args[crc32("delta")]);
+        const float rotationSpeed = 0.1f; // Adjust rotation speed as needed
+        float angle = rotationSpeed * deltaTime;
+
+        float camToViewPt[3] = { m_pActiveCamera->m_view[0], m_pActiveCamera->m_view[1], m_pActiveCamera->m_view[2] };
+        ScalarMul(m_pActiveCamera->m_viewDist, camToViewPt, 3);
+        float viewPt[3] = {};
+        VecAdd(m_pActiveCamera->m_pos, camToViewPt, 3, viewPt);
+
+        float rotMatY[9] = {};
+        float newView[3] = {};
+
+        GenRotationMatY(angle, rotMatY);
+        MatMulVec(rotMatY, m_pActiveCamera->m_view, 3, newView);
+        NormalizeVec(newView, 3);
+        memcpy(m_pActiveCamera->m_view, newView, 3 * sizeof(float));
+
+        float newCamPos[3] = {};
+        ScalarMul(-m_pActiveCamera->m_viewDist, newView, 3);
+        VecAdd(viewPt, newView, 3, newCamPos);
+        memcpy(m_pActiveCamera->m_pos, newCamPos, 3 * sizeof(float));
+    }
 }

@@ -38,8 +38,12 @@ class HEventManager
 public:
     HEventManager()
         : m_eventListenerMap()
-    {};
+    {
+        m_pInstance = this;
+    };
     ~HEventManager() {};
+
+    static HEventManager* HEventManagerInstance() { return m_pInstance; }
 
     void RegisterListener(const std::string& type, EventCallbackFuncPtr listenFunc);
     void UnregisterListener(const std::string& type, EventCallbackFuncPtr listenFunc) {}
@@ -47,4 +51,5 @@ public:
 
 private:
     std::unordered_map<size_t, std::list<EventCallbackFuncPtr>> m_eventListenerMap; // Event type -- Linked list of registered function to execute when the event happens.
+    static HEventManager* m_pInstance;
 };

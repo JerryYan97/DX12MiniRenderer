@@ -1,6 +1,8 @@
 #include "EventManager.h"
 #include "../Utils/crc32.h"
 
+HEventManager* HEventManager::m_pInstance = nullptr;
+
 // ================================================================================================================
 HEvent::HEvent(
     const HEventArguments& arg,

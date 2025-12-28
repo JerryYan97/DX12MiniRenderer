@@ -21,6 +21,7 @@ ID3D12Device* g_pD3dDevice = nullptr;
 UIManager* g_pUIManager = nullptr;
 AssetManager* g_pAssetManager = nullptr;
 TimePerfManager* g_pTimePerfManager = nullptr;
+HEventManager* g_pEventManager = nullptr;
 
 DX12MiniRenderer::DX12MiniRenderer()
     : m_pD3dDevice(nullptr),
@@ -142,7 +143,17 @@ void DX12MiniRenderer::GenerateImGUIStates()
         ImGui::Begin("Debug Menu", &show_another_window, ImGuiWindowFlags_AlwaysAutoResize);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         ImGui::Text("FPS: %d, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);
         ImGui::Text("Display res: %d x %d, Render Res: %d x %d", displayWidth, displayHeight, renderWidth, renderHeight);
-        // if (ImGui::Button("Close Me"))
+        if (ImGui::Button("Center Camera"))
+        {
+
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Camera Anim"))
+        {
+
+        }
             // show_another_window = false;
         ImGui::End();
     }
@@ -247,6 +258,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
         m_pRendererBackend = new ForwardRenderer();
     }
 
+    g_pEventManager = &m_eventManager;
     m_eventManager.RegisterListener("WaitGpuIdle", DX12MiniRenderer::WaitGpuIdle);
 
     uint32_t width = 0;

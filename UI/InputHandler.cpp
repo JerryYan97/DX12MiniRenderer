@@ -1,5 +1,7 @@
 #include "InputHandler.h"
 #include "imgui.h"
+#include "../Utils/crc32.h"
+#include "../EventSystem/EventManager.h"
 
 void InputHandler::Tick(float deltaTime)
 {
@@ -8,45 +10,53 @@ void InputHandler::Tick(float deltaTime)
 
 void InputHandler::TickKeyboardMouseInputBindings(float deltaTime)
 {
+    HEventManager* pEventManager = HEventManager::HEventManagerInstance();
+
     if (ImGui::IsKeyDown(ImGuiKey_W))
     {
-        StBindingInput input = {};
-        input.fVals[0] = deltaTime;
-        m_keyboardMounseBindingTbl[KM_INPUT_KEY_W](input);
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "MoveForward");
+        pEventManager->SendEvent(event);
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_A))
     {
-        StBindingInput input = {};
-        input.fVals[0] = deltaTime;
-        m_keyboardMounseBindingTbl[KM_INPUT_KEY_A](input);
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "MoveLeft");
+        pEventManager->SendEvent(event);
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_S))
     {
-        StBindingInput input = {};
-        input.fVals[0] = deltaTime;
-        m_keyboardMounseBindingTbl[KM_INPUT_KEY_S](input);
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "MoveBackward");
+        pEventManager->SendEvent(event);
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_D))
     {
-        StBindingInput input = {};
-        input.fVals[0] = deltaTime;
-        m_keyboardMounseBindingTbl[KM_INPUT_KEY_D](input);
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "MoveRight");
+        pEventManager->SendEvent(event);
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_Q))
     {
-        StBindingInput input = {};
-        input.fVals[0] = deltaTime;
-        m_keyboardMounseBindingTbl[KM_INPUT_KEY_Q](input);
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "MoveDown");
+        pEventManager->SendEvent(event);
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_E))
     {
-        StBindingInput input = {};
-        input.fVals[0] = deltaTime;
-        m_keyboardMounseBindingTbl[KM_INPUT_KEY_E](input);
+        HEventArguments args;
+        args[crc32("delta")] = deltaTime;
+        HEvent event(args, "MoveUp");
+        pEventManager->SendEvent(event);
     }
 }
