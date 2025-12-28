@@ -228,8 +228,8 @@ void Camera::CenterCamera(HEventArguments args)
         
         // TODO: Need to experiment the 8 points screen space occupation calculation.
         auto pfnClipLevelBBXOccRatio = [&]() -> float {
-            float clipSpaceBBXMin[4] = {};
-            float clipSpaceBBXMax[4] = {};
+            float clipSpaceBBXMin[3] = {  FLT_MAX,  FLT_MAX,  FLT_MAX};
+            float clipSpaceBBXMax[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX};
 
             GenPerspectiveProjMat(m_pActiveCamera->m_near,
                                   m_pActiveCamera->m_far,
@@ -239,19 +239,39 @@ void Camera::CenterCamera(HEventArguments args)
 
             GenViewMat(m_pActiveCamera->m_view, m_pActiveCamera->m_pos, m_pActiveCamera->m_up, viewMat);
             MatMulMat(projMat, viewMat, vpMat, 4);
-            MatMulVec(vpMat, levelBBXMin, 4, clipSpaceBBXMin);
-            MatMulVec(vpMat, levelBBXMax, 4, clipSpaceBBXMax);
 
-            clipSpaceBBXMax[0] /= clipSpaceBBXMax[3];
-            clipSpaceBBXMax[1] /= clipSpaceBBXMax[3];
-            clipSpaceBBXMax[2] /= clipSpaceBBXMax[3];
+            // 8 points clip space bounding box calculation.
+            float levelBBXPoints[8][4] = {
+                {levelBBXMin[0], levelBBXMin[1], levelBBXMin[2], 1.f},
+                {levelBBXMin[0], levelBBXMin[1], levelBBXMax[2], 1.f},
+                {levelBBXMin[0], levelBBXMax[1], levelBBXMin[2], 1.f},
+                {levelBBXMin[0], levelBBXMax[1], levelBBXMax[2], 1.f},
+                {levelBBXMax[0], levelBBXMin[1], levelBBXMin[2], 1.f},
+                {levelBBXMax[0], levelBBXMin[1], levelBBXMax[2], 1.f},
+                {levelBBXMax[0], levelBBXMax[1], levelBBXMin[2], 1.f},
+                {levelBBXMax[0], levelBBXMax[1], levelBBXMax[2], 1.f}
+            };
 
-            clipSpaceBBXMin[0] /= clipSpaceBBXMin[3];
-            clipSpaceBBXMin[1] /= clipSpaceBBXMin[3];
-            clipSpaceBBXMin[2] /= clipSpaceBBXMin[3];
+            for (int i = 0; i < 8; i++)
+            {
+                MatMulVec(vpMat, &levelBBXPoints[i][0], 4, &levelBBXPoints[i][0]);
+                levelBBXPoints[i][0] /= levelBBXPoints[i][3];
+                levelBBXPoints[i][1] /= levelBBXPoints[i][3];
+                levelBBXPoints[i][2] /= levelBBXPoints[i][3];
+
+                clipSpaceBBXMin[0] = min(clipSpaceBBXMin[0], levelBBXPoints[i][0]);
+                clipSpaceBBXMin[1] = min(clipSpaceBBXMin[1], levelBBXPoints[i][1]);
+                clipSpaceBBXMin[2] = min(clipSpaceBBXMin[2], levelBBXPoints[i][2]);
+
+                clipSpaceBBXMax[0] = max(clipSpaceBBXMax[0], levelBBXPoints[i][0]);
+                clipSpaceBBXMax[1] = max(clipSpaceBBXMax[1], levelBBXPoints[i][1]);
+                clipSpaceBBXMax[2] = max(clipSpaceBBXMax[2], levelBBXPoints[i][2]);
+            }
+            //
 
             printf("min: <%f, %f, %f>. max: <%f, %f, %f>\n", clipSpaceBBXMin[0], clipSpaceBBXMin[1], clipSpaceBBXMin[2],
                                                              clipSpaceBBXMax[0], clipSpaceBBXMax[1], clipSpaceBBXMax[2]);
+            
 
             float levelBBXWidth = abs(clipSpaceBBXMax[0] - clipSpaceBBXMin[0]);
             float levelBBXHeight = abs(clipSpaceBBXMax[1] - clipSpaceBBXMin[1]);
@@ -271,7 +291,7 @@ void Camera::CenterCamera(HEventArguments args)
         
         float stepping = 0.3f;
         float occupyRatio = pfnClipLevelBBXOccRatio();
-        while (occupyRatio < 0.05f)
+        while (occupyRatio < 0.3f)
         {
             HEventArguments args;
             args[crc32("delta")] = -stepping;

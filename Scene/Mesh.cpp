@@ -154,6 +154,13 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     MatMulVec(mesh->m_modelMat, meshCenterLocal, 4, meshCenterWorld);
     mesh->m_meshCenter[0] = meshCenterWorld[0]; mesh->m_meshCenter[1] = meshCenterWorld[1]; mesh->m_meshCenter[2] = meshCenterWorld[2];
 
+    float meshBBXMinLocal[4] = { mesh->m_meshBBXMin[0], mesh->m_meshBBXMin[1], mesh->m_meshBBXMin[2], 1.f };
+    float meshBBXMaxLocal[4] = { mesh->m_meshBBXMax[0], mesh->m_meshBBXMax[1], mesh->m_meshBBXMax[2], 1.f };
+    MatMulVec(mesh->m_modelMat, meshBBXMinLocal, 4, meshBBXMinLocal);
+    MatMulVec(mesh->m_modelMat, meshBBXMaxLocal, 4, meshBBXMaxLocal);
+    mesh->m_meshBBXMin[0] = meshBBXMinLocal[0]; mesh->m_meshBBXMin[1] = meshBBXMinLocal[1]; mesh->m_meshBBXMin[2] = meshBBXMinLocal[2];
+    mesh->m_meshBBXMax[0] = meshBBXMaxLocal[0]; mesh->m_meshBBXMax[1] = meshBBXMaxLocal[1]; mesh->m_meshBBXMax[2] = meshBBXMaxLocal[2];
+
     printf("Mesh center point: (%f, %f, %f); Bounding Box: (%f, %f, %f) to (%f, %f, %f)\n", 
            mesh->m_meshCenter[0], mesh->m_meshCenter[1], mesh->m_meshCenter[2],
            mesh->m_meshBBXMin[0], mesh->m_meshBBXMin[1], mesh->m_meshBBXMin[2],
