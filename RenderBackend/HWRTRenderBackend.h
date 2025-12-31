@@ -26,7 +26,9 @@ class HWRTRenderBackend : public RendererBackend
             m_instInfoBuffer(nullptr),
             m_frameCount(0),
             m_renderTargetRadiance(nullptr)
-        {}
+        {
+            m_pInstance = this;
+        }
         
         ~HWRTRenderBackend() {}
 
@@ -39,6 +41,7 @@ class HWRTRenderBackend : public RendererBackend
         virtual void CustomDeinit() override;
     private:
         ID3D12DescriptorHeap* m_uavHeap;
+        ID3D12DescriptorHeap* m_uavCleanHeap;
         ID3D12Resource* m_renderTarget; // With Gamma Correction.
         ID3D12Resource* m_renderTargetRadiance;
 
@@ -75,6 +78,8 @@ class HWRTRenderBackend : public RendererBackend
         void UpdateScene(ID3D12GraphicsCommandList4* cmdList);
         void UpdateFrameConstBuffer();
 
+        static void CameraMovedCallback(HEventArguments args) { m_pInstance->m_bCameraMoved = true; }
+
         struct FrameConstBuffer
         {
             float    cameraPos[4];
@@ -87,4 +92,7 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_frameCnstBuffer;
         void*           m_frameCnstBufferMap;
         uint32_t        m_frameCount;
+
+        bool m_bCameraMoved = false;
+        static HWRTRenderBackend* m_pInstance;
 };

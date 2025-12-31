@@ -20,6 +20,7 @@
 #include <chrono>
 
 extern AssetManager* g_pAssetManager;
+HWRTRenderBackend* HWRTRenderBackend::m_pInstance = nullptr;
 
 constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
 constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = {.Type = D3D12_HEAP_TYPE_UPLOAD};
@@ -401,6 +402,11 @@ void HWRTRenderBackend::CustomInit()
         .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE};
     m_pD3dDevice->CreateDescriptorHeap(&uavHeapDesc, IID_PPV_ARGS(&m_uavHeap));
 
+    // Clean UAV cannot be shader visible.
+    uavHeapDesc.NumDescriptors = 1;
+    uavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    m_pD3dDevice->CreateDescriptorHeap(&uavHeapDesc, IID_PPV_ARGS(&m_uavCleanHeap));
+
     uint32_t winWidth, winHeight;
     m_pUIManager->GetWindowSize(winWidth, winHeight);
     CustomResize(winWidth, winHeight);
@@ -410,11 +416,15 @@ void HWRTRenderBackend::CustomInit()
     InitTopLevel();
     InitRootSignature();
     InitPipeline();
+
+    HEventManager* pEventManager = HEventManager::HEventManagerInstance();
+    pEventManager->RegisterListener("CameraMoved", CameraMovedCallback);
 }
 
 void HWRTRenderBackend::CustomDeinit()
 {
     if (m_uavHeap) { m_uavHeap->Release(); m_uavHeap = nullptr; }
+    if (m_uavCleanHeap) { m_uavCleanHeap->Release(); m_uavCleanHeap = nullptr; }
     if (m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
     if (m_renderTargetRadiance) { m_renderTargetRadiance->Release(); m_renderTargetRadiance = nullptr; }
     if (m_fence) { m_fence->Release(); m_fence = nullptr; }
@@ -462,7 +472,26 @@ void HWRTRenderBackend::UpdateFrameConstBuffer()
 
 void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
 {
+    if (m_bCameraMoved)
+    {
+        float clearColor[4] = {0.f, 0.f, 0.f, 0.f};
+        D3D12_CPU_DESCRIPTOR_HANDLE uavHeapHandleCpu = m_uavCleanHeap->GetCPUDescriptorHandleForHeapStart();
+        D3D12_GPU_DESCRIPTOR_HANDLE uavHeapHandleGpu = m_uavCleanHeap->GetGPUDescriptorHandleForHeapStart();
+
+        // Note that the cpu heap cannot be shader visible for fixed hardware clean.
+        cmdList->ClearUnorderedAccessViewFloat(
+            uavHeapHandleGpu, uavHeapHandleCpu,
+            m_renderTargetRadiance, clearColor, 0, nullptr);
+
+        D3D12_RESOURCE_BARRIER barrier = {.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV,
+                                          .UAV = {.pResource = m_renderTargetRadiance}};
+        cmdList->ResourceBarrier(1, &barrier);
+        m_frameCount = 0;
+        m_bCameraMoved = false;
+    }
+
     UpdateFrameConstBuffer();
+
     /*
     UpdateTransforms();
 
@@ -576,4 +605,7 @@ void HWRTRenderBackend::CustomResize(uint32_t width, uint32_t height)
     m_pD3dDevice->CreateUnorderedAccessView(m_renderTarget, nullptr, &uavDesc, uavHeapHandle);
     uavHeapHandle.ptr += uavDescHandleOffset;
     m_pD3dDevice->CreateUnorderedAccessView(m_renderTargetRadiance, nullptr, &uavDesc, uavHeapHandle);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE uavCleanHeapHandle = m_uavCleanHeap->GetCPUDescriptorHandleForHeapStart();
+    m_pD3dDevice->CreateUnorderedAccessView(m_renderTargetRadiance, nullptr, &uavDesc, uavCleanHeapHandle);
 }
