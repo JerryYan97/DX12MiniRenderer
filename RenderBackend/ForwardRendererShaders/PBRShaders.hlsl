@@ -156,13 +156,15 @@ cbuffer PsMaterialBuffer : register(b2)
     float4 metalicRoughness;
 }
 
+static const uint IBL_MASK = 1;
+
 cbuffer PsSceneBuffer : register(b3)
 {
     float3 lightPositions[4];
     float3 lightRadiance[4];
     float4 cameraPos;    // one padding float
     float4 ambientLight; // one padding float
-    uint4  extraIntData; // (0): Point Light Counts; (1): ;
+    uint4  extraIntData; // (0): Point Light Counts; (1): Light Condition Masks; (2): [0:8] - IBL max mip levels.
 }
 
 // Per-Primitive Asset Material Data.
@@ -186,6 +188,14 @@ SamplerState i_roughnessMetallicSamplerState : register(s2);
 Texture2D    i_occlusionTexture      : register(t3);
 SamplerState i_occlusionSamplerState : register(s3);
 
+TextureCube  i_diffuseCubeMapTexture      : register(t4);
+SamplerState i_diffuseCubemapSamplerState : register(s4);
+
+TextureCube  i_prefilterEnvCubeMapTexture      : register(t5);
+SamplerState i_prefilterEnvCubeMapSamplerState : register(s5);
+
+Texture2D    i_envBrdfTexture      : register(t6);
+SamplerState i_envBrdfSamplerState : register(s6);
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
@@ -261,9 +271,38 @@ float4 PSMain(PSInput input) : SV_TARGET
 
         Lo += (kD * (sphereDifAlbedo / 3.14159265359) + specular) * radiance * lightNormalCosTheta;
     }
-
+    
     float3 ambient = ambientLight.xyz * sphereRefAlbedo * ao;
     float3 color = ambient + Lo;
+    
+    // IBL
+    uint lightConditionMask = extraIntData.y;
+    if ((lightConditionMask & IBL_MASK) > 0)
+    {
+        float3 diffuseIrradiance = i_diffuseCubeMapTexture.Sample(i_diffuseCubemapSamplerState, worldNormal).xyz;
+        
+        float NoV = saturate(dot(worldNormal, wo));
+        float3 R = 2 * NoV * worldNormal - wo;
+        
+        uint maxMipLevels = (float) (extraIntData.z & 0xFF);
+        float3 prefilterEnv = i_prefilterEnvCubeMapTexture.SampleLevel(i_prefilterEnvCubeMapSamplerState,
+                                                                       R, roughness * maxMipLevels).xyz;
+        
+        float2 envBrdf = i_envBrdfTexture.Sample(i_envBrdfSamplerState, float2(NoV, roughness)).xy;
+        
+        float3 F0 = float3(0.04, 0.04, 0.04);
+        F0 = lerp(F0, sphereRefAlbedo, float3(metallic, metallic, metallic));
+        
+        float3 Ks = fresnelSchlickRoughness(NoV, F0, roughness);
+        float3 Kd = float3(1.0, 1.0, 1.0) - Ks;
+        Kd *= (1.0 - metallic);
+        
+        float3 diffuse = Kd * diffuseIrradiance * sphereDifAlbedo;
+        float3 specular = prefilterEnv * (Ks * envBrdf.x + envBrdf.y);
+        
+        color += ((diffuse + specular) * ao);
+    }
+    //
 	
     // Gamma Correction
     color = color / (color + float3(1.0, 1.0, 1.0));

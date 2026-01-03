@@ -49,7 +49,7 @@ void ForwardRenderer::CreateRootSignature()
     D3D12_DESCRIPTOR_RANGE psSrvRange = {};
     {
         psSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        psSrvRange.NumDescriptors = 4;
+        psSrvRange.NumDescriptors = 7;
         psSrvRange.BaseShaderRegister = 0;
         psSrvRange.RegisterSpace = 0;
         psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -70,13 +70,13 @@ void ForwardRenderer::CreateRootSignature()
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[4] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3) };
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[7] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6) };
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
         rootSignatureDesc.NumParameters = 2;
         rootSignatureDesc.pParameters = rootParameters;
-        rootSignatureDesc.NumStaticSamplers = 4;
+        rootSignatureDesc.NumStaticSamplers = 7;
         rootSignatureDesc.pStaticSamplers = staticSamplers;
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     }
