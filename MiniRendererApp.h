@@ -48,6 +48,13 @@ private:
     void InitDevice();
     static void WaitGpuIdle(HEventArguments args);
     static void GenerateImGUIStates();
+    void RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle);
+    void InitEnvMapDescriptorHeaps();
+    void InitEnvMapRootSignature();
+    void InitEnvMapPSO();
+    void InitEnvMapPipeline();
+    void InitEnvMapCnstBuffer();
+    void FinalizeEnvMapPipeline();
 
     ID3D12Device5*   m_pD3dDevice = nullptr;
     ID3D12Debug*     m_pDx12Debug = nullptr;
@@ -82,6 +89,26 @@ private:
     static bool clear_color;
 
     bool m_bCamAnim = false;
+
+    // Env Map GPU pipeline info
+    // The environment map backgaround will be rendered before the main render path without depth.
+    // The subsequent passes need to wait for the environment map pass to finish.
+    struct EnvMapCnstBuffer
+    {
+        float camPos[3];
+        float padding0;
+        float camFront[3];
+        float padding1;
+        float camUpNear[4];
+        float camNearWidthHeight[2];
+        float vpWidthHeight[2];
+    };
+    ID3D12RootSignature* m_pEnvMapRootSignature = nullptr;
+    ID3D12PipelineState* m_pEnvMapPipelineState = nullptr;
+    // ID3D12DescriptorHeap* m_pEnvMapCBVHeap = nullptr;
+    ID3D12DescriptorHeap* m_pEnvMapSRVCBVHeap = nullptr;
+    ID3D12Resource* m_pEnvMapCnstBuffer = nullptr; // Camera info for rendering environment map, which is updated every frame.
+    //
 };
 
 class InputInfoManager {

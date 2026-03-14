@@ -114,3 +114,13 @@ bool GetFilePostfix(
         return false;
     }
 }
+
+std::string GetRootPath()
+{
+#if defined(RELEASE_PKG)
+    // TODO: Add proper root path for release package.
+    return "";
+#else
+    return SOURCE_PATH;
+#endif
+}

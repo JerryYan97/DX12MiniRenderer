@@ -11,6 +11,11 @@ enum DX12_GPU_CPU_ACCESS_ENUM {
     GPU_ONLY = 2 // Default
 };
 
+#define GPU_BUFFER_SIZE_ALIGNMENT 256
+
+#define ALIGNED_GPU_BUFFER_SIZE(size) (((size) + GPU_BUFFER_SIZE_ALIGNMENT - 1) & ~(GPU_BUFFER_SIZE_ALIGNMENT - 1))
+#define ALIGN_UP_256(size) (((size) + 255) & ~255)
+
 // Assign a name to the object to aid with debugging.
 #if defined(_DEBUG) || defined(DBG)
 inline void SetName(ID3D12Object* pObject, LPCWSTR name)
@@ -286,10 +291,16 @@ inline void GpuQueueWaitIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pCmdQueu
 }
 
 void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes);
+void SendDataToCubemapSlice(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes, uint32_t layerIndex, uint32_t mipIndex);
+void ChangeResourceState(ID3D12Device* pDevice, ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState); // Block the thread until the resource is in the desired state.
+ID3D12Resource* CreateUploadBuffer(ID3D12Device* pDevice, uint32_t sizeBytes);
+ID3D12Resource* CreateGPUBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
+void CopyADescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandle, uint32_t dstId, D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, uint32_t srcId, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 
 D3D12_RESOURCE_BARRIER TransitionStateBarrier(ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState);
 D3D12_RESOURCE_BARRIER UAVBarrier(ID3D12Resource* pResource);
 ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
+inline int SubresourceIdx(uint32_t mipLevel, uint32_t arrayLayer, uint32_t mipLevelsPerLayer) { return mipLevel + arrayLayer * mipLevelsPerLayer; }
 
 inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode)
 {
@@ -320,3 +331,8 @@ inline D3D12_STATIC_SAMPLER_DESC StaticWrapSampler(uint32_t regIdx)
 {
     return StaticSampler(regIdx, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
+
+// Pipeline descriptions
+// D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateVsPsPipelineDesc();
+
+//

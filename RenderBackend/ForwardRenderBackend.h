@@ -20,7 +20,7 @@ private:
     void CreatePipelineStateObject();
 
     void UpdatePerFrameGpuResources();
-
+    
     ID3D12RootSignature* m_pRootSignature;
     ID3D12PipelineState* m_pPipelineState;
     

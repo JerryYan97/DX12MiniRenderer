@@ -7,4 +7,6 @@ set(RENDERBACKEND_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/ForwardRenderBackend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/GpuPipeline.h
     ${CMAKE_CURRENT_SOURCE_DIR}/GpuPipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentMapRenderer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentMapRenderer.cpp
     PARENT_SCOPE)

@@ -6,6 +6,7 @@
 
 /*
 * Make sure heavy data is only stored one time and managed by the AssetManager.
+* Each Asset represents its storage in RAM and VRAM.
 */
 
 class StaticMesh;
@@ -40,6 +41,8 @@ struct ImgInfo
     uint32_t             srvHeapIdx;
     TexWrapMode          wrapModeVertical;
     TexWrapMode          wrapModeHorizontal;
+    uint32_t             arrayLayerCnt = 1; // For cubemap, it should be 6. For 2D texture, it should be 1.
+    uint32_t             mipLevelCnt = 1;
 };
 
 struct TextureAsset
@@ -47,9 +50,13 @@ struct TextureAsset
     ImgInfo imgInfo;
 };
 
+// EnvMap Asset can be looked as combination of multiple TextureAssets, but we want to keep them together for better management and usage.
 struct EnvMapAsset
 {
-
+    ImgInfo backGroundCubemap;
+    ImgInfo diffuseIrradianceCubemap;
+    ImgInfo envBRDF;
+    ImgInfo prefilteredEnvMap;
 };
 
 struct PrimitiveAsset
@@ -109,8 +116,10 @@ struct PrimitiveAsset
 class AssetManager
 {
 public:
-    AssetManager() {}
-    ~AssetManager() {}
+    AssetManager() { m_pThis = this; }
+    ~AssetManager() { m_pThis = nullptr; }
+
+    static AssetManager* GetInstance() { return m_pThis; }
 
     void Deinit();
 
@@ -124,6 +133,7 @@ public:
     }
 
     void LoadStaticMeshAssets(const std::string& modelName, StaticMesh* pStaticMesh);
+    EnvMapAsset* LoadEnvMapAsset(const std::string& filepath);
 
     void RetriveAllStaticMeshesNames(std::vector<std::string>& o_staticMeshNames) const
     {
@@ -142,13 +152,44 @@ public:
         }
     }
 
+    bool RetrieveTextureAsset(const std::string& textureName, TextureAsset& o_textureAsset) const
+    {
+        auto it = m_textureAssets.find(textureName);
+        if (it != m_textureAssets.end())
+        {
+            o_textureAsset = *it->second;
+            return true;
+        }
+        return false;
+    }
+
+    bool RetrieveEnvMapAsset(const std::string& envMapName, EnvMapAsset& o_envMapAsset) const
+    {
+        if (m_envMapAsset == nullptr)
+        {
+            return false;
+        }
+        else
+        {
+            o_envMapAsset = *m_envMapAsset;
+            return true;
+        }
+    }
+
     // Used by the DXR render backend for the scene information.
     std::vector<PrimitiveAsset*> GenSceneVertIdxBuffer(std::vector<float>& sceneVertBuffer, std::vector<uint16_t>& sceneIdxBuffer);
+    
 
 private:
     void CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset);
     void GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset);
     void GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset);
+    
+    void LoadCubemapFromSingleFile(const std::string& filepath, ImgInfo& oImgInfo);
 
     std::unordered_map<std::string, std::vector<PrimitiveAsset*>> m_primitiveAssets;
+    std::unordered_map<std::string, TextureAsset*>                m_textureAssets;
+    EnvMapAsset*                                                  m_envMapAsset = nullptr;
+
+    static AssetManager* m_pThis;
 };

@@ -55,10 +55,23 @@ void Level::RetriveLights(std::vector<Light*>& o_lights)
 {
     for (Object* pObj : m_objects)
     {
-        if (pObj->GetObjectTypeHash() == crc32("AmbientLight") || pObj->GetObjectTypeHash() == crc32("PointLight"))
+        if (pObj->GetObjectTypeHash() == crc32("AmbientLight") || pObj->GetObjectTypeHash() == crc32("PointLight") || pObj->GetObjectTypeHash() == crc32("ImageBasedLight"))
         {
             Light* pLight = dynamic_cast<Light*>(pObj);
             o_lights.push_back(pLight);
         }
     }
+}
+
+void Level::LoadEnvMapAndIBL(std::string envMapIblPkgPath)
+{
+    m_envMap.LoadEnvironmentMap(envMapIblPkgPath);
+
+    // Load IBL and add it to the level.
+    
+}
+
+void Level::AttachEnvMapGPUResource(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle)
+{
+    m_envMap.AttachEnvMapGPUResource(pDevice, envMapBkGrdDescriptorHeapHandle);
 }

@@ -15,3 +15,5 @@ void CleanOrCreateDir(const std::string& dir); // The input should be an absolut
 void GetAllFileNames(const std::string& dir, std::vector<std::string>& outputVec);
 
 bool GetFilePostfix(const std::string& pathName, std::string& postfix);
+
+std::string GetRootPath();

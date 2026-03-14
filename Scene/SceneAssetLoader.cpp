@@ -67,6 +67,18 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
         }
     }
 
+    // Environment Map and IBL
+    if (config["EnvironmentMap"].IsDefined())
+    {
+        YAML::Node envMapNode = config["EnvironmentMap"];
+        std::string iblPkgName = envMapNode.as<std::string>();
+        std::string sceneDir = GetFileDir(fileNamePath);
+        sceneDir += "\\";
+        sceneDir += iblPkgName;
+        o_pLevel->LoadEnvMapAndIBL(sceneDir);
+    }
+    //
+
     YAML::Node sceneGraph = config["SceneGraph"];
 
     std::vector<float> bgColor = std::vector<float>(3, 0.1f);

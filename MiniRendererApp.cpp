@@ -6,6 +6,9 @@
 #include "TimePerfManager/TimePerfManager.h"
 #include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
+#include "Utils/StrPathUtils.h"
+#include "Utils/DX12Utils.h"
+#include <d3dcompiler.h>
 #include <dxgidebug.h>
 #include <filesystem>
 #include <chrono>
@@ -259,15 +262,6 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
     m_sceneAssetLoader.LoadAsLevel(sceneYaml, m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\data.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\DXRMilestoneScene\\DXRMilestone.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBoxMultiMaterials\\CornellboxMultiMaterial.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\CornellBox\\CornellBox.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Fish\\Fish.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Avocado\\Avocado.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\Duck\\Duck.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\TexturedCube\\TexturedCube.yaml", m_pLevel);
-    // m_sceneAssetLoader.LoadAsLevel("C:\\JiaruiYan\\Projects\\DX12MiniRenderer\\Assets\\SampleScene\\GLTFs\\\PBRSpheresPtLights\\PBRSpherePtLights.yaml", m_pLevel);
 
     if (m_pLevel->m_rendererBackendType == RendererBackendType::PathTracing)
     {
@@ -299,6 +293,198 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     m_pRendererBackend->Init(initStruct);
     
     m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);
+
+    if (m_pLevel->HasEnvMap()) { InitEnvMapPipeline(); }
+}
+
+void DX12MiniRenderer::InitEnvMapDescriptorHeaps()
+{
+    D3D12_DESCRIPTOR_HEAP_DESC srvCbvHeapDesc = {};
+    {
+        srvCbvHeapDesc.NumDescriptors = 2;
+        srvCbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvCbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    }
+    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&srvCbvHeapDesc, IID_PPV_ARGS(&m_pEnvMapSRVCBVHeap)));
+
+    D3D12_CPU_DESCRIPTOR_HANDLE descriptorHeapHandle = m_pEnvMapSRVCBVHeap->GetCPUDescriptorHandleForHeapStart();
+
+    // Buffer hookup
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+    {
+        cbvDesc.BufferLocation = m_pEnvMapCnstBuffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = ALIGN_UP_256(sizeof(EnvMapCnstBuffer));
+    }
+    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, descriptorHeapHandle);
+
+    // Images hookup
+    descriptorHeapHandle.ptr += m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_pLevel->AttachEnvMapGPUResource(m_pD3dDevice, descriptorHeapHandle);
+}
+
+void DX12MiniRenderer::InitEnvMapRootSignature()
+{
+    D3D12_DESCRIPTOR_RANGE psCbvRange = {};
+    {
+        psCbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        psCbvRange.NumDescriptors = 1;
+        psCbvRange.BaseShaderRegister = 0;
+        psCbvRange.RegisterSpace = 0;
+        psCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+
+    D3D12_DESCRIPTOR_RANGE psSrvRange = {};
+    {
+        psSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        psSrvRange.NumDescriptors = 1;
+        psSrvRange.BaseShaderRegister = 0;
+        psSrvRange.RegisterSpace = 0;
+        psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+
+    D3D12_DESCRIPTOR_RANGE psRanges[] = { psCbvRange, psSrvRange };
+
+    D3D12_ROOT_PARAMETER rootParameters = {};
+    {
+        rootParameters.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters.DescriptorTable.NumDescriptorRanges = 2;
+        rootParameters.DescriptorTable.pDescriptorRanges = psRanges;
+        rootParameters.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    }
+
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[7] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6) };
+
+    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+    {
+        rootSignatureDesc.NumParameters = 1;
+        rootSignatureDesc.pParameters = &rootParameters;
+        rootSignatureDesc.NumStaticSamplers = 7;
+        rootSignatureDesc.pStaticSamplers = staticSamplers;
+        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    }
+
+    ID3DBlob* pSignature;
+    ID3DBlob* pError;
+
+    ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pSignature, &pError));
+    ThrowIfFailed(m_pD3dDevice->CreateRootSignature(0, pSignature->GetBufferPointer(), pSignature->GetBufferSize(), IID_PPV_ARGS(&m_pEnvMapRootSignature)));
+    pSignature->Release();
+
+    if (pError)
+    {
+        pError->Release();
+    }
+}
+
+void DX12MiniRenderer::InitEnvMapPSO()
+{
+    ID3DBlob* vertShader;
+    ID3DBlob* pixelShader;
+
+#if defined(_DEBUG)
+    // Enable better shader debugging with the graphics debugging tools.
+    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+    UINT compileFlags = 0;
+#endif
+
+    // PSO
+    std::string EnvMapShaderPathName(GetRootPath());
+    EnvMapShaderPathName += "/RenderBackend/CommonShaders/EnvMapBackground.hlsl";
+    std::wstring wideString(EnvMapShaderPathName.begin(), EnvMapShaderPathName.end());
+
+    ThrowIfFailed(D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, nullptr));
+    ThrowIfFailed(D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+
+    // Describe and create the graphics pipeline state object (PSO).
+    D3D12_RASTERIZER_DESC rasterizerDesc = {};
+    {
+        rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+        rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+        rasterizerDesc.FrontCounterClockwise = FALSE;
+        rasterizerDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+        rasterizerDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+        rasterizerDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+        rasterizerDesc.DepthClipEnable = TRUE;
+        rasterizerDesc.MultisampleEnable = FALSE;
+        rasterizerDesc.AntialiasedLineEnable = FALSE;
+        rasterizerDesc.ForcedSampleCount = 0;
+        rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+    }
+    
+    D3D12_BLEND_DESC blendDesc = {};
+    {
+        blendDesc.AlphaToCoverageEnable = FALSE;
+        blendDesc.IndependentBlendEnable = FALSE;
+        const D3D12_RENDER_TARGET_BLEND_DESC defaultRenderTargetBlendDesc =
+        {
+            FALSE,FALSE,
+            D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+            D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+            D3D12_LOGIC_OP_NOOP,
+            D3D12_COLOR_WRITE_ENABLE_ALL,
+        };
+        for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+        {
+            blendDesc.RenderTarget[i] = defaultRenderTargetBlendDesc;
+        }
+    }
+
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
+    {
+        depthStencilDesc.DepthEnable = FALSE;
+        depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_NONE;
+        depthStencilDesc.StencilEnable = FALSE;
+    }
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.InputLayout = { nullptr, 0 };
+    psoDesc.pRootSignature = m_pEnvMapRootSignature;
+    psoDesc.VS = D3D12_SHADER_BYTECODE{vertShader->GetBufferPointer(), vertShader->GetBufferSize()};
+    psoDesc.PS = D3D12_SHADER_BYTECODE{pixelShader->GetBufferPointer(), pixelShader->GetBufferSize()};
+    psoDesc.RasterizerState = rasterizerDesc;
+    psoDesc.BlendState = blendDesc;
+    psoDesc.DepthStencilState = depthStencilDesc;
+    psoDesc.SampleMask = UINT_MAX;
+    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.NumRenderTargets = 1;
+    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    psoDesc.SampleDesc.Count = 1;
+    ThrowIfFailed(m_pD3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pEnvMapPipelineState)));
+
+    vertShader->Release();
+    pixelShader->Release();
+}
+
+void DX12MiniRenderer::InitEnvMapCnstBuffer()
+{
+    m_pEnvMapCnstBuffer = CreateGPUBuffer(m_pD3dDevice, sizeof(EnvMapCnstBuffer));
+}
+
+void DX12MiniRenderer::InitEnvMapPipeline()
+{
+    InitEnvMapRootSignature();
+    InitEnvMapPSO();
+    InitEnvMapCnstBuffer();
+    InitEnvMapDescriptorHeaps();
+}
+
+void DX12MiniRenderer::FinalizeEnvMapPipeline()
+{
+    if(m_pEnvMapRootSignature) {
+        m_pEnvMapRootSignature->Release();
+        m_pEnvMapRootSignature = nullptr;
+    }
+    if(m_pEnvMapSRVCBVHeap) {
+        m_pEnvMapSRVCBVHeap->Release();
+        m_pEnvMapSRVCBVHeap = nullptr;
+    }
+    if(m_pEnvMapPipelineState) {
+        m_pEnvMapPipelineState->Release();
+        m_pEnvMapPipelineState = nullptr;
+    }
 }
 
 void DX12MiniRenderer::Run()
@@ -374,16 +560,18 @@ void DX12MiniRenderer::Run()
 
         m_pTimePerfManager->GPUTimeStampStart(m_pD3dCommandList);
 
-        ImVec4 clear_color = ImVec4(m_pLevel->m_backgroundColor[0], 
+        ImVec4 clear_color = ImVec4(m_pLevel->m_backgroundColor[0],
                                     m_pLevel->m_backgroundColor[1],
                                     m_pLevel->m_backgroundColor[2], 1.00f);
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
         m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
         m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
+        if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, frameCRTDescriptor); }
+
         // Render Scene
         RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
-        m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);        
+        m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
 
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
@@ -423,6 +611,8 @@ void DX12MiniRenderer::Finalize()
 {
     delete m_pLevel;
 
+    FinalizeEnvMapPipeline();
+
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
     if (m_pAssetManager) { m_pAssetManager->Deinit(); delete m_pAssetManager; m_pAssetManager = nullptr; }
     if (m_pTimePerfManager) { m_pTimePerfManager->Finalize(); delete m_pTimePerfManager; m_pTimePerfManager = nullptr; }
@@ -438,9 +628,31 @@ void DX12MiniRenderer::Finalize()
     }
 }
 
+void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle)
+{
+    if (m_pLevel->HasEnvMap())
+    {
+        uint32_t winWidth, winHeight;
+        m_pUIManager->GetWindowSize(winWidth, winHeight);
+        D3D12_VIEWPORT viewport    = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
+        D3D12_RECT     scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
+
+        pCmdList->SetDescriptorHeaps(1, &m_pEnvMapSRVCBVHeap);
+
+        pCmdList->SetPipelineState(m_pEnvMapPipelineState);
+        pCmdList->SetGraphicsRootSignature(m_pEnvMapRootSignature);
+        pCmdList->RSSetViewports(1, &viewport);
+        pCmdList->RSSetScissorRects(1, &scissorRect);
+        pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+        pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        pCmdList->SetGraphicsRootDescriptorTable(0, m_pEnvMapSRVCBVHeap->GetGPUDescriptorHandleForHeapStart());
+        pCmdList->DrawInstanced(6, 1, 0, 0);
+    }
+}
+
 void InputInfoManager::GatherInfo()
 {
-    std::string scenePath = SOURCE_PATH;
+    std::string scenePath = GetRootPath();
     scenePath += "/Assets/SampleScene/GLTFs";
 
     try {

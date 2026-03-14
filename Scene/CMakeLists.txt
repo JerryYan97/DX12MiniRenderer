@@ -13,4 +13,6 @@ set(SCENE_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/Lights.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Object.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Object.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentMap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentMap.h
     PARENT_SCOPE)

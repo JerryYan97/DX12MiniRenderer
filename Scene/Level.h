@@ -3,6 +3,7 @@
 #include <string>
 #include "Object.h"
 #include "../RenderBackend/RendererBackend.h"
+#include "EnvironmentMap.h"
 
 class StaticMesh;
 class Camera;
@@ -22,6 +23,7 @@ enum BackgroundType : uint32_t
     CONST_COLOR
 };
 
+// Level represents the scene to be rendered. It contains the scene graph of objects and scene-level info. E.g. environment map, bbx, level center, etc.
 class Level
 {
 public:
@@ -49,14 +51,19 @@ public:
         memcpy(outBbxMax, m_bbxMax, sizeof(float) * 3);
     }
 
+    void LoadEnvMapAndIBL(std::string envMapIblPkgPath);
+    void AttachEnvMapGPUResource(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
+
     std::string m_sceneName;
     float m_backgroundColor[3];
 
     RendererBackendType m_rendererBackendType;
     BackgroundType m_backgroundType;
 
+    bool HasEnvMap() const { return m_envMap.IsLoaded(); }
 private:
     std::vector<Object*> m_objects;
+    EnvironmentMap m_envMap;
     float m_levelCenter[3] = {};
 
     float m_bbxMin[3] = {};

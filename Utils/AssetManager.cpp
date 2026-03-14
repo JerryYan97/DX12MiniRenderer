@@ -3,8 +3,11 @@
 #include "../Scene/Mesh.h"
 #include <unordered_set>
 #include <cassert>
+#include "../ThirdParty/TinyGltf/stb_image.h"
+#include "../ThirdParty/TinyGltf/tiny_gltf.h"
 
 extern ID3D12Device* g_pD3dDevice;
+AssetManager* AssetManager::m_pThis = nullptr;
 
 void AssetManager::Deinit()
 {
@@ -26,6 +29,21 @@ void AssetManager::Deinit()
 
             delete primItr;
         }
+    }
+
+    for (const auto& itr : m_textureAssets)
+    {
+        itr.second->imgInfo.gpuResource->Release();
+        delete itr.second;
+    }
+
+    if (m_envMapAsset != nullptr)
+    {
+        m_envMapAsset->backGroundCubemap.gpuResource->Release();
+        m_envMapAsset->diffuseIrradianceCubemap.gpuResource->Release();
+        m_envMapAsset->envBRDF.gpuResource->Release();
+        m_envMapAsset->prefilteredEnvMap.gpuResource->Release();
+        delete m_envMapAsset;
     }
 }
 
@@ -324,7 +342,6 @@ void AssetManager::GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset)
         pPrimAsset->m_occlusionTex.srvHeapIdx = texHeapOffset;
         texHeapOffset++;
     }
-    /**/
 
     pPrimAsset->GenMaterialMask();
     GenPrimAssetMaterialBuffer(pPrimAsset);
@@ -417,4 +434,96 @@ std::vector<PrimitiveAsset*> AssetManager::GenSceneVertIdxBuffer(std::vector<flo
     }
 
     return prims;
+}
+
+void AssetManager::LoadCubemapFromSingleFile(const std::string& filepath, ImgInfo& oImgInfo)
+{
+    // Load the cubemap texture from the file
+    assert(filepath.size() > 4);
+    std::string extLower = filepath.substr(filepath.size() - 4);
+    assert(extLower == ".hdr" && "LoadCubemapFromSingleFile expects a .hdr file");
+
+    int width, height, channels;
+    float* data = stbi_loadf(filepath.c_str(), &width, &height, &channels, 0);
+    if (data)
+    {
+        oImgInfo.pixWidth = static_cast<uint32_t>(width);
+        oImgInfo.pixHeight = static_cast<uint32_t>(width);
+        oImgInfo.componentCnt = static_cast<uint32_t>(channels);
+        oImgInfo.arrayLayerCnt = 6;
+        oImgInfo.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+        oImgInfo.mipLevelCnt = 1;
+        oImgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+        oImgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+        oImgInfo.dataVec.assign(data, data + (width * height * channels));
+
+        D3D12_RESOURCE_DESC textureDesc = {};
+        {
+            textureDesc.MipLevels = 1;
+            textureDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+            textureDesc.Width = width;
+            textureDesc.Height = width;
+            textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+            textureDesc.DepthOrArraySize = 6;
+            textureDesc.SampleDesc.Count = 1;
+            textureDesc.SampleDesc.Quality = 0;
+            textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        }
+
+        D3D12_HEAP_PROPERTIES heapProperties{};
+        {
+            heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+            heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            heapProperties.CreationNodeMask = 1;
+            heapProperties.VisibleNodeMask = 1;
+        }
+
+        ThrowIfFailed(g_pD3dDevice->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&oImgInfo.gpuResource)));
+
+        for (int sliceIdx = 0; sliceIdx < 6; sliceIdx++)
+        {
+            float* sliceData = data + sliceIdx * (width * width * channels);
+            uint32_t sliceSizeByte = width * width * channels * sizeof(float);
+            SendDataToCubemapSlice(g_pD3dDevice, oImgInfo.gpuResource, sliceData, sliceSizeByte, sliceIdx, 0);
+        }
+
+        ChangeResourceState(g_pD3dDevice, oImgInfo.gpuResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+        delete[] data;
+    }
+}
+
+EnvMapAsset* AssetManager::LoadEnvMapAsset(const std::string& filepath)
+{
+    if (m_envMapAsset != nullptr)
+    {
+        // Release existing resources
+        m_envMapAsset->backGroundCubemap.gpuResource->Release();
+        m_envMapAsset->diffuseIrradianceCubemap.gpuResource->Release();
+        m_envMapAsset->envBRDF.gpuResource->Release();
+        m_envMapAsset->prefilteredEnvMap.gpuResource->Release();
+        delete m_envMapAsset;
+    }
+
+    m_envMapAsset = new EnvMapAsset();
+
+    // Load the new environment map asset from the file
+    // Load the background cubemap.
+    std::string backgroundCubemapPath = filepath + "/background_cubemap.hdr";
+    LoadCubemapFromSingleFile(backgroundCubemapPath, m_envMapAsset->backGroundCubemap);
+
+    // Load the diffuse irradiance cubemap.
+
+    // Load the environment BRDF.
+
+    // Load the prefiltered environment map.
+
+    return m_envMapAsset;
 }

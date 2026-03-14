@@ -50,3 +50,17 @@ public:
     float radiance[3];
 private:
 };
+
+class ImageBasedLight : public Light
+{
+public:
+    ImageBasedLight(const std::string& i_hdrFile)
+    {
+        hdrFile = i_hdrFile;
+        m_objectType = "ImageBasedLight";
+        m_objectTypeHash = crc32("ImageBasedLight");
+    }
+    ~ImageBasedLight() {}
+    static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
+    std::string hdrFile;
+};
