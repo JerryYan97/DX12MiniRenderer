@@ -46,7 +46,7 @@ constexpr auto gen_crc32_table() {
         auto crc = byte;
 
         for (auto i = 0; i < num_iterations; ++i) {
-            auto mask = -(crc & 1);
+            auto mask = static_cast<uint32_t>(-static_cast<int32_t>(crc & 1));
             crc = (crc >> 1) ^ (polynomial & mask);
         }
 

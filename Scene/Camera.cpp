@@ -62,7 +62,7 @@ void Camera::CameraUpdate()
 {
     uint32_t winWidth, winHeight;
     g_pUIManager->GetWindowSize(winWidth, winHeight);
-    m_aspect = (float)winHeight / (float)winWidth;
+    m_aspect = (float)winWidth / (float)winHeight;
 
     GenPerspectiveProjMat(m_near, m_far, m_fov, m_aspect, m_projMat);
     GenViewMat(m_view, m_pos, m_up, m_viewMat);

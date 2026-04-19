@@ -256,7 +256,6 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     float vsConstantBuffer[64] = {};
     Camera* pCamera = nullptr;
     m_pLevel->RetriveActiveCamera(&pCamera);
-    pCamera->CameraUpdate();
 
     memcpy(vsConstantBuffer, pCamera->m_vpMat, sizeof(float) * 16);
 

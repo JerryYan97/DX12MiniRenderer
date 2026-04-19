@@ -8,6 +8,7 @@
 #include "RenderBackend/ForwardRenderBackend.h"
 #include "Utils/StrPathUtils.h"
 #include "Utils/DX12Utils.h"
+#include "Utils/MathUtils.h"
 #include <d3dcompiler.h>
 #include <dxgidebug.h>
 #include <filesystem>
@@ -368,6 +369,7 @@ void DX12MiniRenderer::InitEnvMapRootSignature()
 
     ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pSignature, &pError));
     ThrowIfFailed(m_pD3dDevice->CreateRootSignature(0, pSignature->GetBufferPointer(), pSignature->GetBufferSize(), IID_PPV_ARGS(&m_pEnvMapRootSignature)));
+    m_pEnvMapRootSignature->SetName(L"EnvMapRootSignature");
     pSignature->Release();
 
     if (pError)
@@ -393,8 +395,13 @@ void DX12MiniRenderer::InitEnvMapPSO()
     EnvMapShaderPathName += "/RenderBackend/CommonShaders/EnvMapBackground.hlsl";
     std::wstring wideString(EnvMapShaderPathName.begin(), EnvMapShaderPathName.end());
 
-    ThrowIfFailed(D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, nullptr));
-    ThrowIfFailed(D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+    ID3DBlob* errorBlob = nullptr;
+    ThrowIfFailed(D3DCreateBlob(250, &errorBlob));
+
+    // ThrowIfFailed(D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, &errorBlob));
+    D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertShader, &errorBlob);
+    // const char* errorMsg = (const char*)errorBlob->GetBufferPointer();
+    ThrowIfFailed(D3DCompileFromFile(wideString.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, &errorBlob));
 
     // Describe and create the graphics pipeline state object (PSO).
     D3D12_RASTERIZER_DESC rasterizerDesc = {};
@@ -511,9 +518,11 @@ void DX12MiniRenderer::Run()
             HEvent rotateCameraEvent(args, "RotateCamera");
             pEventManager->SendEvent(rotateCameraEvent);
         }
-        //
+        // Camera Update
+        Camera* pCamera = nullptr;
+        m_pLevel->RetriveActiveCamera(&pCamera);
+        pCamera->CameraUpdate();
 
-        // Temp Renderer
         FrameContext* frameCtx = WaitForCurrentFrameResources();
         ID3D12Resource* frameCRT = m_pUIManager->GetCurrentMainRTResource();
         D3D12_CPU_DESCRIPTOR_HANDLE frameCRTDescriptor = m_pUIManager->GetCurrentMainRTDescriptor();
@@ -524,26 +533,6 @@ void DX12MiniRenderer::Run()
         ID3D12DescriptorHeap* imGUIDescriptorHeap = m_pUIManager->GetImGUISrvDescHeap();
         frameCtx->CommandAllocator->Reset();
 
-        /*
-        D3D12_RESOURCE_BARRIER barriers[2] = {};
-        {
-            // Color Render Target
-            barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-            barriers[0].Transition.pResource = frameCRT;
-            barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-            barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-            barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-            // Depth Stencil Buffer
-            barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-            barriers[1].Transition.pResource = m_pUIManager->GetCurrentMainDSVResource();
-            barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-            barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-            barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ;
-        }
-        */
         D3D12_RESOURCE_BARRIER barrier = {};
         {
             // Color Render Target
@@ -617,8 +606,19 @@ void DX12MiniRenderer::Finalize()
     if (m_pAssetManager) { m_pAssetManager->Deinit(); delete m_pAssetManager; m_pAssetManager = nullptr; }
     if (m_pTimePerfManager) { m_pTimePerfManager->Finalize(); delete m_pTimePerfManager; m_pTimePerfManager = nullptr; }
     CleanupTempRendererInfarstructure();
-    if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
+
     if (m_pRendererBackend) { m_pRendererBackend->Deinit(); delete m_pRendererBackend; m_pRendererBackend = nullptr; }
+
+#if defined(REPORT_LIVE_DEVICE_OBJ)
+    ID3D12DebugDevice* pDebugDevice;
+    if (SUCCEEDED(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&pDebugDevice))))
+    {
+        pDebugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
+    }
+    pDebugDevice->Release(); // Release after the report
+#endif
+
+    if (m_pD3dDevice) { m_pD3dDevice->Release(); m_pD3dDevice = nullptr; }
 
     IDXGIDebug1* pDebug = nullptr;
     if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
@@ -632,13 +632,33 @@ void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_
 {
     if (m_pLevel->HasEnvMap())
     {
+        // Populating the rendering commands
         uint32_t winWidth, winHeight;
         m_pUIManager->GetWindowSize(winWidth, winHeight);
         D3D12_VIEWPORT viewport    = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
         D3D12_RECT     scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
 
-        pCmdList->SetDescriptorHeaps(1, &m_pEnvMapSRVCBVHeap);
+        EnvMapCnstBuffer envMapCB{};
+        Camera* pCamera = nullptr;
+        m_pLevel->RetriveActiveCamera(&pCamera);
 
+        float right[3] = {};
+        CrossProductVec3(pCamera->m_view, pCamera->m_up, right);
+        NormalizeVec(right, 3);
+
+        memcpy(envMapCB.view, pCamera->m_view, 3 * sizeof(float));
+        memcpy(envMapCB.right, right, 3 * sizeof(float));
+        memcpy(envMapCB.camUpNear, pCamera->m_up, 3 * sizeof(float));
+        envMapCB.camUpNear[3] = pCamera->m_near;
+        float nearHeight = 2.f * tanf(pCamera->m_fov / 2.f) * pCamera->m_near;
+        float nearWidth  = pCamera->m_aspect * nearHeight;
+        envMapCB.camNearWidthHeight[0] = nearWidth;
+        envMapCB.camNearWidthHeight[1] = nearHeight;
+        envMapCB.vpWidthHeight[0] = viewport.Width;
+        envMapCB.vpWidthHeight[1] = viewport.Height;
+        SendDataToGPUBuffer(m_pD3dDevice, m_pEnvMapCnstBuffer, &envMapCB, sizeof(EnvMapCnstBuffer));
+
+        pCmdList->SetDescriptorHeaps(1, &m_pEnvMapSRVCBVHeap);
         pCmdList->SetPipelineState(m_pEnvMapPipelineState);
         pCmdList->SetGraphicsRootSignature(m_pEnvMapRootSignature);
         pCmdList->RSSetViewports(1, &viewport);

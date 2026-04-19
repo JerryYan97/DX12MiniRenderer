@@ -93,11 +93,23 @@ private:
     // Env Map GPU pipeline info
     // The environment map backgaround will be rendered before the main render path without depth.
     // The subsequent passes need to wait for the environment map pass to finish.
+    /*
     struct EnvMapCnstBuffer
     {
         float camPos[3];
         float padding0;
         float camFront[3];
+        float padding1;
+        float camUpNear[4];
+        float camNearWidthHeight[2];
+        float vpWidthHeight[2];
+    };
+    */
+    struct EnvMapCnstBuffer
+    {
+        float view[3];
+        float padding0;
+        float right[3];
         float padding1;
         float camUpNear[4];
         float camNearWidthHeight[2];

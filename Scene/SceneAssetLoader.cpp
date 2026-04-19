@@ -41,7 +41,7 @@ void SceneAssetLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLe
     if(config["Renderer"].IsDefined())
     {
         rendererType = config["Renderer"].as<std::string>();
-    }    
+    }
 
     o_pLevel->m_backgroundType = BackgroundType::BLACK;
 

@@ -53,10 +53,28 @@ static void WaitGpuIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pQueue)
     tmpCmdQueuefence->Release();
 }
 
-// TODO: Send data to upload buffer and then copy to the destination buffer.
-void SendDataToBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes)
+void SendDataToUploadBuffer(ID3D12Resource* pUploadBuffer, void* pSrcData, uint32_t dataSizeBytes, uint32_t dstOffsetBytes)
 {
+    void* pConstBufferBegin;
+    D3D12_RANGE readRange{ dstOffsetBytes, 0 };
+    ThrowIfFailed(pUploadBuffer->Map(0, &readRange, &pConstBufferBegin));
+    memcpy(pConstBufferBegin, pSrcData, dataSizeBytes);
+    pUploadBuffer->Unmap(0, nullptr);
+}
 
+void SendDataToGPUBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes)
+{
+    RAIIGPUQueueAndAllocator raiiQueueAndAllocator(pDevice);
+
+    ID3D12Resource* pUploadBuffer = CreateUploadBufferAndInit(pDevice, dataSizeBytes, pSrcData);
+
+    raiiQueueAndAllocator.m_pTempCmdList->CopyBufferRegion(pDstBuffer, 0, pUploadBuffer, 0, dataSizeBytes);
+    raiiQueueAndAllocator.m_pTempCmdList->Close();
+    raiiQueueAndAllocator.m_pTempCmdQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&raiiQueueAndAllocator.m_pTempCmdList);
+
+    WaitGpuIdle(pDevice, raiiQueueAndAllocator.m_pTempCmdQueue);
+
+    pUploadBuffer->Release();
 }
 
 void CopyADescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandle, uint32_t dstId, D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, uint32_t srcId, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
@@ -333,6 +351,8 @@ void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, voi
     raiiQueueAndAllocator.m_pTempCmdQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&raiiQueueAndAllocator.m_pTempCmdList);
 
     WaitGpuIdle(pDevice, raiiQueueAndAllocator.m_pTempCmdQueue);
+
+    pUploadBuffer->Release();
 }
 
 void SendDataToCubemapSlice(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes, uint32_t layerIndex, uint32_t mipIndex)
@@ -390,4 +410,6 @@ void SendDataToCubemapSlice(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, 
     raiiQueueAndAllocator.m_pTempCmdQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&raiiQueueAndAllocator.m_pTempCmdList);
 
     WaitGpuIdle(pDevice, raiiQueueAndAllocator.m_pTempCmdQueue);
+
+    pUploadBuffer->Release();
 }
