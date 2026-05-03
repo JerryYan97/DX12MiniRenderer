@@ -47,8 +47,8 @@ void GenViewMat(
 void GenPerspectiveProjMat(
     float nearPlane,
     float farPlane,
-    float fov,
-    float aspect,
+    float fov, // Vertical fov.
+    float aspect, // Width / Height.
     float* pResMat)
 {
     memset(pResMat, 0, 16 * sizeof(float));
@@ -74,8 +74,12 @@ void GenPerspectiveProjMat(
     */
     /* DX12 style. Refer from MS doc. Note that on MS doc, that is a column-major matrix, which needs to be transposed. */
     /* I always use row-major matrix. */
+    /* The aspect and fov can have different meaning for different implemetation. E.g. FOV-Horiz/Vert, Aspect = W/H or H/W */
+    /* No matter what's the difference. Remember the viewspace to NDC mapping */
+    // E.g. To make the x equal to -1 when it's at the left edge of the screen, the transformed abs(x) needs to be z. Thus pResMat[0] = 1 / (Near Plane half width).
     float c = 1.f / tanf(fov * 0.5f);
-    pResMat[0] = aspect * c;
+
+    pResMat[0] = c / aspect; 
     pResMat[5] = c;
     pResMat[10] = farPlane / (farPlane - nearPlane);
     pResMat[11] = nearPlane * farPlane / (nearPlane - farPlane);
