@@ -1,12 +1,13 @@
-SceneName: SphereTest
+SceneName: CubeTest
 SceneType: GLTF
+SceneId: 3
 SceneGraph:
   TriangleInst:
     Type: StaticMesh
-    Position: [0.2, 0.0, 4.5]
+    Position: [0.2, 0.0, 0.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
-    AssetPath: uvSphere.gltf
+    AssetPath: cube.gltf
   PointLightInst1:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]

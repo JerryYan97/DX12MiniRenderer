@@ -1,5 +1,6 @@
 SceneName: DXRMilestoneScene
 Renderer: PathTracer
+SceneId: 5
 PathTracing Settings:
   MaxDepth: 1
   SamplesPerPixel: 1

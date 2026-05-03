@@ -1,12 +1,13 @@
-SceneName: CubeTest
+SceneName: TriangleTest
 SceneType: GLTF
+SceneId: 11
 SceneGraph:
   TriangleInst:
     Type: StaticMesh
-    Position: [0.2, 0.0, 0.5]
+    Position: [0.2, 1.0, 0.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
-    AssetPath: cube.gltf
+    AssetPath: Triangle.gltf
   PointLightInst1:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
@@ -25,7 +26,7 @@ SceneGraph:
     Position: [-1.0, 0.0, 0.0]
   CameraInst:
     Type: Camera
-    Position: [1.0, 2.0, -8.0]
+    Position: [0.0, 1.0, -2.0]
     View: [0.0, 0.0, 1.0]
     Up: [0.0, 1.0, 0.0]
     fov: 0.820304751

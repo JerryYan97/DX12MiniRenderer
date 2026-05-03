@@ -3,6 +3,7 @@ Renderer: PathTracer
 PathTracing Settings:
   MaxDepth: 1
 SceneType: GLTF
+SceneId: 1
 SceneGraph:
   ShortBox:
     Type: StaticMesh

@@ -9,6 +9,7 @@
 #include "Utils/StrPathUtils.h"
 #include "Utils/DX12Utils.h"
 #include "Utils/MathUtils.h"
+#include "yaml-cpp/yaml.h"
 #include <d3dcompiler.h>
 #include <dxgidebug.h>
 #include <filesystem>
@@ -676,14 +677,48 @@ void InputInfoManager::GatherInfo()
     scenePath += "/Assets/SampleScene/GLTFs";
 
     try {
+        std::unordered_map<int, SceneInfo> sceneInfoMap; // CLI Scene Index to SceneInfo mapping
+        int maxSceneIndex = -1;
+
         // Iterate over the entries in the directory
         for (const auto& entry : fs::directory_iterator(scenePath)) {
             SceneInfo sceneInfo;
             sceneInfo.presentStr = entry.path().filename().string();
             sceneInfo.sceneYmlFilePath = scenePath + "/" + entry.path().filename().string() + "/" + entry.path().filename().string() + ".yaml";
-            // std::cout << entry.path() << std::endl;
-            m_sceneInfoList.push_back(sceneInfo);
+
+            if (fs::exists(sceneInfo.sceneYmlFilePath))
+            {
+                YAML::Node config = YAML::LoadFile(sceneInfo.sceneYmlFilePath.c_str());
+                if (config["SceneId"].IsDefined())
+                {
+                    int cliSceneIndex = config["SceneId"].as<int>();
+                    if (sceneInfoMap.find(cliSceneIndex) != sceneInfoMap.end())
+                    {
+                        std::cerr << "Warning: Duplicate SceneId " << cliSceneIndex << " found in " << sceneInfo.sceneYmlFilePath << ". Skipping this scene." << std::endl;
+                    }
+                    else
+                    {
+                        sceneInfoMap[cliSceneIndex] = sceneInfo; // Store in map for sorting later
+                    }
+                    if (cliSceneIndex > maxSceneIndex)
+                    {
+                        maxSceneIndex = cliSceneIndex;
+                    }
+                }
+                else
+                {
+                    std::cerr << "Warning: SceneId not defined in " << sceneInfo.sceneYmlFilePath << ". Skipping this scene." << std::endl;
+                }
+            }
         }
+
+        // Sort the scenes based on CLI Scene Index and populate the list
+        m_sceneInfoList.resize(maxSceneIndex + 1);
+        for (const auto& pair : sceneInfoMap)
+        {
+            m_sceneInfoList[pair.first] = pair.second;
+        }
+
     } catch (const fs::filesystem_error& e) {
         // Handle potential errors, e.g., if the directory doesn't exist
         std::cerr << "Error: " << e.what() << std::endl;

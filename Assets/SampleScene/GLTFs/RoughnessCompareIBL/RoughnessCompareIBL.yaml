@@ -1,6 +1,7 @@
 SceneName: RoughnessCompareIBL
 SceneType: GLTF
 EnvironmentMap: iblOutputStudio
+SceneId: 8
 SceneGraph:
   CameraInst:
     Type: Camera
@@ -11,6 +12,9 @@ SceneGraph:
     far: 100
     near: 0.1
     isActive: true
-  ImportGltfScene:
-    Type: ImportScene
+  TwoBalls:
+    Type: StaticMesh
     AssetPath: glTF/CompareRoughness.gltf
+    Position: [0.0, -0.5, 0.0]
+    Scale: [3.0, 3.0, 3.0]
+    Rotation: [0, 0, 0]

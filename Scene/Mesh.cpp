@@ -161,7 +161,7 @@ Object* StaticMesh::Deseralize(const std::string& objName, const YAML::Node& i_n
     mesh->m_meshBBXMin[0] = meshBBXMinLocal[0]; mesh->m_meshBBXMin[1] = meshBBXMinLocal[1]; mesh->m_meshBBXMin[2] = meshBBXMinLocal[2];
     mesh->m_meshBBXMax[0] = meshBBXMaxLocal[0]; mesh->m_meshBBXMax[1] = meshBBXMaxLocal[1]; mesh->m_meshBBXMax[2] = meshBBXMaxLocal[2];
 
-    printf("Mesh center point: (%f, %f, %f); Bounding Box: (%f, %f, %f) to (%f, %f, %f)\n", 
+    printf("Mesh center point: (%f, %f, %f); Bounding Box: (%f, %f, %f) to (%f, %f, %f)\n",
            mesh->m_meshCenter[0], mesh->m_meshCenter[1], mesh->m_meshCenter[2],
            mesh->m_meshBBXMin[0], mesh->m_meshBBXMin[1], mesh->m_meshBBXMin[2],
            mesh->m_meshBBXMax[0], mesh->m_meshBBXMax[1], mesh->m_meshBBXMax[2]);

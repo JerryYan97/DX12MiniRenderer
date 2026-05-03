@@ -1,6 +1,7 @@
 SceneName: SphereTest
 SceneType: GLTF
 BackgroundColor: [0.01, 0.01, 0.01]
+SceneId: 7
 SceneGraph:
   SphereInst0:
     Type: StaticMesh

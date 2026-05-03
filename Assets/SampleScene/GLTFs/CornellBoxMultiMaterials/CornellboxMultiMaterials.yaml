@@ -3,6 +3,7 @@ Renderer: PathTracer
 PathTracing Settings:
   MaxDepth: 1
 SceneType: GLTF
+SceneId: 2
 SceneGraph:
   MirrorSphere:
     Type: StaticMesh
