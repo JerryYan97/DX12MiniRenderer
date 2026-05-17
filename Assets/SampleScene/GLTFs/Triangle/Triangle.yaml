@@ -3,7 +3,7 @@ SceneType: GLTF
 SceneId: 11
 SceneGraph:
   TriangleInst:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.2, 1.0, 0.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]

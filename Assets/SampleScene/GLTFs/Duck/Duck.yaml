@@ -4,7 +4,7 @@ BackgroundColor: [0.2, 0.2, 0.01]
 SceneId: 4
 SceneGraph:
   TriangleInst0:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -0.5, 0.0]
     Scale: [0.005, 0.005, 0.005]
     Rotation: [0, 1.39626, 0]

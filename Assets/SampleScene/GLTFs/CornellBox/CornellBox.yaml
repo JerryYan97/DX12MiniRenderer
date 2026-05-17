@@ -6,7 +6,7 @@ SceneType: GLTF
 SceneId: 1
 SceneGraph:
   ShortBox:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, -0.261799, 0]
@@ -17,7 +17,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   TallBox:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0.610865, 0]
@@ -28,13 +28,13 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -1.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 0]
     AssetPath: quad.gltf
   RightWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, 3.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 1.5708]
@@ -45,7 +45,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   LeftWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, 3.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 1.5708]
@@ -56,19 +56,19 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   TopWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 7.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 0]
     AssetPath: quad.gltf
   BackWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 3.0, 4.0]
     Scale: [4, 4, 4]
     Rotation: [1.5708, 0, 0]
     AssetPath: quad.gltf
   TopLight:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 6.8, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]

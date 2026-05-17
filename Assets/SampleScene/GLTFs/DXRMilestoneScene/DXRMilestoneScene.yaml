@@ -9,7 +9,7 @@ PathTracing Settings:
 SceneType: GLTF
 SceneGraph:
   MirrorSphere:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, 1.5, 2.0]
     Scale: [2, 2, 2]
     Rotation: [0, 0, 0]
@@ -21,7 +21,7 @@ SceneGraph:
       Metallic: 1.0
       IsDoubleFace: false
   GlassSphere:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, 0.5, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -34,7 +34,7 @@ SceneGraph:
       IsDielectrics: true
       IsDoubleFace: false
   EmissiveSphere1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 0.6, -5.0]
     Scale: [0.2, 0.2, 0.2]
     Rotation: [0, 0, 0]
@@ -47,7 +47,7 @@ SceneGraph:
       Emissive: [60.0, 0.0, 0.0]
       IsDoubleFace: false
   EmissiveSphere2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [5.0, 0.5, -5.0]
     Scale: [0.1, 0.1, 0.1]
     Rotation: [0, 0, 0]
@@ -60,7 +60,7 @@ SceneGraph:
       Emissive: [0.0, 60.0, 0.0]
       IsDoubleFace: false
   EmissiveSphere3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-5.0, 0.5, -5.0]
     Scale: [0.1, 0.1, 0.1]
     Rotation: [0, 0, 0]
@@ -73,7 +73,7 @@ SceneGraph:
       Emissive: [0.0, 0.0, 60.0]
       IsDoubleFace: false
   BottomBoxRowF0Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -3.3206, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -84,7 +84,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.5983, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -95,7 +95,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -3.4461, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -106,7 +106,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -3.9448, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -117,7 +117,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -3.3874, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -128,7 +128,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -3.0566, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -139,7 +139,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -3.1557, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -150,7 +150,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.8432, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -161,7 +161,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF0L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.1418, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -172,7 +172,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowF1Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.4544, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -183,7 +183,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0859, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -194,7 +194,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -3.0458, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -205,7 +205,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -3.4468, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -216,7 +216,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -3.0360, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -227,7 +227,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.5856, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -238,7 +238,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -3.1971, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -249,7 +249,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -3.4147, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -260,7 +260,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF1L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -3.1056, 2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -271,7 +271,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowF2Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.7619, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -282,7 +282,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.5070, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -293,7 +293,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.3344, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -304,7 +304,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.3189, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -315,7 +315,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -3.3183, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -326,7 +326,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -3.062, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -337,7 +337,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -348,7 +348,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -359,7 +359,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF2L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, 4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -370,7 +370,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowF3Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -381,7 +381,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -392,7 +392,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -403,7 +403,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -414,7 +414,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -425,7 +425,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -436,7 +436,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -447,7 +447,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -458,7 +458,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF3L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, 6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -469,7 +469,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowF4Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -480,7 +480,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -491,7 +491,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -502,7 +502,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -513,7 +513,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -524,7 +524,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -535,7 +535,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -546,7 +546,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -557,7 +557,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomF4L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, 8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -568,7 +568,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowB1Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -579,7 +579,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -590,7 +590,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -601,7 +601,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -612,7 +612,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -623,7 +623,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -634,7 +634,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -645,7 +645,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -656,7 +656,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB1L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, -2.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -667,7 +667,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowB2Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -678,7 +678,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -689,7 +689,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -700,7 +700,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -711,7 +711,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -722,7 +722,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -733,7 +733,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -744,7 +744,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -755,7 +755,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB2L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, -4.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -766,7 +766,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowB3Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -777,7 +777,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -788,7 +788,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -799,7 +799,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -810,7 +810,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -821,7 +821,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -832,7 +832,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -843,7 +843,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -854,7 +854,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB3L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, -6.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -865,7 +865,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomRowB4Center:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -876,7 +876,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4R1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -887,7 +887,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4R2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -898,7 +898,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4R3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [6.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -909,7 +909,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4R4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [8.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -920,7 +920,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4L1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -931,7 +931,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4L2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -942,7 +942,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4L3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-6.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -953,7 +953,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   BottomB4L4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-8.0, -4.0, -8.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
