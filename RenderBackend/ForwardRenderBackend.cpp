@@ -267,7 +267,18 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     m_pVsSceneBuffer->Unmap(0, nullptr);
 
     // Collect scene environment data to PS scene constant buffer
-    float psConstantBuffer[64] = {};
+
+   //  struct float3 { float val[3]; };
+    struct float4 { float val[4]; };
+    struct uint4 { uint32_t val[4]; };
+
+    struct PsSceneBuffer {
+        float4 lightPositions[4]; // Each element has one padding float.
+        float4 lightRadiance[4];
+        float4 cameraPos;    // one padding float
+        float4 ambientLight; // one padding float
+        uint4  extraIntData; // (0): Point Light Counts; (1): Light Condition Masks; (2): [0:8] - IBL max mip levels.
+    } psConstantBuffer{};
 
     std::vector<Light*> sceneLights;
     uint32_t ambientLightCnt = 0;
@@ -278,8 +289,8 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
         if (sceneLights[i]->GetObjectTypeHash() == crc32("PointLight"))
         {
             PointLight* pPtLight = dynamic_cast<PointLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + pointLightCnt * 4,      pPtLight->position, sizeof(float) * 3);
-            memcpy(psConstantBuffer + 16 + pointLightCnt * 4, pPtLight->radiance, sizeof(float) * 3);
+            memcpy(psConstantBuffer.lightPositions[pointLightCnt].val, pPtLight->position, sizeof(float) * 3);
+            memcpy(psConstantBuffer.lightRadiance[pointLightCnt].val, pPtLight->radiance, sizeof(float) * 3);
             pointLightCnt++;
         }
         else if (sceneLights[i]->GetObjectTypeHash() == crc32("AmbientLight"))
@@ -287,16 +298,16 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
             assert(ambientLightCnt <= 1, "We shouldn't have more than 1 ambient lights.");
             ambientLightCnt++;
             AmbientLight* pAmbientLight = dynamic_cast<AmbientLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + 36, pAmbientLight->radiance, sizeof(float) * 3);
+            memcpy(psConstantBuffer.ambientLight.val, pAmbientLight->radiance, sizeof(float) * 3);
         }
     }
 
-    memcpy(psConstantBuffer + 32, pCamera->m_pos, sizeof(float) * 3);
-    memcpy(psConstantBuffer + 40, &pointLightCnt, sizeof(uint32_t));
+    memcpy(psConstantBuffer.cameraPos.val, pCamera->m_pos, sizeof(float) * 3);
+    psConstantBuffer.extraIntData.val[0] = pointLightCnt;
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
-    memcpy(m_pPsSceneBufferBegin, psConstantBuffer, sizeof(psConstantBuffer));
+    memcpy(m_pPsSceneBufferBegin, &psConstantBuffer, sizeof(psConstantBuffer));
     m_pPsSceneBuffer->Unmap(0, nullptr);
 }
 

@@ -161,8 +161,8 @@ static const uint IBL_MASK = 1;
 
 cbuffer PsSceneBuffer : register(b3)
 {
-    float3 lightPositions[4];
-    float3 lightRadiance[4];
+    float4 lightPositions[4];
+    float4 lightRadiance[4];
     float4 cameraPos;    // one padding float
     float4 ambientLight; // one padding float
     uint4  extraIntData; // (0): Point Light Counts; (1): Light Condition Masks; (2): [0:8] - IBL max mip levels.
@@ -237,8 +237,8 @@ float4 PSMain(PSInput input) : SV_TARGET
     uint lightCnt = extraIntData.x;
     for (int i = 0; i < lightCnt; i++)
     {        
-        float3 lightColor = lightRadiance[i];
-        float3 lightPos = lightPositions[i];
+        float3 lightColor = lightRadiance[i].xyz;
+        float3 lightPos = lightPositions[i].xyz;
         float3 wi = normalize(lightPos - input.worldPos.xyz);
         float3 H = normalize(wi + wo);
         float distance = length(lightPos - input.worldPos.xyz);
@@ -266,7 +266,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 
         Lo += (kD * (sphereDifAlbedo / 3.14159265359) + specular) * radiance * lightNormalCosTheta;
     }
-    
+
     float3 ambient = ambientLight.xyz * sphereRefAlbedo * ao;
     float3 color = ambient + Lo;
     
