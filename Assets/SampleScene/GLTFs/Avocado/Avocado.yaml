@@ -1,19 +1,14 @@
-SceneName: SphereTest
+SceneName: AvocadoTest
 SceneType: GLTF
 BackgroundColor: [0.01, 0.01, 0.01]
 SceneId: 0
 SceneGraph:
-  TriangleInst0:
+  AvocadoInst:
     Type: MeshObject
     Position: [0.0, -0.5, 0.0]
     Scale: [12.0, 12.0, 12.0]
     Rotation: [0, -0.261799, 0]
     AssetPath: avocado/Avocado.gltf
-    Material:
-      Type: ConstMaterial
-      Albedo: [1.0, 1.0, 0.0]
-      Roughness: 1.0
-      Metallic: 0.0
   PointLightInst1:
     Type: PointLight
     Radiance: [50.0, 50.0, 50.0]

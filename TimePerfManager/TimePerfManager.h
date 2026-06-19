@@ -11,12 +11,12 @@ public:
     ~TimePerfManager();
 
     static TimePerfManager* GetInstance() { return m_pThis; }
-    void Init(ID3D12Device* pDevice, ID3D12CommandQueue* pGfxQueue);
+    void Init(ID3D12Device5* pDevice, ID3D12CommandQueue* pGfxQueue);
     void Finalize();
 
     void AddCPUTime(float deltaTimeSec); // In seconds. The delta time comes from the main loop, which drives the whole system. Thus, we don't need to query the time again.
-    void GPUTimeStampStart(ID3D12GraphicsCommandList* pCmdList);
-    void GPUTimeStampEnd(ID3D12GraphicsCommandList* pCmdList); // Resolve after end timestamp.
+    void GPUTimeStampStart(ID3D12GraphicsCommandList4* pCmdList);
+    void GPUTimeStampEnd(ID3D12GraphicsCommandList4* pCmdList); // Resolve after end timestamp.
     void ReadBackGPUTimeStampResults(); // Call after GPU finishes the work.
 
     int GetFPS() const;
@@ -25,7 +25,7 @@ public:
 
 private:
     static TimePerfManager* m_pThis;
-    ID3D12Device* m_pD3dDevice = nullptr;
+    ID3D12Device5* m_pD3dDevice = nullptr;
     ID3D12QueryHeap* m_pQueryHeap = nullptr;
     ID3D12Resource* m_pQueryResultBuffer = nullptr;
     ID3D12Resource* m_pQueryReadbackBuffer = nullptr;

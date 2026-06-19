@@ -1,56 +1,14 @@
 #pragma once
+#include "Asset.h"
 #include <unordered_map>
 #include <string>
-#include <vector>
-#include <d3d12.h>
 
-/*
-* Make sure heavy data is only stored one time and managed by the AssetManager.
-* Each Asset represents its storage in RAM and VRAM.
-*/
-
-class StaticMesh;
-
-const uint32_t ALBEDO_MASK            = 1;
-const uint32_t NORMAL_MASK            = 2;
-const uint32_t ROUGHNESS_METALIC_MASK = 4;
-const uint32_t AO_MASK                = 8;
-const uint32_t EMISSIVE_MASK          = 16;
-const uint32_t DIELECTRIC_MASK        = 32;
-const uint32_t DOUBLE_FACE_MASK       = 64;
+struct Primitive;
 
 constexpr int VERT_SIZE_FLOAT = (3 + 3 + 4 + 2); // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
 
-enum class TexWrapMode
-{
-    REPEAT,
-    MIRRORED_REPEAT,
-    CLAMP_TO_EDGE,
-    CLAMP_TO_BORDER
-};
-
-struct ImgInfo
-{
-    uint32_t             pixWidth;
-    uint32_t             pixHeight;
-    uint32_t             componentCnt;
-    std::vector<uint8_t> dataVec;
-    uint32_t             componentType;
-    ID3D12Resource*      gpuResource;
-    bool                 isSentToGpu;
-    uint32_t             srvHeapIdx;
-    TexWrapMode          wrapModeVertical;
-    TexWrapMode          wrapModeHorizontal;
-    uint32_t             arrayLayerCnt = 1; // For cubemap, it should be 6. For 2D texture, it should be 1.
-    uint32_t             mipLevelCnt = 1;
-};
-
-struct TextureAsset
-{
-    ImgInfo imgInfo;
-};
-
 // EnvMap Asset can be looked as combination of multiple TextureAssets, but we want to keep them together for better management and usage.
+/*
 struct EnvMapAsset
 {
     ImgInfo backGroundCubemap;
@@ -58,7 +16,10 @@ struct EnvMapAsset
     ImgInfo envBRDF;
     ImgInfo prefilteredEnvMap;
 };
+*/
 
+
+/*
 struct PrimitiveAsset
 {
     std::vector<float> m_vertData;
@@ -112,6 +73,7 @@ struct PrimitiveAsset
         if(m_emissiveTex.pixWidth > 1) { m_materialMask |= EMISSIVE_MASK; }
     }
 };
+*/
 
 class AssetManager
 {
@@ -123,73 +85,43 @@ public:
 
     void Deinit();
 
-    void SaveModelPrimAssetAndCreateGpuRsrc(const std::string& modelName, PrimitiveAsset* pPrimitiveAsset);
-    void LoadAssets();
-    void UnloadAssets();
-
-    bool IsStaticMeshAssetLoaded(const std::string& modelName) const
+    bool IsAssetLoaded(const std::string& modelName) const
     {
-        return m_primitiveAssets.find(modelName) != m_primitiveAssets.end();
+        return ( m_geoAssets.find(modelName) != m_geoAssets.end() ) || ( m_textureAssets.find(modelName) != m_textureAssets.end() );
     }
 
-    void LoadStaticMeshAssets(const std::string& modelName, StaticMesh* pStaticMesh);
-    EnvMapAsset* LoadEnvMapAsset(const std::string& filepath);
+    // The upper level AssetLoader calls this func after it loads the model file and arrage the data to a 'Primitive' vector.
+    // It will also send assets' resources to GPU according to the rendering backend.
+    void StoreModelAssets(const std::string& assetPath, const std::vector<Primitive>& iPrimitives);
+    void StoreTextureAsset(const std::string& assetPath, TextureAsset* iTexAsset);
+    // EnvMapAsset* StoreEnvMapAsset(const std::string& filepath);
 
-    void RetriveAllStaticMeshesNames(std::vector<std::string>& o_staticMeshNames) const
+    void RetriveAllMeshAssetsNames(std::vector<std::string>& o_meshNames) const
     {
-        for (const auto& pair : m_primitiveAssets)
+        for (const auto& pair : m_geoAssets)
         {
-            o_staticMeshNames.push_back(pair.first);
+            o_meshNames.push_back(pair.first);
         }
     }
-
-    void RetriveStaticMeshAssets(const std::string& modelName, std::vector<PrimitiveAsset*>& o_primitiveAssets) const
-    {
-        auto it = m_primitiveAssets.find(modelName);
-        if (it != m_primitiveAssets.end())
-        {
-            o_primitiveAssets = it->second;
-        }
-    }
-
-    bool RetrieveTextureAsset(const std::string& textureName, TextureAsset& o_textureAsset) const
-    {
-        auto it = m_textureAssets.find(textureName);
-        if (it != m_textureAssets.end())
-        {
-            o_textureAsset = *it->second;
-            return true;
-        }
-        return false;
-    }
-
-    bool RetrieveEnvMapAsset(const std::string& envMapName, EnvMapAsset& o_envMapAsset) const
-    {
-        if (m_envMapAsset == nullptr)
-        {
-            return false;
-        }
-        else
-        {
-            o_envMapAsset = *m_envMapAsset;
-            return true;
-        }
-    }
-
-    // Used by the DXR render backend for the scene information.
-    std::vector<PrimitiveAsset*> GenSceneVertIdxBuffer(std::vector<float>& sceneVertBuffer, std::vector<uint16_t>& sceneIdxBuffer);
-    
 
 private:
+    /*
     void CreateVertIdxBuffer(PrimitiveAsset* pPrimAsset);
     void GenMaterialTexBuffer(PrimitiveAsset* pPrimAsset);
     void GenPrimAssetMaterialBuffer(PrimitiveAsset* pPrimAsset);
-    
-    void LoadCubemapFromSingleFile(const std::string& filepath, ImgInfo& oImgInfo);
+    */
 
-    std::unordered_map<std::string, std::vector<PrimitiveAsset*>> m_primitiveAssets;
-    std::unordered_map<std::string, TextureAsset*>                m_textureAssets;
-    EnvMapAsset*                                                  m_envMapAsset = nullptr;
+    // void LoadCubemapFromSingleFile(const std::string& filepath, ImgInfo& oImgInfo);
+
+    void SendGeoAssetToGpu(GeometryAsset* pGeoAsset);
+    void SendTextureAssetToGpu(TextureAsset* pTexAsset);
+
+    // Key - Value pairs to avoid loading the same asset multiple times. The key is the asset's relative file/folder path. The value is the geo/tex data in/linked to the corresponding asset file.
+    // The asset can be a normal .gltf file (Geo assets + Texture assets) or a custom env map folder (Only texture assets).
+    //
+    // The AssetManager doesn't care about how to interpret the geo/tex data. It simply stores them. The upper level class/instance will decide how to use them.
+    std::unordered_map<std::string, std::vector<GeometryAsset*>> m_geoAssets;
+    std::unordered_map<std::string, std::vector<TextureAsset*>>  m_textureAssets;
 
     static AssetManager* m_pThis;
 };

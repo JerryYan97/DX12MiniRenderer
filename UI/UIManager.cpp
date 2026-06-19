@@ -9,7 +9,7 @@
 
 UIManager* UIManager::m_pThis = nullptr;
 
-UIManager::UIManager(ID3D12Device*  i_pD3dDevice,
+UIManager::UIManager(ID3D12Device5*  i_pD3dDevice,
                      HEventManager* i_pEventManager)
     : m_pD3dDevice(i_pD3dDevice),
       m_pEventManager(i_pEventManager),
@@ -218,7 +218,7 @@ void UIManager::FrameStart()
     ImGui::NewFrame();
 }
 
-void UIManager::RecordDrawData(ID3D12GraphicsCommandList* iCmdList)
+void UIManager::RecordDrawData(ID3D12GraphicsCommandList4* iCmdList)
 {
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), iCmdList);
 }

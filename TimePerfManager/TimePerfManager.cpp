@@ -27,12 +27,12 @@ void TimePerfManager::AddCPUTime(float deltaTimeSec) {
     }
 }
 
-void TimePerfManager::GPUTimeStampStart(ID3D12GraphicsCommandList* pCmdList) {
+void TimePerfManager::GPUTimeStampStart(ID3D12GraphicsCommandList4* pCmdList) {
     // pCmdList->BeginQuery(m_pQueryHeap, D3D12_QUERY_TYPE_TIMESTAMP, QUERY_FRAME_ID * 2); Timestamp doesn't have BeginQuery.
     pCmdList->EndQuery(m_pQueryHeap, D3D12_QUERY_TYPE_TIMESTAMP, 0);
 }
 
-void TimePerfManager::GPUTimeStampEnd(ID3D12GraphicsCommandList* pCmdList) {
+void TimePerfManager::GPUTimeStampEnd(ID3D12GraphicsCommandList4* pCmdList) {
     // Insert last timestamp and copy the result to readback buffer.
     pCmdList->EndQuery(m_pQueryHeap, D3D12_QUERY_TYPE_TIMESTAMP, 1);
 
@@ -95,7 +95,7 @@ float TimePerfManager::GetAverageGPUFrameTime() const // In milliseconds.
     return avgGpuTime;
 }
 
-void TimePerfManager::Init(ID3D12Device* pDevice, ID3D12CommandQueue* pGfxQueue)
+void TimePerfManager::Init(ID3D12Device5* pDevice, ID3D12CommandQueue* pGfxQueue)
 {
     m_pD3dDevice = pDevice;
     D3D12_QUERY_HEAP_DESC queryHeapDesc = {};

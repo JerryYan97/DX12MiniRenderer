@@ -12,4 +12,5 @@ set(UTILS_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/AssetManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/AssetManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Asset.h
     PARENT_SCOPE)

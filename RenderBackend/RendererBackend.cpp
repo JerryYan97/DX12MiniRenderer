@@ -9,7 +9,6 @@ void RendererBackend::Init(RendererBackendInitStruct initStruct)
     m_pDx12Debug = initStruct.pDx12Debug;
     m_pUIManager = initStruct.pUIManager;
     m_pEventManager = initStruct.pEventManager;
-    m_pSceneAssetLoader = initStruct.pSceneAssetLoader;
     m_pLevel = initStruct.pLevel;
     m_pMainCommandQueue = initStruct.pMainCmdQueue;
     m_pInitFrameContext = initStruct.pInitFrameContext;

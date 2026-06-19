@@ -77,8 +77,8 @@ uint32_t GetAccessorDataBytes(
 void ReadOutAccessorData(
     void* pDst,
     const tinygltf::Accessor& accessor,
-    std::vector<tinygltf::BufferView>& bufferViews,
-    std::vector<tinygltf::Buffer>& buffers)
+    const std::vector<tinygltf::BufferView>& bufferViews,
+    const std::vector<tinygltf::Buffer>& buffers)
 {
     auto& bufferView = bufferViews[accessor.bufferView];
     auto& buffer = buffers[bufferView.buffer];

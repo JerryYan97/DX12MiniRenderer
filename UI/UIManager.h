@@ -15,7 +15,7 @@ typedef void(*ImGUIGenFuncPtr) ();
 class UIManager
 {
 public:
-    UIManager(ID3D12Device* i_pD3dDevice, HEventManager* i_pEventManager);
+    UIManager(ID3D12Device5* i_pD3dDevice, HEventManager* i_pEventManager);
     ~UIManager();
 
     /*
@@ -35,7 +35,7 @@ public:
     void SetCustomImGUIFunc(ImGUIGenFuncPtr i_pCustomImGUIFunc) { m_pCustomImGUIGenFunc = i_pCustomImGUIFunc; }
     void CleanupCustomImGUIFunc() { m_pCustomImGUIGenFunc = nullptr; }
 
-    void RecordDrawData(ID3D12GraphicsCommandList* iCmdList);
+    void RecordDrawData(ID3D12GraphicsCommandList4* iCmdList);
 
     UINT GetCurrentBackBufferIndex() { return m_pSwapChain->GetCurrentBackBufferIndex(); }
     ID3D12Resource* GetCurrentMainRTResource() { return m_mainRenderTargetResources[GetCurrentBackBufferIndex()]; }
@@ -72,7 +72,7 @@ private:
     void FrameStart();
 
     // Reference to GPU Rsrcs managed by other classes.
-    ID3D12Device*  const m_pD3dDevice;
+    ID3D12Device5*  const m_pD3dDevice;
     HEventManager* const m_pEventManager;
 
     // GPU/OS Rsrcs managed by this class.

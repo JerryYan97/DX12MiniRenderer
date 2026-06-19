@@ -22,18 +22,6 @@
 extern AssetManager* g_pAssetManager;
 HWRTRenderBackend* HWRTRenderBackend::m_pInstance = nullptr;
 
-constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
-constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = {.Type = D3D12_HEAP_TYPE_UPLOAD};
-constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = {.Type = D3D12_HEAP_TYPE_DEFAULT};
-constexpr D3D12_RESOURCE_DESC BASIC_BUFFER_DESC = {
-    .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-    .Width = 0, // Will be changed in copies
-    .Height = 1,
-    .DepthOrArraySize = 1,
-    .MipLevels = 1,
-    .SampleDesc = NO_AA,
-    .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR};
-
 void HWRTRenderBackend::Flush()
 {
     static UINT64 value = 1;
@@ -41,6 +29,7 @@ void HWRTRenderBackend::Flush()
     m_fence->SetEventOnCompletion(value++, nullptr);
 }
 
+/*
 ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize)
 {
     auto makeBuffer = [=](UINT64 size, auto initialState) {
@@ -80,99 +69,141 @@ ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_R
     scratch->Release();
     return as;
 }
+*/
 
 void HWRTRenderBackend::InitScene()
 {
-    std::vector<float> sceneVertData;
-    std::vector<uint16_t> sceneIdxData;
-    std::vector<PrimitiveAsset*> scenePrimAssets = g_pAssetManager->GenSceneVertIdxBuffer(sceneVertData, sceneIdxData);
-
-    auto GetPrimStartVertIdxStart = [&](PrimitiveAsset* tarPrim, uint32_t& vertStartFloat, uint32_t& idxStartInt) {
-        uint32_t vertFloatCnt = 0;
-        uint32_t idxIntCnt = 0;
-        for (auto* primAsset : scenePrimAssets)
-        {
-            if (primAsset == tarPrim)
-            {
-                vertStartFloat = vertFloatCnt;
-                idxStartInt = idxIntCnt;
-                break;
-            }
-            vertFloatCnt += primAsset->m_vertData.size();
-            idxIntCnt += primAsset->m_idxCnt;
-        }
+    struct GeometryOffsets
+    {
+        uint32_t vertStartFloat = 0;
+        uint32_t idxStartInt = 0;
     };
 
-    std::vector<StaticMesh*> staticMeshes;
-    m_pLevel->RetriveStaticMeshes(staticMeshes);
-
-    // Count the number of all primitives instances -- Different prims use referred by different static meshes.
-    m_numInstances = 0;
-    for (auto* staticMesh : staticMeshes)
+    struct InstanceInfo
     {
-        m_numInstances += staticMesh->m_primitiveAssets.size();
+        uint32_t instUintInfo0[4];
+        float    instFloatInfo0[4];
+        float    instAlbedo[4];
+        float    instMetallicRoughness[4];
+    };
+
+    std::vector<MeshObject*> meshObjs;
+    m_pLevel->RetriveMeshObjects(meshObjs);
+
+    std::vector<float> sceneVertData;
+    std::vector<uint16_t> sceneIdxData;
+    std::unordered_map<GeometryAsset*, GeometryOffsets> geoOffsets;
+
+    m_numInstances = 0;
+
+    // Flatten unique geometry assets into one scene vertex/index buffer and record offsets.
+    for (MeshObject* pMeshObj : meshObjs)
+    {
+        std::vector<Primitive> meshPrimitives = pMeshObj->GetMeshPrimitives();
+        m_numInstances += static_cast<UINT>(meshPrimitives.size());
+
+        for (const Primitive& prim : meshPrimitives)
+        {
+            GeometryAsset* pGeo = prim.geometry;
+            if (pGeo == nullptr)
+            {
+                continue;
+            }
+
+            if (geoOffsets.find(pGeo) != geoOffsets.end())
+            {
+                continue;
+            }
+
+            GeometryOffsets offsets = {};
+            offsets.vertStartFloat = static_cast<uint32_t>(sceneVertData.size());
+            offsets.idxStartInt = static_cast<uint32_t>(sceneIdxData.size());
+
+            sceneVertData.insert(sceneVertData.end(), pGeo->m_vertData.begin(), pGeo->m_vertData.end());
+
+            if (pGeo->m_idxType)
+            {
+                assert(false && "HWRT InitScene currently assumes uint16 indices.");
+            }
+            else
+            {
+                sceneIdxData.insert(sceneIdxData.end(), pGeo->m_idxDataUint16.begin(), pGeo->m_idxDataUint16.end());
+            }
+
+            geoOffsets[pGeo] = offsets;
+        }
     }
 
     auto instancesDesc = BASIC_BUFFER_DESC;
     instancesDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_numInstances;
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
-                                    // &instancesDesc, D3D12_RESOURCE_STATE_COMMON,
-                                    &instancesDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                                    nullptr, IID_PPV_ARGS(&m_instances));
+                                          &instancesDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                          nullptr, IID_PPV_ARGS(&m_instances));
 
     D3D12_RAYTRACING_INSTANCE_DESC* pAllInstData = nullptr;
     m_instances->Map(0, nullptr, reinterpret_cast<void**>(&pAllInstData));
 
-    struct InstanceInfo
-    {
-        uint32_t instUintInfo0[4];
-        float instFloatInfo0[4];
-        float instAlbedo[4];
-        float instMetallicRoughness[4];
-    };
     std::vector<InstanceInfo> instInfoVecData;
+    instInfoVecData.reserve(m_numInstances);
 
     UINT instIdx = 0;
-    for (int sMeshIdx = 0; sMeshIdx < staticMeshes.size(); sMeshIdx++)
+    for (MeshObject* pMeshObj : meshObjs)
     {
-        auto* pStaticMesh = staticMeshes[sMeshIdx];
-        std::vector<float> staticMeshCnstAlbedo = pStaticMesh->GetCnstAlbedo();
-        std::vector<float> staticMeshCnstMetallicRoughness = pStaticMesh->GetCnstMetallicRoughness();
-        uint32_t meshMaterialMask = pStaticMesh->GetStaticMeshMaterialMask();
+        std::vector<Primitive> meshPrimitives = pMeshObj->GetMeshPrimitives();
 
-        for (int primIdx = 0; primIdx < staticMeshes[sMeshIdx]->m_primitiveAssets.size(); primIdx++, instIdx++)
+        for (const Primitive& prim : meshPrimitives)
         {
-            auto* pPrimAsset = staticMeshes[sMeshIdx]->m_primitiveAssets[primIdx];
-            auto* pInstDesc = &pAllInstData[instIdx];
+            GeometryAsset* pGeo = prim.geometry;
+            if (pGeo == nullptr || pGeo->m_blas == nullptr)
+            {
+                continue;
+            }
+
+            auto geoOffsetItr = geoOffsets.find(pGeo);
+            assert(geoOffsetItr != geoOffsets.end());
+
+            const GeometryOffsets& offsets = geoOffsetItr->second;
+
+            D3D12_RAYTRACING_INSTANCE_DESC* pInstDesc = &pAllInstData[instIdx];
             *pInstDesc = {
                 .InstanceID = instIdx,
                 .InstanceMask = 1,
-                .AccelerationStructure = pPrimAsset->m_blas->GetGPUVirtualAddress(),
+                .AccelerationStructure = pGeo->m_blas->GetGPUVirtualAddress(),
             };
 
-            // Update transform
-            memcpy(pInstDesc->Transform, staticMeshes[sMeshIdx]->m_modelMat, sizeof(float) * 12);
+            memcpy(pInstDesc->Transform, pMeshObj->GetModelMat(), sizeof(float) * 12);
 
-            // A prim asset is a blas, but there can be multiple instances refer to one blas and use different materials...
-            uint32_t vertStartFloat, idxStartInt;
-            GetPrimStartVertIdxStart(pPrimAsset, vertStartFloat, idxStartInt);
+            std::vector<float> emissiveRadianceVec = prim.material.GetCnstEmissive();
+            std::vector<float> cnstAlbedo = prim.material.GetCnstAlbedo();
+            std::vector<float> cnstMetallicRoughness = prim.material.GetCnstMetallicRoughness();
 
-            float emissiveRadiance[3] = {0.f, 0.f, 0.f};
-            if (pStaticMesh->IsCnstEmissiveMaterial())
-            {
-                std::vector<float> emissiveRadianceVec = pStaticMesh->GetCnstEmissive();
-                memcpy(emissiveRadiance, emissiveRadianceVec.data(), sizeof(float) * 3);
-            }
+            InstanceInfo instInfo = {};
+            instInfo.instUintInfo0[0] = prim.material.GetMaterialMask();
+            instInfo.instUintInfo0[1] = offsets.vertStartFloat;
+            instInfo.instUintInfo0[2] = offsets.idxStartInt;
+            instInfo.instUintInfo0[3] = 0;
 
-            InstanceInfo instInfo{
-                .instUintInfo0 = {pPrimAsset->m_materialMask | meshMaterialMask, vertStartFloat, idxStartInt, 0},
-                .instFloatInfo0 ={emissiveRadiance[0], emissiveRadiance[1], emissiveRadiance[2], 0.f},
-                .instAlbedo = {staticMeshCnstAlbedo[0], staticMeshCnstAlbedo[1], staticMeshCnstAlbedo[2], 0.f},
-                .instMetallicRoughness = {staticMeshCnstMetallicRoughness[0], staticMeshCnstMetallicRoughness[1], 0.f, 0.f}
-            };
+            instInfo.instFloatInfo0[0] = emissiveRadianceVec[0];
+            instInfo.instFloatInfo0[1] = emissiveRadianceVec[1];
+            instInfo.instFloatInfo0[2] = emissiveRadianceVec[2];
+            instInfo.instFloatInfo0[3] = 0.f;
+
+            instInfo.instAlbedo[0] = cnstAlbedo[0];
+            instInfo.instAlbedo[1] = cnstAlbedo[1];
+            instInfo.instAlbedo[2] = cnstAlbedo[2];
+            instInfo.instAlbedo[3] = 0.f;
+
+            instInfo.instMetallicRoughness[0] = cnstMetallicRoughness[0];
+            instInfo.instMetallicRoughness[1] = cnstMetallicRoughness[1];
+            instInfo.instMetallicRoughness[2] = 0.f;
+            instInfo.instMetallicRoughness[3] = 0.f;
+
             instInfoVecData.push_back(instInfo);
+            instIdx++;
         }
     }
+
+    m_instances->Unmap(0, nullptr);
 
     // Create and init the camera constant buffer
     auto cameraCnstDesc = BASIC_BUFFER_DESC;
@@ -190,7 +221,7 @@ void HWRTRenderBackend::InitScene()
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
                                           &instInfoDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
                                           nullptr, IID_PPV_ARGS(&m_instInfoBuffer));
-    void* instInfoBufferMap;
+    void* instInfoBufferMap = nullptr;
     m_instInfoBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instInfoBufferMap));
     memcpy(instInfoBufferMap, instInfoVecData.data(), sizeof(InstanceInfo) * instInfoVecData.size());
     m_instInfoBuffer->Unmap(0, nullptr);
@@ -201,7 +232,7 @@ void HWRTRenderBackend::InitScene()
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
                                           &sceneVertDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
                                           nullptr, IID_PPV_ARGS(&m_sceneVertBuffer));
-    void* sceneVertBufferMap;
+    void* sceneVertBufferMap = nullptr;
     m_sceneVertBuffer->Map(0, nullptr, &sceneVertBufferMap);
     memcpy(sceneVertBufferMap, sceneVertData.data(), sizeof(float) * sceneVertData.size());
     m_sceneVertBuffer->Unmap(0, nullptr);
@@ -212,7 +243,7 @@ void HWRTRenderBackend::InitScene()
     m_pD3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE,
                                           &sceneIdxDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
                                           nullptr, IID_PPV_ARGS(&m_sceneIdxBuffer));
-    void* sceneIdxBufferMap;
+    void* sceneIdxBufferMap = nullptr;
     m_sceneIdxBuffer->Map(0, nullptr, &sceneIdxBufferMap);
     memcpy(sceneIdxBufferMap, sceneIdxData.data(), sizeof(uint16_t) * sceneIdxData.size());
     m_sceneIdxBuffer->Unmap(0, nullptr);
@@ -225,13 +256,13 @@ void HWRTRenderBackend::InitTopLevel()
 
     auto desc = BASIC_BUFFER_DESC;
     // WARP bug workaround: use 8 if the required size was reported as less
-    desc.Width = std::max(updateScratchSize, 8ULL);
+    desc.Width = max(updateScratchSize, 8ULL);
     desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
                                           D3D12_RESOURCE_STATE_COMMON, nullptr,
                                           IID_PPV_ARGS(&m_tlasUpdateScratch));
 }
-
+/*
 ID3D12Resource* HWRTRenderBackend::MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer, UINT indices)
 {
     D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {
@@ -258,7 +289,7 @@ ID3D12Resource* HWRTRenderBackend::MakeBLAS(ID3D12Resource* vertexBuffer, UINT v
 
     return MakeAccelerationStructure(inputs);
 }
-
+*/
 ID3D12Resource* HWRTRenderBackend::MakeTLAS(ID3D12Resource* instances, UINT numInstances,
                          UINT64* updateScratchSize)
 {
@@ -269,9 +300,10 @@ ID3D12Resource* HWRTRenderBackend::MakeTLAS(ID3D12Resource* instances, UINT numI
         .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
         .InstanceDescs = instances->GetGPUVirtualAddress()};
 
-    return MakeAccelerationStructure(inputs, updateScratchSize);
+    return MakeAccelerationStructure(m_pD3dDevice, inputs, updateScratchSize);
 }
 
+/*
 void HWRTRenderBackend::InitBottomLevel()
 {
     std::vector<std::string> staticMeshNames;
@@ -289,6 +321,7 @@ void HWRTRenderBackend::InitBottomLevel()
         }
     }
 }
+*/
 
 void HWRTRenderBackend::InitRootSignature()
 {
@@ -411,7 +444,7 @@ void HWRTRenderBackend::CustomInit()
     m_pUIManager->GetWindowSize(winWidth, winHeight);
     CustomResize(winWidth, winHeight);
 
-    InitBottomLevel();
+    // InitBottomLevel();
     InitScene();
     InitTopLevel();
     InitRootSignature();
@@ -448,7 +481,7 @@ void HWRTRenderBackend::UpdateFrameConstBuffer()
     CrossProductVec3(pCamera->m_view, pCamera->m_up, right);
     NormalizeVec(right, 3);
 
-    srand(time(0));
+    srand(static_cast<unsigned int>(time(0)));
     // Generate a random number between 1 and 100
     uint32_t random_number = rand() % 100 + 1;
 

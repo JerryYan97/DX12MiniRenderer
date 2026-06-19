@@ -302,3 +302,8 @@ void Camera::CenterCamera(HEventArguments args)
         }
     }
 }
+
+void Camera::Tick(float DeltaTime)
+{
+    CameraUpdate();
+}

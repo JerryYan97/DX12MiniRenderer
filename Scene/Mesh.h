@@ -1,53 +1,46 @@
 #pragma once
-#include "../Utils/AssetManager.h"
+#include "../Utils/Asset.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <d3d12.h>
 #include "Object.h"
+#include "../RenderBackend/Material.h"
 
 namespace YAML
 {
     class Node;
 }
 
-// StaticMesh is actually a StaticMesh Instance that can share the same mesh data with other StaticMesh Instances.
-class StaticMesh : public Object
+// Both Primitive and Mesh are composer. Only GeometryAsset and TextureAsset are the actual storage data, which are managed by the AssetManager.
+//
+// Primitive is a composer of references to geometry assets and material. It's the smallest renderable unit in the scene.
+// When a Primitive is stored in the Mesh stored in AssetLoader, it doesn't have constant buffer and descriptor heap for the material. (Maybe this is not a good design and I should separate 'Primitive' as 'PrimitiveStorageData' and 'PrimitiveRuntimeData')
+// When a Primitive is stored in the MeshObject, it has its own constant buffer and descriptor heap for the material. Their lifetime is managed by the MeshObject.
+struct Primitive
+{
+    Material              material;
+    GeometryAsset*        geometry = nullptr;
+    ID3D12Resource*       primMaterialCnstBuffer = nullptr;
+    ID3D12DescriptorHeap* primMaterialCbvDescHeap = nullptr;
+};
+
+// Mesh is a wrapper of the pointers to <geometry+materials -- Primitive> + anim data.
+// Since it only stores the pointers to the geo-material data, we can also easily change the material of it.
+//
+// A Mesh can be used as two cases:
+// (1): It can be used as the data source of a MeshObject. (Note that different MeshObjects won't share a 'Mesh')
+// (2): It is a storage of the combination data from an asset file like GLTF/OBJ/OpenUSD, which represents an original model without any material/animation override in the AssetLoader.
+class Mesh
 {
 public:
-    StaticMesh();
-    ~StaticMesh();
+    Mesh() {}
+    ~Mesh();
 
-    static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
-    void SendModelMatrixToGpuBuffer();
+    //
+    void InitAsAssetStorage(const std::string& assetPath, const std::vector<Primitive>& primitives);
 
-    bool IsCnstEmissiveMaterial() const { return m_isCnstEmissiveMaterial; }
-
-    uint32_t GetStaticMeshMaterialMask() const
-    {
-        uint32_t mask = 0;
-        mask |= m_isDielectric ? DIELECTRIC_MASK : 0;
-        mask |= m_isDoubleFace ? DOUBLE_FACE_MASK : 0;
-        return mask;
-    }
-
-    std::vector<float> GetCnstEmissive() const
-    {
-        std::vector<float> res = {m_cnstEmissive[0], m_cnstEmissive[1], m_cnstEmissive[2]};
-        return res;
-    }
-
-    std::vector<float> GetCnstAlbedo() const
-    {
-        std::vector<float> res = {m_cnstAlbedo[0], m_cnstAlbedo[1], m_cnstAlbedo[2]};
-        return res;
-    }
-
-    std::vector<float> GetCnstMetallicRoughness() const
-    {
-        std::vector<float> res = {m_cnstMetallic, m_cnstRoughness};
-        return res;
-    }
+    //
+    void InitAsObjectDataSource(const Mesh& otherMesh);
 
     std::vector<float> GetMeshCenter() const
     {
@@ -63,42 +56,54 @@ public:
         return res;
     }
 
+    std::vector<Primitive> GetPrimitives() const { return m_primitives; }
+
+    void OverrideAsConstMaterial(const ConstMaterialData& cnstMatData);
+
+    void GenAndInitRuntimeGpuBufferRsrcForPrimitives();
+
+private:
     std::string m_assetPath;
 
-    // std::vector<MeshPrimitive> m_meshPrimitives;
-
-    std::vector<PrimitiveAsset*> m_primitiveAssets;
+    std::vector<Primitive> m_primitives;
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC*> m_primMappedInsts; // Maybe useful when we want to render dynamic scene in the future.
+
+    float m_meshCenter[3] = {}; // In the model space.
+    float m_meshBBXMin[3] = {};
+    float m_meshBBXMax[3] = {};
+
+    bool m_isMeshObjectDataSource = false; // Or, it's managed by the AssetLoader.
+};
+
+// MeshObject is an instance of a Mesh in the SceneGraph. It can have position, rotation and scale to transform the Mesh.
+class MeshObject : public Object
+{
+public:
+    MeshObject();
+    ~MeshObject();
+
+    static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
+
+    // void SendModelMatrixToGpuBuffer();
+
+    std::vector<float> GetMeshCenter() const { return m_mesh.GetMeshCenter(); }
+    std::vector<float> GetMeshBBX() const { return m_mesh.GetMeshBBX(); }
+    std::vector<Primitive> GetMeshPrimitives() const { return m_mesh.GetPrimitives(); }
+    float* GetModelMat() { return m_modelMat; }
+
+    ID3D12DescriptorHeap* GetMeshObjCbvDescHeap() const { return m_pMeshObjCbvDescHeap; }
+
+private:
+    // The GPU buffer of a MeshObject is used to store per-object data like model matrix/material settings.
+    void GenAndInitRuntimeGpuBufferRsrc();
+
+    ID3D12Resource*       m_pMeshObjCnstBuffer = nullptr;
+    ID3D12DescriptorHeap* m_pMeshObjCbvDescHeap = nullptr;
 
     float m_modelMat[16];
 
-    ID3D12Resource* m_staticMeshConstantBuffer;
-    ID3D12DescriptorHeap* m_staticMeshCbvDescHeap;
-
-    ID3D12Resource* m_staticMeshCnstMaterialBuffer;
-    ID3D12DescriptorHeap* m_staticMeshCnstMaterialCbvDescHeap;
-
-private:
-    void GenAndInitGpuBufferRsrc();
-
+    Mesh m_mesh;
     float m_position[3];
     float m_rotation[3];
     float m_scale[3];
-
-    bool  m_isCnstMaterial;
-    float m_cnstAlbedo[3];
-    float m_cnstMetallic;
-    float m_cnstRoughness;
-    bool  m_isDielectric;
-    bool  m_isDoubleFace;
-
-    bool m_isCnstEmissiveMaterial;
-    float m_cnstEmissive[3];
-
-    bool m_loadedInRAM;
-    bool m_loadedInVRAM;
-
-    float m_meshCenter[3] = {}; // In the world space.
-    float m_meshBBXMin[3] = {};
-    float m_meshBBXMax[3] = {};
 };

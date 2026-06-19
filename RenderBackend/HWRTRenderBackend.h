@@ -47,8 +47,8 @@ class HWRTRenderBackend : public RendererBackend
 
         ID3D12Fence* m_fence;
 
-        ID3D12Resource* MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize = nullptr);
-        ID3D12Resource* MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer = nullptr, UINT indices = 0);
+        // ID3D12Resource* MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize = nullptr);
+        // ID3D12Resource* MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer = nullptr, UINT indices = 0);
         ID3D12Resource* MakeTLAS(ID3D12Resource* instances, UINT numInstances, UINT64* updateScratchSize);
 
         void Flush();
@@ -62,7 +62,7 @@ class HWRTRenderBackend : public RendererBackend
         ID3D12Resource* m_sceneVertBuffer;
         ID3D12Resource* m_sceneIdxBuffer;
 
-        void InitBottomLevel();
+        // void InitBottomLevel();
 
         void InitTopLevel();
         ID3D12Resource* m_tlas;

@@ -1,4 +1,5 @@
 #include "MiniRendererApp.h"
+#include "Settings.h"
 #include "UI/UIManager.h"
 #include "Utils/AssetManager.h"
 #include "Scene/Level.h"
@@ -22,7 +23,7 @@ bool DX12MiniRenderer::show_demo_window = true;
 bool DX12MiniRenderer::show_another_window = true;
 bool DX12MiniRenderer::clear_color = true;
 DX12MiniRenderer* DX12MiniRenderer::m_pThis = nullptr;
-ID3D12Device* g_pD3dDevice = nullptr;
+ID3D12Device5* g_pD3dDevice = nullptr;
 UIManager* g_pUIManager = nullptr;
 AssetManager* g_pAssetManager = nullptr;
 TimePerfManager* g_pTimePerfManager = nullptr;
@@ -119,7 +120,7 @@ void DX12MiniRenderer::GenerateImGUIStates()
     */
     // 3. Show another simple window.
     // if (show_another_window)
-    int fps = 0.f;
+    int fps = 0;
     float cpuTime = 0.f;
     float gpuTime = 0.f;
     uint32_t displayWidth = 100;
@@ -263,8 +264,9 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
-    m_sceneAssetLoader.LoadAsLevel(sceneYaml, m_pLevel);
-
+    m_assetLoader.Init(sceneYaml); // Init eariler since the 'LoadAsLevel' function needs to load assets through the m_assetLoader.
+    m_sceneLoader.LoadAsLevel(sceneYaml, m_pLevel);
+    
     if (m_pLevel->m_rendererBackendType == RendererBackendType::PathTracing)
     {
         m_pRendererBackend = new HWRTRenderBackend();
@@ -281,14 +283,12 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     uint32_t height = 0;
     m_pUIManager->GetWindowSize(width, height);
 
-    /**/
     RendererBackendInitStruct initStruct;
     initStruct.pD3dDevice = m_pD3dDevice;
     initStruct.pMainCmdQueue = m_pD3dCommandQueue;
     initStruct.pDx12Debug = m_pDx12Debug;
     initStruct.pUIManager = m_pUIManager;
     initStruct.pEventManager = &m_eventManager;
-    initStruct.pSceneAssetLoader = &m_sceneAssetLoader;
     initStruct.pLevel = m_pLevel;
     initStruct.pInitFrameContext = &m_frameContexts[0];
     initStruct.pCommandList = m_pD3dCommandList;
@@ -481,17 +481,21 @@ void DX12MiniRenderer::InitEnvMapPipeline()
 
 void DX12MiniRenderer::FinalizeEnvMapPipeline()
 {
-    if(m_pEnvMapRootSignature) {
+    if (m_pEnvMapRootSignature) {
         m_pEnvMapRootSignature->Release();
         m_pEnvMapRootSignature = nullptr;
     }
-    if(m_pEnvMapSRVCBVHeap) {
+    if (m_pEnvMapSRVCBVHeap) {
         m_pEnvMapSRVCBVHeap->Release();
         m_pEnvMapSRVCBVHeap = nullptr;
     }
-    if(m_pEnvMapPipelineState) {
+    if (m_pEnvMapPipelineState) {
         m_pEnvMapPipelineState->Release();
         m_pEnvMapPipelineState = nullptr;
+    }
+    if (m_pEnvMapCnstBuffer) {
+        m_pEnvMapCnstBuffer->Release();
+        m_pEnvMapCnstBuffer = nullptr;
     }
 }
 
@@ -519,10 +523,9 @@ void DX12MiniRenderer::Run()
             HEvent rotateCameraEvent(args, "RotateCamera");
             pEventManager->SendEvent(rotateCameraEvent);
         }
-        // Camera Update
-        Camera* pCamera = nullptr;
-        m_pLevel->RetriveActiveCamera(&pCamera);
-        pCamera->CameraUpdate();
+
+        // Scene Objects Update
+        m_pLevel->Tick(deltaSec);
 
         FrameContext* frameCtx = WaitForCurrentFrameResources();
         ID3D12Resource* frameCRT = m_pUIManager->GetCurrentMainRTResource();
@@ -610,7 +613,7 @@ void DX12MiniRenderer::Finalize()
 
     if (m_pRendererBackend) { m_pRendererBackend->Deinit(); delete m_pRendererBackend; m_pRendererBackend = nullptr; }
 
-#if defined(REPORT_LIVE_DEVICE_OBJ)
+#if defined(REPORT_LIVE_DEVICE_OBJS)
     ID3D12DebugDevice* pDebugDevice;
     if (SUCCEEDED(m_pD3dDevice->QueryInterface(IID_PPV_ARGS(&pDebugDevice))))
     {
