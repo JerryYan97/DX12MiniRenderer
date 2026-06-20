@@ -39,13 +39,6 @@ C:\DX12MiniRenderer\build\Debug>DX12MiniRenderer.exe -h
 
       -h, --help                        Display this help menu
       -s, --scene                       The render scene idx.
-    DX12 Mini-Renderer. Supports Rasterization/Raytracing Backend and various
-    scenes.
-
-  OPTIONS:
-
-      -h, --help                        Display this help menu
-      -s, --scene                       The render scene idx.
 
     E.g. DX12MiniRenderer.exe --scene 1
     (0):Avocado

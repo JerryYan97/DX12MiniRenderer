@@ -283,7 +283,7 @@ void Mesh::GenAndInitRuntimeGpuBufferRsrcForPrimitives()
         primPSMaterialConstBuffer.metallicRoughness[1] = cnstMetallicRoughness[1];
         primPSMaterialConstBuffer.materialMask = primitive.material.GetMaterialMask();
 
-        AllocateUploadBuffer(g_pD3dDevice, &primPSMaterialConstBuffer, CnstBufferSize, &primitive.primMaterialCnstBuffer);
+        AllocateUploadBuffer(g_pD3dDevice, &primPSMaterialConstBuffer, sizeof(PsMaterialBuffer), &primitive.primMaterialCnstBuffer);
 
         D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
         cbvHeapDesc.NumDescriptors = 1;
