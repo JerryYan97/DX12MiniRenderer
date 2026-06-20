@@ -1,11 +1,11 @@
 #pragma once
+#define NOMINMAX
 #include <d3d12.h>
 #include <stdexcept>
 #include <debugapi.h>
 #include <sstream>
 #include <iomanip>
-
-#define max(a,b) (((a) > (b)) ? (a) : (b))
+#include <algorithm>
 
 enum DX12_GPU_CPU_ACCESS_ENUM {
     UPLOAD = 0, // CPU TO GPU
@@ -212,7 +212,7 @@ inline void AllocateUploadBuffer(ID3D12Device5* pDevice, void *pData, UINT64 dat
 
     DXGI_SAMPLE_DESC bufferSampleDesc = DXGI_SAMPLE_DESC{ 1, 0 };
     D3D12_RESOURCE_DESC bufferDesc = D3D12_RESOURCE_DESC{D3D12_RESOURCE_DIMENSION_BUFFER,
-                                                         0, max(datasize, CnstBufferMinSize), 1, 1, 1,
+                                                         0, std::max(datasize, CnstBufferMinSize), 1, 1, 1,
                                                          DXGI_FORMAT_UNKNOWN, bufferSampleDesc,
                                                          D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE};
     
@@ -244,7 +244,7 @@ inline void AllocateUploadBuffer(ID3D12Device5* pDevice, UINT64 buffersize, ID3D
 
     DXGI_SAMPLE_DESC bufferSampleDesc = DXGI_SAMPLE_DESC{ 1, 0 };
     D3D12_RESOURCE_DESC bufferDesc = D3D12_RESOURCE_DESC{D3D12_RESOURCE_DIMENSION_BUFFER,
-                                                         0, max( CnstBufferMinSize, buffersize), 1, 1, 1,
+                                                         0, std::max<UINT64>(CnstBufferMinSize, buffersize), 1, 1, 1,
                                                          DXGI_FORMAT_UNKNOWN, bufferSampleDesc,
                                                          D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE};
     
