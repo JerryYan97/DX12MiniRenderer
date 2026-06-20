@@ -9,11 +9,6 @@ SceneGraph:
     Scale: [0.005, 0.005, 0.005]
     Rotation: [0, 1.39626, 0]
     AssetPath: duck/Duck.gltf
-    Material:
-      Type: ConstMaterial
-      Albedo: [1.0, 1.0, 0.0]
-      Roughness: 1.0
-      Metallic: 0.0
   PointLightInst1:
     Type: PointLight
     Radiance: [10.0, 10.0, 10.0]

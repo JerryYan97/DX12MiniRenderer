@@ -9,11 +9,6 @@ SceneGraph:
     Scale: [3.0, 3.0, 3.0]
     Rotation: [0, 0, 0]
     AssetPath: fish/BarramundiFish.gltf
-    Material:
-      Type: ConstMaterial
-      Albedo: [1.0, 1.0, 0.0]
-      Roughness: 1.0
-      Metallic: 0.0
   PointLightInst1:
     Type: PointLight
     Radiance: [10.0, 10.0, 10.0]

@@ -11,19 +11,19 @@ SceneGraph:
   PointLightInst1:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [1.0, 1.0, 0.0]
+    Position: [1.0, 2.0, -2.0]
   PointLightInst2:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [-1.0, 1.0, 0.0]
+    Position: [-1.0, 2.0, -2.0]
   PointLightInst3:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [1.0, 0.0, 0.0]
+    Position: [1.0, 0.0, 2.0]
   PointLightInst4:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [-1.0, 0.0, 0.0]
+    Position: [-1.0, 0.0, 2.0]
   CameraInst:
     Type: Camera
     Position: [0.0, 1.0, -2.0]

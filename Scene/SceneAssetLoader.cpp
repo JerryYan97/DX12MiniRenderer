@@ -218,6 +218,7 @@ Mesh AssetLoader::LoadAsOneMesh(const std::string& fileNamePath)
     else
     {
         mesh = LoadTinyGltfOneModelAsOneMesh(fileNamePath);
+        m_pThis->m_AssetsMeshes[fileNamePath] = mesh;
     }
 
     g_pAssetManager->StoreModelAssets(fileNamePath, mesh.GetPrimitives());
