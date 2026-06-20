@@ -1,0 +1,3 @@
+set(RT_SHADERS_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/PBRShaders.hlsl
+    PARENT_SCOPE)

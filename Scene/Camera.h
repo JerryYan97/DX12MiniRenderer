@@ -36,7 +36,6 @@ class Camera : public Object
 public:
     Camera(float* pPos, float* pView, float* pUp, float  fov, float near, float far);
 
-    void CameraUpdate(); // Update projection matrix according to current window size and camera position every frame.
     void SetCameraMode(CAMERA_MODE mode) { m_cameraMode = mode; }
 
     static void BindKeyboardMouseInput(InputHandler* pInputHandler);
@@ -52,6 +51,8 @@ public:
     static void RotateCamera(HEventArguments args);
     static void ZoomCamera(HEventArguments args); // It's different from moving forward/backward. It changes the view distance to the look-at point.
     static void CenterCamera(HEventArguments args);
+
+    virtual void Tick(float DeltaTime) override;
 
     float m_projMat[16];
     float m_viewMat[16];
@@ -70,6 +71,8 @@ public:
     bool  m_active;
 
 private:
+    void CameraUpdate(); // Update projection matrix according to current window size and camera position every frame.
+
     static Camera* m_pActiveCamera;
     CAMERA_MODE m_cameraMode = CAMERA_MODE::USER_CONTROLLED;
 };

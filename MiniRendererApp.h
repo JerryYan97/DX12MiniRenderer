@@ -60,7 +60,8 @@ private:
     ID3D12Debug*     m_pDx12Debug = nullptr;
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;
-    SceneAssetLoader m_sceneAssetLoader;
+    SceneLoader      m_sceneLoader;
+    AssetLoader      m_assetLoader;
     AssetManager*    m_pAssetManager = nullptr;
     TimePerfManager* m_pTimePerfManager = nullptr;
 

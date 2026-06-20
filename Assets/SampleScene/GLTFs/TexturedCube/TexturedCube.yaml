@@ -1,18 +1,14 @@
 SceneName: SphereTest
 SceneType: GLTF
 BackgroundColor: [0.01, 0.01, 0.01]
+SceneId: 10
 SceneGraph:
   TriangleInst0:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
     AssetPath: texCube/BoxTextured.gltf
-    Material:
-      Type: ConstMaterial
-      Albedo: [1.0, 1.0, 0.0]
-      Roughness: 1.0
-      Metallic: 0.0
   PointLightInst1:
     Type: PointLight
     Radiance: [20.0, 20.0, 20.0]

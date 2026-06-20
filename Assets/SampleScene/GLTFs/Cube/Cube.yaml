@@ -1,8 +1,9 @@
 SceneName: CubeTest
 SceneType: GLTF
+SceneId: 3
 SceneGraph:
-  TriangleInst:
-    Type: StaticMesh
+  CubeInst:
+    Type: MeshObject
     Position: [0.2, 0.0, 0.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -10,19 +11,19 @@ SceneGraph:
   PointLightInst1:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [1.0, 1.0, 0.0]
+    Position: [1.0, 2.0, -1.0]
   PointLightInst2:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [-1.0, 1.0, 0.0]
+    Position: [-1.0, 2.0, -1.0]
   PointLightInst3:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [1.0, 0.0, 0.0]
+    Position: [1.0, -2.0, -1.0]
   PointLightInst4:
     Type: PointLight
     Radiance: [1.0, 1.0, 1.0]
-    Position: [-1.0, 0.0, 0.0]
+    Position: [-1.0, -2.0, -1.0]
   CameraInst:
     Type: Camera
     Position: [1.0, 2.0, -8.0]

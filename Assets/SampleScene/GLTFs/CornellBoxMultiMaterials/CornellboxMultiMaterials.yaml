@@ -3,9 +3,10 @@ Renderer: PathTracer
 PathTracing Settings:
   MaxDepth: 1
 SceneType: GLTF
+SceneId: 2
 SceneGraph:
   MirrorSphere:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -17,7 +18,7 @@ SceneGraph:
       Metallic: 1.0
       IsDoubleFace: false
   GlassSphere:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [2.0, 0.0, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -30,13 +31,19 @@ SceneGraph:
       IsDielectrics: true
       IsDoubleFace: false
   BottomWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, -1.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 0]
     AssetPath: quad.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 1.0]
+      Roughness: 1.0
+      Metallic: 0.0
+      IsDoubleFace: true
   RightWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.0, 3.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 1.5708]
@@ -46,8 +53,9 @@ SceneGraph:
       Albedo: [0.0, 1.0, 0.0]
       Roughness: 0.05
       Metallic: 0.0
+      IsDoubleFace: true
   LeftWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.0, 3.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 1.5708]
@@ -57,20 +65,33 @@ SceneGraph:
       Albedo: [1.0, 0.0, 0.0]
       Roughness: 0.05
       Metallic: 0.0
+      IsDoubleFace: true
   TopWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 7.0, 0.0]
     Scale: [4, 4, 4]
     Rotation: [0, 0, 0]
     AssetPath: quad.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 1.0]
+      Roughness: 1.0
+      Metallic: 0.0
+      IsDoubleFace: true
   BackWall:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 3.0, 4.0]
     Scale: [4, 4, 4]
     Rotation: [1.5708, 0, 0]
     AssetPath: quad.gltf
+    Material:
+      Type: ConstMaterial
+      Albedo: [1.0, 1.0, 1.0]
+      Roughness: 1.0
+      Metallic: 0.0
+      IsDoubleFace: true
   TopLight:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [0.0, 6.8, 0.0]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]

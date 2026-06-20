@@ -8,7 +8,7 @@ if __name__ == "__main__":
     tallBoxCnt = 0
     sceneGraphDict = data['SceneGraph']
     for key, value in sceneGraphDict.items():
-        if value['Type'] == 'StaticMesh':
+        if value['Type'] == 'MeshObject':
             if 'AssetPath' in value and value['AssetPath'] == 'tallBox.gltf':
                 # print(f"Key: {key}, Value: {value}")
                 value['Position'][1] = -4.0 + random.random() - 0.5

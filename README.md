@@ -48,11 +48,9 @@ C:\DX12MiniRenderer\build\Debug>DX12MiniRenderer.exe -h
     (4):Duck
     (5):DXRMilestoneScene
     (6):Fish
-    (7):Fox
-    (8):PBRSpheresPtLights
-    (9):Spanza
-    (10):Sphere
-    (11):TexturedCube
-    (12):Triangle
-    (13):WaterBottle
+    (7):PBRSpheresPtLights
+    (8):RoughnessCompareIBL
+    (9):Sphere
+    (10):TexturedCube
+    (11):Triangle
 ```

@@ -7,7 +7,7 @@ class UIManager;
 class HEventManager;
 class SceneAssetLoader;
 class Level;
-class FrameContext;
+struct FrameContext;
 
 enum class RendererBackendType
 {
@@ -28,7 +28,6 @@ struct RendererBackendInitStruct
     ID3D12Debug*   pDx12Debug = nullptr;
     UIManager*     pUIManager = nullptr;
     HEventManager* pEventManager = nullptr;
-    SceneAssetLoader*   pSceneAssetLoader = nullptr;
     Level*         pLevel = nullptr;
     ID3D12CommandQueue* pMainCmdQueue = nullptr;
     FrameContext*  pInitFrameContext = nullptr;

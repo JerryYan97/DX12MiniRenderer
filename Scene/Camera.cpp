@@ -51,7 +51,7 @@ Object* Camera::Deseralize(const std::string& objName, const YAML::Node& i_node)
 
     uint32_t winWidth, winHeight;
     g_pUIManager->GetWindowSize(winWidth, winHeight);
-    pCamera->m_aspect = (float)winHeight / (float)winWidth;
+    pCamera->m_aspect = (float)winWidth / (float)winHeight;
 
     m_pActiveCamera = pCamera;
 
@@ -301,4 +301,9 @@ void Camera::CenterCamera(HEventArguments args)
             printf("Occupy Radio: %f\n", occupyRatio);
         }
     }
+}
+
+void Camera::Tick(float DeltaTime)
+{
+    CameraUpdate();
 }

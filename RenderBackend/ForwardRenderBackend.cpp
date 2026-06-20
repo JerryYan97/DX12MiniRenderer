@@ -41,7 +41,7 @@ void ForwardRenderer::CreateRootSignature()
     D3D12_DESCRIPTOR_RANGE psCbvRange = {};
     {
         psCbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        psCbvRange.NumDescriptors = 3;
+        psCbvRange.NumDescriptors = 2;
         psCbvRange.BaseShaderRegister = 2;
         psCbvRange.RegisterSpace = 0;
         psCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -56,7 +56,7 @@ void ForwardRenderer::CreateRootSignature()
         psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     }
 
-    D3D12_DESCRIPTOR_RANGE psRanges[] = { psCbvRange, psSrvRange};
+    D3D12_DESCRIPTOR_RANGE psRanges[] = { psCbvRange, psSrvRange };
 
     D3D12_ROOT_PARAMETER rootParameters[2] = {};
     {
@@ -267,7 +267,18 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     m_pVsSceneBuffer->Unmap(0, nullptr);
 
     // Collect scene environment data to PS scene constant buffer
-    float psConstantBuffer[64] = {};
+
+   //  struct float3 { float val[3]; };
+    struct float4 { float val[4]; };
+    struct uint4 { uint32_t val[4]; };
+
+    struct PsSceneBuffer {
+        float4 lightPositions[4]; // Each element has one padding float.
+        float4 lightRadiance[4];
+        float4 cameraPos;    // one padding float
+        float4 ambientLight; // one padding float
+        uint4  extraIntData; // (0): Point Light Counts; (1): Light Condition Masks; (2): [0:8] - IBL max mip levels.
+    } psConstantBuffer{};
 
     std::vector<Light*> sceneLights;
     uint32_t ambientLightCnt = 0;
@@ -278,8 +289,8 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
         if (sceneLights[i]->GetObjectTypeHash() == crc32("PointLight"))
         {
             PointLight* pPtLight = dynamic_cast<PointLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + pointLightCnt * 4,      pPtLight->position, sizeof(float) * 3);
-            memcpy(psConstantBuffer + 16 + pointLightCnt * 4, pPtLight->radiance, sizeof(float) * 3);
+            memcpy(psConstantBuffer.lightPositions[pointLightCnt].val, pPtLight->position, sizeof(float) * 3);
+            memcpy(psConstantBuffer.lightRadiance[pointLightCnt].val, pPtLight->radiance, sizeof(float) * 3);
             pointLightCnt++;
         }
         else if (sceneLights[i]->GetObjectTypeHash() == crc32("AmbientLight"))
@@ -287,16 +298,16 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
             assert(ambientLightCnt <= 1, "We shouldn't have more than 1 ambient lights.");
             ambientLightCnt++;
             AmbientLight* pAmbientLight = dynamic_cast<AmbientLight*>(sceneLights[i]);
-            memcpy(psConstantBuffer + 36, pAmbientLight->radiance, sizeof(float) * 3);
+            memcpy(psConstantBuffer.ambientLight.val, pAmbientLight->radiance, sizeof(float) * 3);
         }
     }
 
-    memcpy(psConstantBuffer + 32, pCamera->m_pos, sizeof(float) * 3);
-    memcpy(psConstantBuffer + 40, &pointLightCnt, sizeof(uint32_t));
+    memcpy(psConstantBuffer.cameraPos.val, pCamera->m_pos, sizeof(float) * 3);
+    psConstantBuffer.extraIntData.val[0] = pointLightCnt;
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
-    memcpy(m_pPsSceneBufferBegin, psConstantBuffer, sizeof(psConstantBuffer));
+    memcpy(m_pPsSceneBufferBegin, &psConstantBuffer, sizeof(psConstantBuffer));
     m_pPsSceneBuffer->Unmap(0, nullptr);
 }
 
@@ -310,6 +321,141 @@ void ForwardRenderer::CustomInit()
     m_pUIManager->GetWindowSize(winWidth, winHeight);
     m_viewport = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
     m_scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
+}
+
+ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorHeapFromPrimitive(const MeshObject& meshObj, const Primitive& iPrim)
+{
+    DescriptorHeapData res = {};
+    res.pPrimRenderDescriptorHeap = nullptr;
+    res.gfxRootDescriptorTableHandleInHeap[0] = {};
+    res.gfxRootDescriptorTableHandleInHeap[1] = {};
+
+    const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    const uint32_t materialTexCnt = iPrim.material.TextureCnt();
+
+    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+    cbvHeapDesc.NumDescriptors = 4 + materialTexCnt;
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+    ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&res.pPrimRenderDescriptorHeap)));
+    m_inflightShaderVisibleCbvHeaps.push_back(res.pPrimRenderDescriptorHeap);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE shaderCbvDescHeapCpuHandle = res.pPrimRenderDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE shaderCbvDescHeapGpuHandle = res.pPrimRenderDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+    // VS root table starts at slot 0: [vs obj cbv][vs scene cbv]
+    res.gfxRootDescriptorTableHandleInHeap[0] = shaderCbvDescHeapGpuHandle;
+
+    // PS root table starts at slot 2: [ps prim material cbv][ps scene cbv][srv...]
+    res.gfxRootDescriptorTableHandleInHeap[1] = shaderCbvDescHeapGpuHandle;
+    res.gfxRootDescriptorTableHandleInHeap[1].ptr += cbvDescHandleOffset * 2;
+
+    // VS object CBV
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = meshObj.GetMeshObjCbvDescHeap()->GetCPUDescriptorHandleForHeapStart();
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    // VS scene CBV
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    // PS primitive material CBV
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * 2;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = iPrim.primMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    // PS scene CBV
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * 3;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
+        srcHandle.ptr += cbvDescHandleOffset;
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    TextureAsset* pBaseColorTex = iPrim.material.GetBaseColorTex();
+    TextureAsset* pNormalTex = iPrim.material.GetNormalTex();
+    TextureAsset* pMetallicRoughnessTex = iPrim.material.GetMetallicRoughnessTex();
+    TextureAsset* pOcclusionTex = iPrim.material.GetOcclusionTex();
+    TextureAsset* pEmissiveTex = iPrim.material.GetEmissiveTex();
+
+    uint32_t texHeapOffset = 4;
+
+    if (pBaseColorTex != nullptr && pBaseColorTex->imgInfo.texDescHeap != nullptr)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle =
+            pBaseColorTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        texHeapOffset++;
+    }
+
+    if (pNormalTex != nullptr && pNormalTex->imgInfo.texDescHeap != nullptr)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle =
+            pNormalTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        texHeapOffset++;
+    }
+
+    if (pMetallicRoughnessTex != nullptr && pMetallicRoughnessTex->imgInfo.texDescHeap != nullptr)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle =
+            pMetallicRoughnessTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        texHeapOffset++;
+    }
+
+    if (pOcclusionTex != nullptr && pOcclusionTex->imgInfo.texDescHeap != nullptr)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle =
+            pOcclusionTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        texHeapOffset++;
+    }
+
+    if (pEmissiveTex != nullptr && pEmissiveTex->imgInfo.texDescHeap != nullptr)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = shaderCbvDescHeapCpuHandle;
+        dstHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle =
+            pEmissiveTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+        m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        texHeapOffset++;
+    }
+
+    return res;
 }
 
 void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
@@ -326,8 +472,8 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Rende
 
     UpdatePerFrameGpuResources();
 
-    std::vector<StaticMesh*> staticMeshes;
-    m_pLevel->RetriveStaticMeshes(staticMeshes);
+    std::vector<MeshObject*> meshObjs;
+    m_pLevel->RetriveMeshObjects(meshObjs);
 
     // Pre-Render
     // Free previous frame resources
@@ -340,100 +486,14 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Rende
     // Render Logic
 
     // Meshes
-    for (uint32_t mshIdx = 0; mshIdx < staticMeshes.size(); mshIdx++)
+    for (uint32_t mshIdx = 0; mshIdx < meshObjs.size(); mshIdx++)
     {
-        for (uint32_t primIdx = 0; primIdx < staticMeshes[mshIdx]->m_primitiveAssets.size(); primIdx++)
+        std::vector<Primitive> meshPrimitives = meshObjs[mshIdx]->GetMeshPrimitives();
+        for (uint32_t primIdx = 0; primIdx < meshPrimitives.size(); primIdx++)
         {
-            uint32_t materialTexCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->TextureCnt();
-
-            // Create in-flight shader visible CBV heap and properly copy the CBV descriptor to it.
-            // Shader visible heap.
-            D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-            cbvHeapDesc.NumDescriptors = 5 + materialTexCnt;
-            cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-            cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-            ID3D12DescriptorHeap* pInflightShaderVisibleCbvHeap = nullptr;
-            ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pInflightShaderVisibleCbvHeap)));
-            m_inflightShaderVisibleCbvHeaps.push_back(pInflightShaderVisibleCbvHeap);
-
-            D3D12_CPU_DESCRIPTOR_HANDLE shaderCbvDescHeapCpuHandle = pInflightShaderVisibleCbvHeap->GetCPUDescriptorHandleForHeapStart();
-            const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            D3D12_CPU_DESCRIPTOR_HANDLE vsObjCbvHandle = shaderCbvDescHeapCpuHandle;
-            D3D12_CPU_DESCRIPTOR_HANDLE meshModelMatCbvHandle = staticMeshes[mshIdx]->m_staticMeshCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
-            m_pD3dDevice->CopyDescriptorsSimple(1, vsObjCbvHandle, meshModelMatCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            D3D12_CPU_DESCRIPTOR_HANDLE vsSceneCbvHandle = shaderCbvDescHeapCpuHandle;
-            vsSceneCbvHandle.ptr += cbvDescHandleOffset;
-            D3D12_CPU_DESCRIPTOR_HANDLE vsSceneVpMatCbvHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
-            m_pD3dDevice->CopyDescriptorsSimple(1, vsSceneCbvHandle, vsSceneVpMatCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            
-            D3D12_CPU_DESCRIPTOR_HANDLE psObjCnstMaterialCbvHandle = shaderCbvDescHeapCpuHandle;
-            psObjCnstMaterialCbvHandle.ptr += cbvDescHandleOffset * 2;
-            D3D12_CPU_DESCRIPTOR_HANDLE psCnstMaterialCbvHandle = staticMeshes[mshIdx]->m_staticMeshCnstMaterialCbvDescHeap->GetCPUDescriptorHandleForHeapStart();
-            m_pD3dDevice->CopyDescriptorsSimple(1, psObjCnstMaterialCbvHandle, psCnstMaterialCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            D3D12_CPU_DESCRIPTOR_HANDLE psSceneCbvHandle = shaderCbvDescHeapCpuHandle;
-            psSceneCbvHandle.ptr += cbvDescHandleOffset * 3;
-            D3D12_CPU_DESCRIPTOR_HANDLE psSceneSrcCbvHandle = m_pSceneCbvHeap->GetCPUDescriptorHandleForHeapStart();
-            psSceneSrcCbvHandle.ptr += cbvDescHandleOffset;
-            m_pD3dDevice->CopyDescriptorsSimple(1, psSceneCbvHandle, psSceneSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            D3D12_CPU_DESCRIPTOR_HANDLE psPrimAssetCbvHandle = shaderCbvDescHeapCpuHandle;
-            psPrimAssetCbvHandle.ptr += cbvDescHandleOffset * 4;
-            D3D12_CPU_DESCRIPTOR_HANDLE psPrimAssetSrcCbvHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pMaterialMaskCbvHeap->GetCPUDescriptorHandleForHeapStart();
-            m_pD3dDevice->CopyDescriptorsSimple(1, psPrimAssetCbvHandle, psPrimAssetSrcCbvHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            // Texture SRV binding
-            uint32_t materialTexMask = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_materialMask;
-            if (materialTexMask & ALBEDO_MASK)
-            {
-                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
-                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_baseColorTex.srvHeapIdx * cbvDescHandleOffset;
-
-                D3D12_CPU_DESCRIPTOR_HANDLE psObjAlbedoTexSrvHandle = shaderCbvDescHeapCpuHandle;
-                psObjAlbedoTexSrvHandle.ptr += cbvDescHandleOffset * 5;
-                m_pD3dDevice->CopyDescriptorsSimple(1, psObjAlbedoTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            }
-
-            if (materialTexMask & NORMAL_MASK)
-            {
-                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
-                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_normalTex.srvHeapIdx * cbvDescHandleOffset;
-
-                D3D12_CPU_DESCRIPTOR_HANDLE psObjNormalTexSrvHandle = shaderCbvDescHeapCpuHandle;
-                psObjNormalTexSrvHandle.ptr += cbvDescHandleOffset * 6;
-                m_pD3dDevice->CopyDescriptorsSimple(1, psObjNormalTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            }
-
-            if (materialTexMask & ROUGHNESS_METALIC_MASK)
-            {
-                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
-                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_metallicRoughnessTex.srvHeapIdx * cbvDescHandleOffset;
-
-                D3D12_CPU_DESCRIPTOR_HANDLE psObjRoughnessMetallicTexSrvHandle = shaderCbvDescHeapCpuHandle;
-                psObjRoughnessMetallicTexSrvHandle.ptr += cbvDescHandleOffset * 7;
-                m_pD3dDevice->CopyDescriptorsSimple(1, psObjRoughnessMetallicTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            }
-
-            if (materialTexMask & AO_MASK)
-            {
-                D3D12_CPU_DESCRIPTOR_HANDLE objTexSrvStartHandle = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_pTexturesSrvHeap->GetCPUDescriptorHandleForHeapStart();
-                objTexSrvStartHandle.ptr += staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_occlusionTex.srvHeapIdx * cbvDescHandleOffset;
-
-                D3D12_CPU_DESCRIPTOR_HANDLE psObjAOTexSrvHandle = shaderCbvDescHeapCpuHandle;
-                psObjAOTexSrvHandle.ptr += cbvDescHandleOffset * 8;
-                m_pD3dDevice->CopyDescriptorsSimple(1, psObjAOTexSrvHandle, objTexSrvStartHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            }
-
-            const uint32_t idxCnt = staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxCnt;
-            const uint32_t cbvDescHeapHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            D3D12_GPU_DESCRIPTOR_HANDLE psCbvDescHeapGpuHandle = pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart();
-            psCbvDescHeapGpuHandle.ptr += cbvDescHeapHandleOffset * 2;
-
-            // ID3D12DescriptorHeap* ppHeaps[] = { m_cbvDescHeap };
-            ID3D12DescriptorHeap* ppHeaps[] = { pInflightShaderVisibleCbvHeap };
+            DescriptorHeapData primRenderDescriptorHeapData = GenerateOnFlightDescriptorHeapFromPrimitive(*meshObjs[mshIdx], meshPrimitives[primIdx]);
+            const uint32_t idxCnt = meshPrimitives[primIdx].geometry->m_idxCnt;
+            ID3D12DescriptorHeap* ppHeaps[] = { primRenderDescriptorHeapData.pPrimRenderDescriptorHeap };
             pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
             pCommandList->SetPipelineState(m_pPipelineState);
@@ -442,11 +502,11 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Rende
             pCommandList->RSSetScissorRects(1, &m_scissorRect);
             pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
             pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            pCommandList->IASetIndexBuffer(&staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_idxBufferView);
-            pCommandList->IASetVertexBuffers(0, 1, &staticMeshes[mshIdx]->m_primitiveAssets[primIdx]->m_vertexBufferView);
+            pCommandList->IASetIndexBuffer(&meshPrimitives[primIdx].geometry->m_idxBufferView);
+            pCommandList->IASetVertexBuffers(0, 1, &meshPrimitives[primIdx].geometry->m_vertexBufferView);
             // pCommandList->SetGraphicsRootDescriptorTable(0, m_cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
-            pCommandList->SetGraphicsRootDescriptorTable(0, pInflightShaderVisibleCbvHeap->GetGPUDescriptorHandleForHeapStart());
-            pCommandList->SetGraphicsRootDescriptorTable(1, psCbvDescHeapGpuHandle);
+            pCommandList->SetGraphicsRootDescriptorTable(0, primRenderDescriptorHeapData.gfxRootDescriptorTableHandleInHeap[0]);
+            pCommandList->SetGraphicsRootDescriptorTable(1, primRenderDescriptorHeapData.gfxRootDescriptorTableHandleInHeap[1]);
             pCommandList->DrawIndexedInstanced(idxCnt, 1, 0, 0, 0);
         }
     }

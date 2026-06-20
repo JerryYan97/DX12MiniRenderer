@@ -9,4 +9,8 @@ set(RENDERBACKEND_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/GpuPipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentMapRenderer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/EnvironmentMapRenderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Material.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Material.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Primitive.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Primitive.cpp
     PARENT_SCOPE)

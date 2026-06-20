@@ -21,14 +21,14 @@ void Level::LoadObject(const std::string& objName, const YAML::Node& i_node, PFN
     m_objects.push_back(i_func(objName, i_node));
 }
 
-void Level::RetriveStaticMeshes(std::vector<StaticMesh*>& o_staticMeshes)
+void Level::RetriveMeshObjects(std::vector<MeshObject*>& o_meshObjects)
 {
     for (Object* pObj : m_objects)
     {
-        if (pObj->GetObjectTypeHash() == crc32("StaticMesh"))
+        if (pObj->GetObjectTypeHash() == crc32("MeshObject"))
         {
-            StaticMesh* pStaticMesh = dynamic_cast<StaticMesh*>(pObj);
-            o_staticMeshes.push_back(pStaticMesh);
+            MeshObject* pMeshObject = dynamic_cast<MeshObject*>(pObj);
+            o_meshObjects.push_back(pMeshObject);
         }
     }
 }
@@ -63,15 +63,15 @@ void Level::RetriveLights(std::vector<Light*>& o_lights)
     }
 }
 
-void Level::LoadEnvMapAndIBL(std::string envMapIblPkgPath)
-{
-    m_envMap.LoadEnvironmentMap(envMapIblPkgPath);
-
-    // Load IBL and add it to the level.
-    
-}
-
-void Level::AttachEnvMapGPUResource(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle)
+void Level::AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle)
 {
     m_envMap.AttachEnvMapGPUResource(pDevice, envMapBkGrdDescriptorHeapHandle);
+}
+
+void Level::Tick(float DeltaTime)
+{
+    for (Object* pObj : m_objects)
+    {
+        pObj->Tick(DeltaTime);
+    }
 }

@@ -1,6 +1,9 @@
 #pragma once
 #include "RendererBackend.h"
 
+class MeshObject;
+struct Primitive;
+
 class ForwardRenderer : public RendererBackend
 {
 public:
@@ -20,7 +23,14 @@ private:
     void CreatePipelineStateObject();
 
     void UpdatePerFrameGpuResources();
-    
+
+    struct DescriptorHeapData {
+        ID3D12DescriptorHeap*       pPrimRenderDescriptorHeap;
+        D3D12_GPU_DESCRIPTOR_HANDLE gfxRootDescriptorTableHandleInHeap[2]; // [0] is the starting descriptor for VS and [1] is the starting descriptor for PS.
+    };
+
+    DescriptorHeapData GenerateOnFlightDescriptorHeapFromPrimitive(const MeshObject& meshObj, const Primitive& iPrim);
+
     ID3D12RootSignature* m_pRootSignature;
     ID3D12PipelineState* m_pPipelineState;
     

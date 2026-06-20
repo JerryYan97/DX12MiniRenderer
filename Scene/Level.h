@@ -2,10 +2,10 @@
 #include <vector>
 #include <string>
 #include "Object.h"
+#include "Mesh.h"
 #include "../RenderBackend/RendererBackend.h"
 #include "EnvironmentMap.h"
 
-class StaticMesh;
 class Camera;
 class Light;
 
@@ -30,9 +30,11 @@ public:
     Level();
     ~Level();
 
+    void Tick(float DeltaTime);
+
     void LoadObject(const std::string& objName, const YAML::Node& i_node, PFN_CustomSerlizeObject i_func);
 
-    void RetriveStaticMeshes(std::vector<StaticMesh*>& o_staticMeshes);
+    void RetriveMeshObjects(std::vector<MeshObject*>& o_meshObjects);
     void RetriveActiveCamera(Camera** o_camera);
     void RetriveLights(std::vector<Light*>& o_lights);
 
@@ -51,8 +53,8 @@ public:
         memcpy(outBbxMax, m_bbxMax, sizeof(float) * 3);
     }
 
-    void LoadEnvMapAndIBL(std::string envMapIblPkgPath);
-    void AttachEnvMapGPUResource(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
+    void SetEnvMapAndIBL(EnvironmentMap envMap) { m_envMap = envMap; }
+    void AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
 
     std::string m_sceneName;
     float m_backgroundColor[3];

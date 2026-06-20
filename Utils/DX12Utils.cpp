@@ -4,7 +4,7 @@
 class RAIIGPUQueueAndAllocator
 {
 public:
-    RAIIGPUQueueAndAllocator(ID3D12Device* pDevice)
+    RAIIGPUQueueAndAllocator(ID3D12Device5* pDevice)
     {
         {
             D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -37,10 +37,10 @@ public:
 
     ID3D12CommandQueue*        m_pTempCmdQueue = nullptr;
     ID3D12CommandAllocator*    m_pTempCmdAllocator = nullptr;
-    ID3D12GraphicsCommandList* m_pTempCmdList = nullptr;
+    ID3D12GraphicsCommandList4* m_pTempCmdList = nullptr;
 };
 
-static void WaitGpuIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pQueue)
+static void WaitGpuIdle(ID3D12Device5* pDevice, ID3D12CommandQueue* pQueue)
 {
     ID3D12Fence* tmpCmdQueuefence = nullptr;
     pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tmpCmdQueuefence));
@@ -62,7 +62,7 @@ void SendDataToUploadBuffer(ID3D12Resource* pUploadBuffer, void* pSrcData, uint3
     pUploadBuffer->Unmap(0, nullptr);
 }
 
-void SendDataToGPUBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes)
+void SendDataToGPUBuffer(ID3D12Device5* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes)
 {
     RAIIGPUQueueAndAllocator raiiQueueAndAllocator(pDevice);
 
@@ -77,7 +77,7 @@ void SendDataToGPUBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void
     pUploadBuffer->Release();
 }
 
-void CopyADescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandle, uint32_t dstId, D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, uint32_t srcId, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+void CopyADescriptor(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandle, uint32_t dstId, D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, uint32_t srcId, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
 {
     UINT descriptorSize = pDevice->GetDescriptorHandleIncrementSize(heapType);
     D3D12_CPU_DESCRIPTOR_HANDLE dstHandleWithOffset = { dstHandle.ptr + dstId * descriptorSize };
@@ -85,7 +85,7 @@ void CopyADescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandl
     pDevice->CopyDescriptorsSimple(1, dstHandleWithOffset, srcHandleWithOffset, heapType);
 }
 
-ID3D12Resource* CreateGPUBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, D3D12_RESOURCE_STATES initialResourceState)
+ID3D12Resource* CreateGPUBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, D3D12_RESOURCE_STATES initialResourceState)
 {
     sizeBytes = max(GPU_BUFFER_SIZE_ALIGNMENT, sizeBytes);
 
@@ -122,7 +122,7 @@ ID3D12Resource* CreateGPUBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, D3D12
     return pBuffer;
 }
 
-ID3D12Resource* CreateUploadBuffer(ID3D12Device* pDevice, uint32_t sizeBytes)
+ID3D12Resource* CreateUploadBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes)
 {
     ID3D12Resource* pUploadBuffer;
     // NOTE: Constant buffer needs to be padded to 256 bytes.
@@ -159,7 +159,7 @@ ID3D12Resource* CreateUploadBuffer(ID3D12Device* pDevice, uint32_t sizeBytes)
     return pUploadBuffer;
 }
 
-void ChangeResourceState(ID3D12Device* pDevice, ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState)
+void ChangeResourceState(ID3D12Device5* pDevice, ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState)
 {
     RAIIGPUQueueAndAllocator raiiQueueAndAllocator(pDevice);
 
@@ -182,7 +182,7 @@ void ChangeResourceState(ID3D12Device* pDevice, ID3D12Resource* pResource, D3D12
     WaitGpuIdle(pDevice, raiiQueueAndAllocator.m_pTempCmdQueue);
 }
 
-ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device* pDevice, uint32_t sizeBytes, void* pSrcData)
+ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device5* pDevice, uint32_t sizeBytes, void* pSrcData)
 {
     ID3D12Resource* pUploadBuffer;
     // NOTE: Constant buffer needs to be padded to 256 bytes.
@@ -252,7 +252,7 @@ D3D12_RESOURCE_BARRIER UAVBarrier(ID3D12Resource* pResource)
     return barrier;
 }
 
-ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState)
+ID3D12Resource* AllocateGpuBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState)
 {
     assert(accessType == GPU_ONLY || accessType == READBACK, "Please use CreateUploadBufferAndInit to create UPLOAD buffers.");
     if (accessType == READBACK) { initialResourceState = D3D12_RESOURCE_STATE_COPY_DEST; } // READBACK buffers must be in COPY DEST state.
@@ -301,7 +301,7 @@ ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX1
 }
 
 // Assume the input texture is COPY DEST and the texture is PIXEL SHADER RESOURCE after copying.
-void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes)
+void SendDataToTexture2D(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes)
 {
     RAIIGPUQueueAndAllocator raiiQueueAndAllocator(pDevice);
 
@@ -355,7 +355,7 @@ void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, voi
     pUploadBuffer->Release();
 }
 
-void SendDataToCubemapSlice(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes, uint32_t layerIndex, uint32_t mipIndex)
+void SendDataToCubemapSlice(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes, uint32_t layerIndex, uint32_t mipIndex)
 {
     RAIIGPUQueueAndAllocator raiiQueueAndAllocator(pDevice);
 
@@ -412,4 +412,42 @@ void SendDataToCubemapSlice(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, 
     WaitGpuIdle(pDevice, raiiQueueAndAllocator.m_pTempCmdQueue);
 
     pUploadBuffer->Release();
+}
+
+ID3D12Resource* MakeAccelerationStructure(ID3D12Device5* pDevice, const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize)
+{
+    RAIIGPUQueueAndAllocator raiiQueueAndAllocator(pDevice);
+
+    auto makeBuffer = [=](UINT64 size, auto initialState) {
+        auto desc = BASIC_BUFFER_DESC;
+        desc.Width = size;
+        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        ID3D12Resource* buffer;
+        pDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, initialState, nullptr, IID_PPV_ARGS(&buffer));
+        return buffer;
+    };
+
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo;
+    pDevice->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &prebuildInfo);
+    if (updateScratchSize)
+    {
+        *updateScratchSize = prebuildInfo.UpdateScratchDataSizeInBytes;
+    }
+
+    auto* scratch = makeBuffer(prebuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_COMMON);
+    auto* as = makeBuffer(prebuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {
+        .DestAccelerationStructureData = as->GetGPUVirtualAddress(),
+        .Inputs = inputs,
+        .ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress()};
+
+    raiiQueueAndAllocator.m_pTempCmdList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
+    raiiQueueAndAllocator.m_pTempCmdList->Close();
+    raiiQueueAndAllocator.m_pTempCmdQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&raiiQueueAndAllocator.m_pTempCmdList));
+
+    WaitGpuIdle(pDevice, raiiQueueAndAllocator.m_pTempCmdQueue);
+
+    scratch->Release();
+    return as;
 }

@@ -1,9 +1,10 @@
 SceneName: SphereTest
 SceneType: GLTF
 BackgroundColor: [0.01, 0.01, 0.01]
+SceneId: 7
 SceneGraph:
   SphereInst0:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-7.5, -2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -14,7 +15,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 0.0
   SphereInst1:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.5, -2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -25,7 +26,7 @@ SceneGraph:
       Roughness: 0.15
       Metallic: 0.0
   SphereInst2:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-1.5, -2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -36,7 +37,7 @@ SceneGraph:
       Roughness: 0.3
       Metallic: 0.0
   SphereInst3:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [1.5, -2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -47,7 +48,7 @@ SceneGraph:
       Roughness: 0.45
       Metallic: 0.0
   SphereInst4:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.5, -2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -58,7 +59,7 @@ SceneGraph:
       Roughness: 0.8
       Metallic: 0.0
   SphereInst5:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [7.5, -2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -69,7 +70,7 @@ SceneGraph:
       Roughness: 1.0
       Metallic: 0.0
   SphereInst6:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-7.5, 2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -80,7 +81,7 @@ SceneGraph:
       Roughness: 0.05
       Metallic: 1.0
   SphereInst7:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-4.5, 2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -91,7 +92,7 @@ SceneGraph:
       Roughness: 0.15
       Metallic: 1.0
   SphereInst8:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [-1.5, 2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -102,7 +103,7 @@ SceneGraph:
       Roughness: 0.3
       Metallic: 1.0
   SphereInst9:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [1.5, 2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -113,7 +114,7 @@ SceneGraph:
       Roughness: 0.45
       Metallic: 1.0
   SphereInst10:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [4.5, 2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]
@@ -124,7 +125,7 @@ SceneGraph:
       Roughness: 0.7
       Metallic: 1.0
   SphereInst11:
-    Type: StaticMesh
+    Type: MeshObject
     Position: [7.5, 2.0, 7.5]
     Scale: [1, 1, 1]
     Rotation: [0, 0, 0]

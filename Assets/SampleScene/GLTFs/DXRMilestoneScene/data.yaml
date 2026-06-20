@@ -34,7 +34,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1L2:
     AssetPath: tallBox.gltf
     Material:
@@ -57,7 +57,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1L3:
     AssetPath: tallBox.gltf
     Material:
@@ -80,7 +80,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1L4:
     AssetPath: tallBox.gltf
     Material:
@@ -103,7 +103,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1R1:
     AssetPath: tallBox.gltf
     Material:
@@ -126,7 +126,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1R2:
     AssetPath: tallBox.gltf
     Material:
@@ -149,7 +149,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1R3:
     AssetPath: tallBox.gltf
     Material:
@@ -172,7 +172,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB1R4:
     AssetPath: tallBox.gltf
     Material:
@@ -195,7 +195,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2L1:
     AssetPath: tallBox.gltf
     Material:
@@ -218,7 +218,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2L2:
     AssetPath: tallBox.gltf
     Material:
@@ -241,7 +241,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2L3:
     AssetPath: tallBox.gltf
     Material:
@@ -264,7 +264,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2L4:
     AssetPath: tallBox.gltf
     Material:
@@ -287,7 +287,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2R1:
     AssetPath: tallBox.gltf
     Material:
@@ -310,7 +310,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2R2:
     AssetPath: tallBox.gltf
     Material:
@@ -333,7 +333,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2R3:
     AssetPath: tallBox.gltf
     Material:
@@ -356,7 +356,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB2R4:
     AssetPath: tallBox.gltf
     Material:
@@ -379,7 +379,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3L1:
     AssetPath: tallBox.gltf
     Material:
@@ -402,7 +402,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3L2:
     AssetPath: tallBox.gltf
     Material:
@@ -425,7 +425,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3L3:
     AssetPath: tallBox.gltf
     Material:
@@ -448,7 +448,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3L4:
     AssetPath: tallBox.gltf
     Material:
@@ -471,7 +471,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3R1:
     AssetPath: tallBox.gltf
     Material:
@@ -494,7 +494,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3R2:
     AssetPath: tallBox.gltf
     Material:
@@ -517,7 +517,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3R3:
     AssetPath: tallBox.gltf
     Material:
@@ -540,7 +540,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB3R4:
     AssetPath: tallBox.gltf
     Material:
@@ -563,7 +563,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4L1:
     AssetPath: tallBox.gltf
     Material:
@@ -586,7 +586,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4L2:
     AssetPath: tallBox.gltf
     Material:
@@ -609,7 +609,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4L3:
     AssetPath: tallBox.gltf
     Material:
@@ -632,7 +632,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4L4:
     AssetPath: tallBox.gltf
     Material:
@@ -655,7 +655,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4R1:
     AssetPath: tallBox.gltf
     Material:
@@ -678,7 +678,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4R2:
     AssetPath: tallBox.gltf
     Material:
@@ -701,7 +701,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4R3:
     AssetPath: tallBox.gltf
     Material:
@@ -724,7 +724,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomB4R4:
     AssetPath: tallBox.gltf
     Material:
@@ -747,7 +747,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomBoxRowF0Center:
     AssetPath: tallBox.gltf
     Material:
@@ -770,7 +770,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0L1:
     AssetPath: tallBox.gltf
     Material:
@@ -793,7 +793,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0L2:
     AssetPath: tallBox.gltf
     Material:
@@ -816,7 +816,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0L3:
     AssetPath: tallBox.gltf
     Material:
@@ -839,7 +839,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0L4:
     AssetPath: tallBox.gltf
     Material:
@@ -862,7 +862,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0R1:
     AssetPath: tallBox.gltf
     Material:
@@ -885,7 +885,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0R2:
     AssetPath: tallBox.gltf
     Material:
@@ -908,7 +908,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0R3:
     AssetPath: tallBox.gltf
     Material:
@@ -931,7 +931,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF0R4:
     AssetPath: tallBox.gltf
     Material:
@@ -954,7 +954,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1L1:
     AssetPath: tallBox.gltf
     Material:
@@ -977,7 +977,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1L2:
     AssetPath: tallBox.gltf
     Material:
@@ -1000,7 +1000,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1L3:
     AssetPath: tallBox.gltf
     Material:
@@ -1023,7 +1023,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1L4:
     AssetPath: tallBox.gltf
     Material:
@@ -1046,7 +1046,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1R1:
     AssetPath: tallBox.gltf
     Material:
@@ -1069,7 +1069,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1R2:
     AssetPath: tallBox.gltf
     Material:
@@ -1092,7 +1092,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1R3:
     AssetPath: tallBox.gltf
     Material:
@@ -1115,7 +1115,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF1R4:
     AssetPath: tallBox.gltf
     Material:
@@ -1138,7 +1138,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2L1:
     AssetPath: tallBox.gltf
     Material:
@@ -1161,7 +1161,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2L2:
     AssetPath: tallBox.gltf
     Material:
@@ -1184,7 +1184,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2L3:
     AssetPath: tallBox.gltf
     Material:
@@ -1207,7 +1207,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2L4:
     AssetPath: tallBox.gltf
     Material:
@@ -1230,7 +1230,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2R1:
     AssetPath: tallBox.gltf
     Material:
@@ -1253,7 +1253,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2R2:
     AssetPath: tallBox.gltf
     Material:
@@ -1276,7 +1276,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2R3:
     AssetPath: tallBox.gltf
     Material:
@@ -1299,7 +1299,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF2R4:
     AssetPath: tallBox.gltf
     Material:
@@ -1322,7 +1322,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3L1:
     AssetPath: tallBox.gltf
     Material:
@@ -1345,7 +1345,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3L2:
     AssetPath: tallBox.gltf
     Material:
@@ -1368,7 +1368,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3L3:
     AssetPath: tallBox.gltf
     Material:
@@ -1391,7 +1391,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3L4:
     AssetPath: tallBox.gltf
     Material:
@@ -1414,7 +1414,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3R1:
     AssetPath: tallBox.gltf
     Material:
@@ -1437,7 +1437,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3R2:
     AssetPath: tallBox.gltf
     Material:
@@ -1460,7 +1460,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3R3:
     AssetPath: tallBox.gltf
     Material:
@@ -1483,7 +1483,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF3R4:
     AssetPath: tallBox.gltf
     Material:
@@ -1506,7 +1506,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4L1:
     AssetPath: tallBox.gltf
     Material:
@@ -1529,7 +1529,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4L2:
     AssetPath: tallBox.gltf
     Material:
@@ -1552,7 +1552,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4L3:
     AssetPath: tallBox.gltf
     Material:
@@ -1575,7 +1575,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4L4:
     AssetPath: tallBox.gltf
     Material:
@@ -1598,7 +1598,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4R1:
     AssetPath: tallBox.gltf
     Material:
@@ -1621,7 +1621,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4R2:
     AssetPath: tallBox.gltf
     Material:
@@ -1644,7 +1644,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4R3:
     AssetPath: tallBox.gltf
     Material:
@@ -1667,7 +1667,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomF4R4:
     AssetPath: tallBox.gltf
     Material:
@@ -1690,7 +1690,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowB1Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1713,7 +1713,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowB2Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1736,7 +1736,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowB3Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1759,7 +1759,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowB4Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1782,7 +1782,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowF1Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1805,7 +1805,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowF2Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1828,7 +1828,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowF3Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1851,7 +1851,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   BottomRowF4Center:
     AssetPath: tallBox.gltf
     Material:
@@ -1874,7 +1874,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   CameraInst:
     Position:
     - 0.0
@@ -1920,7 +1920,7 @@ SceneGraph:
     - 0.2
     - 0.2
     - 0.2
-    Type: StaticMesh
+    Type: MeshObject
   EmissiveSphere2:
     AssetPath: isoSphereHighFaceNum.gltf
     Material:
@@ -1948,7 +1948,7 @@ SceneGraph:
     - 0.1
     - 0.1
     - 0.1
-    Type: StaticMesh
+    Type: MeshObject
   EmissiveSphere3:
     AssetPath: isoSphereHighFaceNum.gltf
     Material:
@@ -1976,7 +1976,7 @@ SceneGraph:
     - 0.1
     - 0.1
     - 0.1
-    Type: StaticMesh
+    Type: MeshObject
   GlassSphere:
     AssetPath: isoSphereHighFaceNum.gltf
     Material:
@@ -2001,7 +2001,7 @@ SceneGraph:
     - 1
     - 1
     - 1
-    Type: StaticMesh
+    Type: MeshObject
   MirrorSphere:
     AssetPath: isoSphereHighFaceNum.gltf
     Material:
@@ -2025,6 +2025,7 @@ SceneGraph:
     - 2
     - 2
     - 2
-    Type: StaticMesh
+    Type: MeshObject
 SceneName: DXRMilestoneScene
 SceneType: GLTF
+

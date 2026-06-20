@@ -5,6 +5,8 @@
 #include <sstream>
 #include <iomanip>
 
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+
 enum DX12_GPU_CPU_ACCESS_ENUM {
     UPLOAD = 0, // CPU TO GPU
     READBACK = 1, // GPU TO CPU
@@ -15,6 +17,19 @@ enum DX12_GPU_CPU_ACCESS_ENUM {
 
 #define ALIGNED_GPU_BUFFER_SIZE(size) (((size) + GPU_BUFFER_SIZE_ALIGNMENT - 1) & ~(GPU_BUFFER_SIZE_ALIGNMENT - 1))
 #define ALIGN_UP_256(size) (((size) + 255) & ~255)
+
+constexpr DXGI_SAMPLE_DESC NO_AA = {.Count = 1, .Quality = 0};
+constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = {.Type = D3D12_HEAP_TYPE_UPLOAD};
+constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = {.Type = D3D12_HEAP_TYPE_DEFAULT};
+
+constexpr D3D12_RESOURCE_DESC BASIC_BUFFER_DESC = {
+    .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+    .Width = 0, // Will be changed in copies
+    .Height = 1,
+    .DepthOrArraySize = 1,
+    .MipLevels = 1,
+    .SampleDesc = NO_AA,
+    .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR};
 
 // Assign a name to the object to aid with debugging.
 #if defined(_DEBUG) || defined(DBG)
@@ -186,15 +201,18 @@ inline void PrintStateObjectDesc(const D3D12_STATE_OBJECT_DESC* desc)
     OutputDebugStringW(wstr.str().c_str());
 }
 
-inline void AllocateUploadBuffer(ID3D12Device* pDevice, void *pData, UINT64 datasize, ID3D12Resource **ppResource, const wchar_t* resourceName = nullptr)
+inline void AllocateUploadBuffer(ID3D12Device5* pDevice, void *pData, UINT64 datasize, ID3D12Resource **ppResource, const wchar_t* resourceName = nullptr)
 {
+    // NOTE: Constant buffer needs to be padded to 256 bytes.
+    constexpr UINT64 CnstBufferMinSize = sizeof(float) * 64;
+
     D3D12_HEAP_PROPERTIES uploadHeapProperties = D3D12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_UPLOAD,
                                                                         D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
                                                                         D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
 
     DXGI_SAMPLE_DESC bufferSampleDesc = DXGI_SAMPLE_DESC{ 1, 0 };
     D3D12_RESOURCE_DESC bufferDesc = D3D12_RESOURCE_DESC{D3D12_RESOURCE_DIMENSION_BUFFER,
-                                                         0, datasize, 1, 1, 1,
+                                                         0, max(datasize, CnstBufferMinSize), 1, 1, 1,
                                                          DXGI_FORMAT_UNKNOWN, bufferSampleDesc,
                                                          D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE};
     
@@ -215,15 +233,18 @@ inline void AllocateUploadBuffer(ID3D12Device* pDevice, void *pData, UINT64 data
     (*ppResource)->Unmap(0, nullptr);
 }
 
-inline void AllocateUploadBuffer(ID3D12Device* pDevice, UINT64 buffersize, ID3D12Resource **ppResource, const wchar_t* resourceName = nullptr)
+inline void AllocateUploadBuffer(ID3D12Device5* pDevice, UINT64 buffersize, ID3D12Resource **ppResource, const wchar_t* resourceName = nullptr)
 {
+    // NOTE: Constant buffer needs to be padded to 256 bytes.
+    constexpr uint32_t CnstBufferMinSize = sizeof(float) * 64;
+
     D3D12_HEAP_PROPERTIES uploadHeapProperties = D3D12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_UPLOAD,
                                                                         D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
                                                                         D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
 
     DXGI_SAMPLE_DESC bufferSampleDesc = DXGI_SAMPLE_DESC{ 1, 0 };
     D3D12_RESOURCE_DESC bufferDesc = D3D12_RESOURCE_DESC{D3D12_RESOURCE_DIMENSION_BUFFER,
-                                                         0, buffersize, 1, 1, 1,
+                                                         0, max( CnstBufferMinSize, buffersize), 1, 1, 1,
                                                          DXGI_FORMAT_UNKNOWN, bufferSampleDesc,
                                                          D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE};
     
@@ -240,7 +261,7 @@ inline void AllocateUploadBuffer(ID3D12Device* pDevice, UINT64 buffersize, ID3D1
     }
 }
 
-inline void AllocateUAVBuffer(ID3D12Device* pDevice, UINT64 bufferSize, ID3D12Resource **ppResource, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON, const wchar_t* resourceName = nullptr)
+inline void AllocateUAVBuffer(ID3D12Device5* pDevice, UINT64 bufferSize, ID3D12Resource **ppResource, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON, const wchar_t* resourceName = nullptr)
 {
     D3D12_HEAP_PROPERTIES defaultHeapProperties = D3D12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_DEFAULT,
                                                                          D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
@@ -275,11 +296,11 @@ inline UINT Align(UINT size, UINT alignment)
     return (size + (alignment - 1)) & ~(alignment - 1);
 }
 
-ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device* pDevice, uint32_t sizeBytes, void* pSrcData);
-void SendDataToGPUBuffer(ID3D12Device* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes);
+ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device5* pDevice, uint32_t sizeBytes, void* pSrcData);
+void SendDataToGPUBuffer(ID3D12Device5* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes);
 void SendDataToUploadBuffer(ID3D12Resource* pUploadBuffer, void* pSrcData, uint32_t dataSizeBytes, uint32_t dstOffsetBytes = 0);
 
-inline void GpuQueueWaitIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pCmdQueue)
+inline void GpuQueueWaitIdle(ID3D12Device5* pDevice, ID3D12CommandQueue* pCmdQueue)
 {
     ID3D12Fence* tmpCmdQueuefence = nullptr;
     pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tmpCmdQueuefence));
@@ -292,22 +313,23 @@ inline void GpuQueueWaitIdle(ID3D12Device* pDevice, ID3D12CommandQueue* pCmdQueu
     tmpCmdQueuefence->Release();
 }
 
-void SendDataToTexture2D(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes);
-void SendDataToCubemapSlice(ID3D12Device* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes, uint32_t layerIndex, uint32_t mipIndex);
-void ChangeResourceState(ID3D12Device* pDevice, ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState); // Block the thread until the resource is in the desired state.
-ID3D12Resource* CreateUploadBuffer(ID3D12Device* pDevice, uint32_t sizeBytes);
-ID3D12Resource* CreateGPUBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
-void CopyADescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandle, uint32_t dstId, D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, uint32_t srcId, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+void SendDataToTexture2D(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes);
+void SendDataToCubemapSlice(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture, void* pSrcData, uint32_t dataSizeBytes, uint32_t layerIndex, uint32_t mipIndex);
+void ChangeResourceState(ID3D12Device5* pDevice, ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState); // Block the thread until the resource is in the desired state.
+ID3D12Resource* CreateUploadBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes);
+ID3D12Resource* CreateGPUBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
+void CopyADescriptor(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE dstHandle, uint32_t dstId, D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, uint32_t srcId, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 
 D3D12_RESOURCE_BARRIER TransitionStateBarrier(ID3D12Resource* pResource, D3D12_RESOURCE_STATES curState, D3D12_RESOURCE_STATES destState);
 D3D12_RESOURCE_BARRIER UAVBarrier(ID3D12Resource* pResource);
-ID3D12Resource* AllocateGpuBuffer(ID3D12Device* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
+ID3D12Resource* AllocateGpuBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
 inline int SubresourceIdx(uint32_t mipLevel, uint32_t arrayLayer, uint32_t mipLevelsPerLayer) { return mipLevel + arrayLayer * mipLevelsPerLayer; }
 
 inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode)
 {
     D3D12_STATIC_SAMPLER_DESC sampler = {};
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    // sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     sampler.AddressU = addressMode;
     sampler.AddressV = addressMode;
     sampler.AddressW = addressMode;
@@ -333,6 +355,8 @@ inline D3D12_STATIC_SAMPLER_DESC StaticWrapSampler(uint32_t regIdx)
 {
     return StaticSampler(regIdx, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
+
+ID3D12Resource* MakeAccelerationStructure(ID3D12Device5* pDevice, const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize);
 
 // Pipeline descriptions
 // D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateVsPsPipelineDesc();
