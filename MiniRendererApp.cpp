@@ -264,6 +264,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
 
     // Tmp Load Test Triangle Level
     m_pLevel = new Level();
+    m_pAssetManager->SetLevel(m_pLevel);
     m_assetLoader.Init(sceneYaml); // Init eariler since the 'LoadAsLevel' function needs to load assets through the m_assetLoader.
     m_sceneLoader.LoadAsLevel(sceneYaml, m_pLevel);
     

@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <string>
 
+class Level;
 struct Primitive;
 
 constexpr int VERT_SIZE_FLOAT = (3 + 3 + 4 + 2); // Position(3) + Normal(3) + Tangent(4) + TexCoord(2).
@@ -83,6 +84,8 @@ public:
 
     static AssetManager* GetInstance() { return m_pThis; }
 
+    void SetLevel(Level* pLevel) { m_pLevel = pLevel; }
+
     void Deinit();
 
     bool IsAssetLoaded(const std::string& modelName) const
@@ -115,6 +118,7 @@ private:
 
     void SendGeoAssetToGpu(GeometryAsset* pGeoAsset);
     void SendTextureAssetToGpu(TextureAsset* pTexAsset);
+    ID3D12Resource* MakeBLAS(GeometryAsset* pGeoAsset);
 
     // Key - Value pairs to avoid loading the same asset multiple times. The key is the asset's relative file/folder path. The value is the geo/tex data in/linked to the corresponding asset file.
     // The asset can be a normal .gltf file (Geo assets + Texture assets) or a custom env map folder (Only texture assets).
@@ -122,6 +126,7 @@ private:
     // The AssetManager doesn't care about how to interpret the geo/tex data. It simply stores them. The upper level class/instance will decide how to use them.
     std::unordered_map<std::string, std::vector<GeometryAsset*>> m_geoAssets;
     std::unordered_map<std::string, std::vector<TextureAsset*>>  m_textureAssets;
+    Level* m_pLevel;
 
     static AssetManager* m_pThis;
 };

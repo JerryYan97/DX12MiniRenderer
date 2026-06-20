@@ -1,6 +1,7 @@
 #include "AssetManager.h"
 #include "DX12Utils.h"
 #include "../Scene/Mesh.h"
+#include "../Scene/Level.h"
 #include <unordered_set>
 #include <cassert>
 #include "../ThirdParty/TinyGltf/stb_image.h"
@@ -81,6 +82,16 @@ void AssetManager::StoreTextureAsset(const std::string& assetPath, TextureAsset*
 
 void AssetManager::SendGeoAssetToGpu(GeometryAsset* pGeoAsset)
 {
+    if (pGeoAsset == nullptr)
+    {
+        return;
+    }
+
+    if (pGeoAsset->m_gpuVertBuffer != nullptr && pGeoAsset->m_gpuIndexBuffer != nullptr)
+    {
+        return;
+    }
+
     const uint32_t idxBufferSizeByte = pGeoAsset->m_idxType ? sizeof(uint32_t) * pGeoAsset->m_idxDataUint32.size() :
                                                               sizeof(uint16_t) * pGeoAsset->m_idxDataUint16.size();
 
@@ -171,6 +182,13 @@ void AssetManager::SendGeoAssetToGpu(GeometryAsset* pGeoAsset)
     pGeoAsset->m_idxBufferView.BufferLocation = pGeoAsset->m_gpuIndexBuffer->GetGPUVirtualAddress();
     pGeoAsset->m_idxBufferView.Format = pGeoAsset->m_idxType ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
     pGeoAsset->m_idxBufferView.SizeInBytes = idxBufferSizeByte;
+
+    if (m_pLevel != nullptr &&
+        m_pLevel->m_rendererBackendType == RendererBackendType::PathTracing &&
+        pGeoAsset->m_blas == nullptr)
+    {
+        pGeoAsset->m_blas = MakeBLAS(pGeoAsset);
+    }
 }
 
 void AssetManager::SendTextureAssetToGpu(TextureAsset* pTexAsset)
@@ -279,6 +297,39 @@ void AssetManager::SendTextureAssetToGpu(TextureAsset* pTexAsset)
 
     pTexAsset->imgInfo.isSentToGpu = true;
 }
+
+ID3D12Resource* AssetManager::MakeBLAS(GeometryAsset* pGeoAsset)
+{
+    if (pGeoAsset == nullptr || pGeoAsset->m_gpuVertBuffer == nullptr)
+    {
+        return nullptr;
+    }
+
+    const DXGI_FORMAT indexFormat = (pGeoAsset->m_gpuIndexBuffer == nullptr) ? DXGI_FORMAT_UNKNOWN :
+                                    (pGeoAsset->m_idxType ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT);
+
+    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
+    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+    geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+    geometryDesc.Triangles.Transform3x4 = 0;
+    geometryDesc.Triangles.IndexFormat = indexFormat;
+    geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+    geometryDesc.Triangles.IndexCount = pGeoAsset->m_gpuIndexBuffer ? pGeoAsset->m_idxCnt : 0;
+    geometryDesc.Triangles.VertexCount = static_cast<UINT>(pGeoAsset->m_vertData.size() / VERT_SIZE_FLOAT);
+    geometryDesc.Triangles.IndexBuffer = pGeoAsset->m_gpuIndexBuffer ? pGeoAsset->m_gpuIndexBuffer->GetGPUVirtualAddress() : 0;
+    geometryDesc.Triangles.VertexBuffer.StartAddress = pGeoAsset->m_gpuVertBuffer->GetGPUVirtualAddress();
+    geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(float) * VERT_SIZE_FLOAT;
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = {};
+    inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+    inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    inputs.NumDescs = 1;
+    inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+    inputs.pGeometryDescs = &geometryDesc;
+
+    return MakeAccelerationStructure(g_pD3dDevice, inputs, nullptr);
+}
+
 /*
 void AssetManager::SaveModelPrimAssetAndCreateGpuRsrc(const std::string& name, PrimitiveAsset* pPrimitiveAsset)
 {

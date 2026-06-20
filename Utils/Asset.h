@@ -47,4 +47,26 @@ struct GeometryAsset
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW  m_idxBufferView;
     ID3D12Resource*          m_blas;
+    bool                     m_useHWRT;
+
+    GeometryAsset()
+    {
+        m_vertData.clear();
+        m_posData.clear();
+        m_normalData.clear();
+        m_tangentData.clear();
+        m_texCoordData.clear();
+
+        m_idxType = false;
+        m_idxCnt = 0;
+        m_idxDataUint16.clear();
+        m_idxDataUint32.clear();
+
+        m_gpuVertBuffer = nullptr;
+        m_gpuIndexBuffer = nullptr;
+        m_vertexBufferView = {};
+        m_idxBufferView = {};
+        m_blas = nullptr;
+        m_useHWRT = false;
+    }
 };
