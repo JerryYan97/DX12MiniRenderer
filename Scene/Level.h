@@ -15,6 +15,7 @@ namespace YAML
 }
 
 typedef Object* (*PFN_CustomSerlizeObject)(const std::string& objName, const YAML::Node& i_node);
+typedef std::vector<Object*> (*PFN_CustomDeserializeMultipleObjects)(const std::string& objCommonName, const YAML::Node& i_node);
 
 enum BackgroundType : uint32_t
 {
@@ -33,6 +34,7 @@ public:
     void Tick(float DeltaTime);
 
     void LoadObject(const std::string& objName, const YAML::Node& i_node, PFN_CustomSerlizeObject i_func);
+    void LoadMultipleObjects(const std::string& objCommonName, const YAML::Node& i_node, PFN_CustomDeserializeMultipleObjects i_func);
 
     void RetriveMeshObjects(std::vector<MeshObject*>& o_meshObjects);
     void RetriveActiveCamera(Camera** o_camera);

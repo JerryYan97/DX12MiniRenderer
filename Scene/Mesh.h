@@ -83,6 +83,7 @@ public:
     ~MeshObject();
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
+    static std::vector<Object*> DeseralizeFromSubLevel(const std::string& objCommonName, const YAML::Node& i_node);
 
     // void SendModelMatrixToGpuBuffer();
 

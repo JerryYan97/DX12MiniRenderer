@@ -121,6 +121,15 @@ Object* MeshObject::Deseralize(const std::string& objName, const YAML::Node& i_n
     return mesh;
 }
 
+std::vector<Object*> MeshObject::DeseralizeFromSubLevel(const std::string& objCommonName, const YAML::Node& i_node)
+{
+    std::vector<Object*> meshObjects;
+
+
+
+    return meshObjects;
+}
+
 /*
 void MeshObject::SendModelMatrixToGpuBuffer()
 {

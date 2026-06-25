@@ -3,15 +3,18 @@
 
 const std::string EnvironmentMap::ENV_MAP_TEX_ASSET_NAME = "EnvironmentMapTexture";
 
-void EnvironmentMap::InitEnvironmentMap(TextureAsset* pEnvMapTextureAsset)
+void EnvironmentMap::InitEnvironmentMap(TextureAsset* pEnvMapTextureAsset, TextureAsset* pDiffIrradianceTextureAsset, TextureAsset* pEnvBrdfTextureAsset, TextureAsset* pPrefilterEnvMapTextureAsset)
 {
-    m_pEnvMapTextureAsset = pEnvMapTextureAsset;
+    m_pBackgroundTexAsset = pEnvMapTextureAsset;
+    m_pDiffIrradianceTexAsset = pDiffIrradianceTextureAsset;
+    m_pEnvBrdfTexAsset = pEnvBrdfTextureAsset;
+    m_pPrefilteredEnvTexAsset = pPrefilterEnvMapTextureAsset;
     m_isLoaded = true;
 }
 
 void EnvironmentMap::AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle)
 {
-    if (m_isLoaded && m_pEnvMapTextureAsset != nullptr)
+    if (m_isLoaded && m_pBackgroundTexAsset != nullptr)
     {
         // For now, we only attach the background cubemap to the GPU resource. We can also attach the other IBL related textures in the future if needed.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -21,6 +24,6 @@ void EnvironmentMap::AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_D
         srvDesc.TextureCube.MipLevels = 1;
         srvDesc.TextureCube.MostDetailedMip = 0;
         srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-        pDevice->CreateShaderResourceView(m_pEnvMapTextureAsset->imgInfo.gpuResource, &srvDesc, envMapBkGrdDescriptorHeapHandle);
+        pDevice->CreateShaderResourceView(m_pBackgroundTexAsset->imgInfo.gpuResource, &srvDesc, envMapBkGrdDescriptorHeapHandle);
     }
 }

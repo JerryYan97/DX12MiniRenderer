@@ -39,10 +39,8 @@ AssetLoader::~AssetLoader()
 {
 }
 
-EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
+TextureAsset* AssetLoader::LoadEnvMapBackgroundTextureAsset(const std::string& fileNamePath)
 {
-    EnvironmentMap envMap = {};
-
     assert(fileNamePath.size() > 4);
     const std::string extLower = fileNamePath.substr(fileNamePath.size() - 4);
     assert(extLower == ".hdr" && "LoadAsEnvMap expects a .hdr file");
@@ -53,13 +51,13 @@ EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
     float* pData = stbi_loadf(fileNamePath.c_str(), &width, &height, &channels, 0);
     if (pData == nullptr)
     {
-        return envMap;
+        return nullptr;
     }
 
     TextureAsset* pEnvMapTexture = new TextureAsset();
     pEnvMapTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
     pEnvMapTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
-    pEnvMapTexture->imgInfo.textureFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+    pEnvMapTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
     pEnvMapTexture->imgInfo.gpuResource = nullptr;
     pEnvMapTexture->imgInfo.isSentToGpu = false;
     pEnvMapTexture->imgInfo.texDescHeap = nullptr;
@@ -76,8 +74,34 @@ EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
     stbi_image_free(pData);
 
     g_pAssetManager->StoreTextureAsset(fileNamePath, pEnvMapTexture);
-    envMap.InitEnvironmentMap(pEnvMapTexture);
 
+    return pEnvMapTexture;
+}
+
+TextureAsset* AssetLoader::LoadEnvMapDiffIrradianceTextureAsset(const std::string& fileNamePath)
+{
+    return nullptr;
+}
+
+TextureAsset* AssetLoader::LoadEnvMapBrdfTextureAsset(const std::string& fileNamePath)
+{
+    return nullptr;
+}
+
+TextureAsset* AssetLoader::LoadEnvMapPrefilteredEnvTextureAsset(const std::string& fileNamePath)
+{
+    return nullptr;
+}
+
+EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
+{
+    EnvironmentMap envMap = {};
+
+    TextureAsset* pEnvMapBackgroundTextureAsset = LoadEnvMapBackgroundTextureAsset(fileNamePath + "/background_cubemap.hdr");
+    TextureAsset* pEnvMapDiffIrradianceTextureAsset = LoadEnvMapDiffIrradianceTextureAsset(fileNamePath + "/diffuse_irradiance_cubemap.hdr");
+    TextureAsset* pEnvMapBrdfTextureAsset = LoadEnvMapBrdfTextureAsset(fileNamePath + "/envBrdf.hdr");
+    TextureAsset* pEnvMapPrefilteredTextureAsset = LoadEnvMapPrefilteredEnvTextureAsset(fileNamePath + "/prefilterEnvMaps");
+    envMap.InitEnvironmentMap(pEnvMapBackgroundTextureAsset, pEnvMapDiffIrradianceTextureAsset, pEnvMapBrdfTextureAsset, pEnvMapPrefilteredTextureAsset);
     return envMap;
 }
 
@@ -172,6 +196,10 @@ void SceneLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLevel)
         {
             o_pLevel->LoadObject(objName, itr.second, Camera::Deseralize);
         }
+        else if (type.compare("SubLevel") == 0)
+        {
+            o_pLevel->LoadMultipleObjects(objName, itr.second, MeshObject::DeseralizeFromSubLevel);
+        }
     }
 
     // Calculate the meshes center and bounding box of the level
@@ -202,6 +230,12 @@ void SceneLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLevel)
 
     o_pLevel->SetLevelCenter(levelCenter);
     o_pLevel->SetBoundingBox(bbxMin, bbxMax);
+}
+
+std::vector<Mesh> AssetLoader::LoadSubLevelAsMultipleMeshes(const std::string& fileNamePath)
+{
+    std::vector<Mesh> meshes;
+    return meshes;
 }
 
 Mesh AssetLoader::LoadAsOneMesh(const std::string& fileNamePath)

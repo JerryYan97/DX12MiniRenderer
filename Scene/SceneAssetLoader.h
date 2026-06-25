@@ -64,6 +64,7 @@ public:
 
     // The path is relative to the scene folder since the caller doesn't know the absolute path of the scene folder. The AssetLoader will resolve the absolute path and load the asset into the AssetManager.
     static Mesh LoadAsOneMesh(const std::string& fileNamePath);
+    static std::vector<Mesh> LoadSubLevelAsMultipleMeshes(const std::string& fileNamePath);
     static EnvironmentMap LoadAsEnvMap(const std::string& fileNamePath);
 
 private:
@@ -71,6 +72,13 @@ private:
     static GeometryAsset* LoadOneGltfPrimGeometryAsset(const tinygltf::Primitive& primitive, const tinygltf::Model& model, const int meshIdx, const int primIdx);
     static Material LoadOneGltfPrimMaterial(const tinygltf::Primitive& primitive, const tinygltf::Model& model, const int meshIdx, const int primIdx);
     // static void LoadTextureAsset();
+
+    // IBL related assets loading
+    static TextureAsset* LoadEnvMapBackgroundTextureAsset(const std::string& fileNamePath);
+    static TextureAsset* LoadEnvMapDiffIrradianceTextureAsset(const std::string& fileNamePath);
+    static TextureAsset* LoadEnvMapBrdfTextureAsset(const std::string& fileNamePath);
+    static TextureAsset* LoadEnvMapPrefilteredEnvTextureAsset(const std::string& fileNamePath);
+    //
 
     bool IsAssetLoaded(const std::string& assetName) const
     {
