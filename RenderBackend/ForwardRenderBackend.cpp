@@ -332,7 +332,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
 
     const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    const uint32_t materialTexCnt = iPrim.material.TextureCnt();
+    // const uint32_t materialTexCnt = iPrim.material.TextureCnt();
+    const uint32_t materialTexCnt = 4;
 
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
     cbvHeapDesc.NumDescriptors = 4 + materialTexCnt;
@@ -404,8 +405,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pBaseColorTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pNormalTex != nullptr && pNormalTex->imgInfo.texDescHeap != nullptr)
     {
@@ -416,8 +417,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pNormalTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pMetallicRoughnessTex != nullptr && pMetallicRoughnessTex->imgInfo.texDescHeap != nullptr)
     {
@@ -428,8 +429,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pMetallicRoughnessTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pOcclusionTex != nullptr && pOcclusionTex->imgInfo.texDescHeap != nullptr)
     {
@@ -440,8 +441,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pOcclusionTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pEmissiveTex != nullptr && pEmissiveTex->imgInfo.texDescHeap != nullptr)
     {
@@ -452,7 +453,6 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pEmissiveTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
 
     return res;

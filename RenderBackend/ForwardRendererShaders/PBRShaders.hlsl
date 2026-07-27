@@ -219,8 +219,8 @@ float4 PSMain(PSInput input) : SV_TARGET
     if(materialMask & ROUGHNESS_METALIC_MASK)
     {
         float3 roughnessMetallicSampled = i_roughnessMetallicTexture.Sample(i_roughnessMetallicSamplerState, input.uv).xyz;
-        roughness = roughnessMetallicSampled.g;
-        metallic = roughnessMetallicSampled.b;
+        roughness *= roughnessMetallicSampled.g;
+        metallic  *= roughnessMetallicSampled.b;
     }
     
     float ao = 1.0;
