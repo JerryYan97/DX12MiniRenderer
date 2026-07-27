@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <algorithm>
 
 #define M_PI 3.1415926535897932384626433832795
 
@@ -10,6 +11,15 @@ struct HFVec2
 {
     float ele[2];
 };
+
+template<typename T1, typename T2>
+inline void MatTypeCast(const T1* matSrc, T2* matDst, uint32_t dim)
+{
+    for (uint32_t i = 0; i < dim * dim; i++)
+    {
+        matDst[i] = static_cast<T2>(matSrc[i]);
+    }
+}
 
 template<typename T>
 inline void MatrixMul4x4(const T mat1[16], const T mat2[16], T* resMat)
@@ -145,6 +155,71 @@ inline void MatTranspose(T* mat, uint32_t dim)
     }
 }
 
+template<typename T>
+inline void SetIdentityMat4x4(T* pResMat)
+{
+    for (uint32_t i = 0; i < 16; ++i)
+    {
+        pResMat[i] = static_cast<T>(0);
+    }
+
+    pResMat[0] = static_cast<T>(1);
+    pResMat[5] = static_cast<T>(1);
+    pResMat[10] = static_cast<T>(1);
+    pResMat[15] = static_cast<T>(1);
+}
+
+template<typename T>
+inline void GenTranslationMat4x4(const T translation[3], T* pResMat)
+{
+    SetIdentityMat4x4(pResMat);
+    pResMat[3] = translation[0];
+    pResMat[7] = translation[1];
+    pResMat[11] = translation[2];
+}
+
+template<typename T>
+inline void GenScaleMat4x4(const T scale[3], T* pResMat)
+{
+    SetIdentityMat4x4(pResMat);
+    pResMat[0] = scale[0];
+    pResMat[5] = scale[1];
+    pResMat[10] = scale[2];
+}
+
+template<typename T>
+inline void GenQuaternionRotationMat4x4(const T quatXYWZ[4], T* pResMat)
+{
+    const T x = quatXYWZ[0];
+    const T y = quatXYWZ[1];
+    const T z = quatXYWZ[2];
+    const T w = quatXYWZ[3];
+
+    const T xx = x * x;
+    const T yy = y * y;
+    const T zz = z * z;
+    const T xy = x * y;
+    const T xz = x * z;
+    const T yz = y * z;
+    const T wx = w * x;
+    const T wy = w * y;
+    const T wz = w * z;
+
+    SetIdentityMat4x4(pResMat);
+
+    pResMat[0] = static_cast<T>(1) - static_cast<T>(2) * (yy + zz);
+    pResMat[1] = static_cast<T>(2) * (xy - wz);
+    pResMat[2] = static_cast<T>(2) * (xz + wy);
+
+    pResMat[4] = static_cast<T>(2) * (xy + wz);
+    pResMat[5] = static_cast<T>(1) - static_cast<T>(2) * (xx + zz);
+    pResMat[6] = static_cast<T>(2) * (yz - wx);
+
+    pResMat[8] = static_cast<T>(2) * (xz - wy);
+    pResMat[9] = static_cast<T>(2) * (yz + wx);
+    pResMat[10] = static_cast<T>(1) - static_cast<T>(2) * (xx + yy);
+}
+
 // Generate 4x4 matrices
 // Realtime rendering -- P67
 void GenViewMat(float* const pView, float* const pPos, float* const pWorldUp, float* pResMat);
@@ -168,3 +243,75 @@ void GenRotationMatY(float radien, float* pResMat);
 void GenRotationMatZ(float radien, float* pResMat);
 
 void Mat3x3ToMat4x4(float* mat3x3, float* mat4x4);
+
+template<typename T>
+inline void GenTRSModelMat(const T translation[3], const T rotationQuat[4], const T scale[3], T* pResMat)
+{
+    T tMat[16];
+    T rMat[16];
+    T sMat[16];
+    T trMat[16];
+
+    GenTranslationMat4x4(translation, tMat);
+    GenQuaternionRotationMat4x4(rotationQuat, rMat);
+    GenScaleMat4x4(scale, sMat);
+
+    MatrixMul4x4(tMat, rMat, trMat);
+    MatrixMul4x4(trMat, sMat, pResMat);
+}
+
+template<typename T>
+inline bool ExtractEulerZXYFromTRSMatrix(const T mat[16], T outRotation[3], T outScale[3], T outTranslation[3])
+{
+    outTranslation[0] = mat[3];
+    outTranslation[1] = mat[7];
+    outTranslation[2] = mat[11];
+
+    outScale[0] = static_cast<T>(sqrt(mat[0] * mat[0] + mat[4] * mat[4] + mat[8] * mat[8]));
+    outScale[1] = static_cast<T>(sqrt(mat[1] * mat[1] + mat[5] * mat[5] + mat[9] * mat[9]));
+    outScale[2] = static_cast<T>(sqrt(mat[2] * mat[2] + mat[6] * mat[6] + mat[10] * mat[10]));
+
+    if (outScale[0] == static_cast<T>(0) ||
+        outScale[1] == static_cast<T>(0) ||
+        outScale[2] == static_cast<T>(0))
+    {
+        outRotation[0] = static_cast<T>(0);
+        outRotation[1] = static_cast<T>(0);
+        outRotation[2] = static_cast<T>(0);
+        return false;
+    }
+
+    const T r00 = mat[0] / outScale[0];
+    const T r01 = mat[1] / outScale[1];
+    const T r02 = mat[2] / outScale[2];
+
+    const T r10 = mat[4] / outScale[0];
+    const T r11 = mat[5] / outScale[1];
+    const T r12 = mat[6] / outScale[2];
+
+    const T r20 = mat[8] / outScale[0];
+    const T r21 = mat[9] / outScale[1];
+    const T r22 = mat[10] / outScale[2];
+
+    const T pitch = static_cast<T>(asin(std::clamp(r21, static_cast<T>(-1), static_cast<T>(1))));
+    const T cosPitch = static_cast<T>(cos(pitch));
+
+    T roll = static_cast<T>(0);
+    T head = static_cast<T>(0);
+
+    if (static_cast<T>(fabs(cosPitch)) > static_cast<T>(1e-6))
+    {
+        roll = static_cast<T>(atan2(-r01, r11));
+        head = static_cast<T>(atan2(-r20, r22));
+    }
+    else
+    {
+        roll = static_cast<T>(atan2(r10, r00));
+        head = static_cast<T>(0);
+    }
+
+    outRotation[0] = pitch;
+    outRotation[1] = head;
+    outRotation[2] = roll;
+    return true;
+}

@@ -64,11 +64,12 @@ public:
 
     // The path is relative to the scene folder since the caller doesn't know the absolute path of the scene folder. The AssetLoader will resolve the absolute path and load the asset into the AssetManager.
     static Mesh LoadAsOneMesh(const std::string& fileNamePath);
-    static std::vector<Mesh> LoadSubLevelAsMultipleMeshes(const std::string& fileNamePath);
+    static std::vector<Mesh> LoadSubLevelAsMultipleMeshes(const std::string& fileNamePath, std::vector<Object*>& meshObjects); // Note that GLTF has the concept of children nodes, but our scene objects don't have this concept. Thus, we just flatten the meshes.
     static EnvironmentMap LoadAsEnvMap(const std::string& fileNamePath);
 
 private:
-    static Mesh LoadTinyGltfOneModelAsOneMesh(const std::string& fileNamePath); // This func assumes the gltf is not loaded before.
+    // static Mesh LoadTinyGltfOneMesh(const std::string& fileNamePath); // This func assumes the gltf is not loaded before.
+    static Mesh LoadTinyGltfOneMesh(const std::string& fileNamePath, tinygltf::Model& model, int idx);
     static GeometryAsset* LoadOneGltfPrimGeometryAsset(const tinygltf::Primitive& primitive, const tinygltf::Model& model, const int meshIdx, const int primIdx);
     static Material LoadOneGltfPrimMaterial(const tinygltf::Primitive& primitive, const tinygltf::Model& model, const int meshIdx, const int primIdx);
     // static void LoadTextureAsset();
@@ -80,6 +81,8 @@ private:
     static TextureAsset* LoadEnvMapPrefilteredEnvTextureAsset(const std::string& fileNamePath);
     //
 
+    static void LoadGltfNodesToMeshObjects(const std::string& fileName, const tinygltf::Model& model, const std::vector<Mesh>& meshes, int thisNodeId, float parentWorldMat[16], std::vector<Object*>& meshObjects);
+
     bool IsAssetLoaded(const std::string& assetName) const
     {
         return m_AssetsMeshes.find(assetName) != m_AssetsMeshes.end();
@@ -89,5 +92,5 @@ private:
     std::string m_currentScenePath;
 
     // Assets meshes assets life time is managed by the AssetManager, so we do nothing in the destructor.
-    std::unordered_map<std::string, Mesh> m_AssetsMeshes;
+    std::unordered_map<std::string, std::vector<Mesh>> m_AssetsMeshes;
 };

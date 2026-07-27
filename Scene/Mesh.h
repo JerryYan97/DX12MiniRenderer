@@ -92,6 +92,8 @@ public:
     std::vector<Primitive> GetMeshPrimitives() const { return m_mesh.GetPrimitives(); }
     float* GetModelMat() { return m_modelMat; }
 
+    void Init(const Mesh& mesh, const std::string& name, const float position[3], const float rotation[3], const float scale[3]);
+
     ID3D12DescriptorHeap* GetMeshObjCbvDescHeap() const { return m_pMeshObjCbvDescHeap; }
 
 private:

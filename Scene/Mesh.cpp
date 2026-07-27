@@ -125,8 +125,24 @@ std::vector<Object*> MeshObject::DeseralizeFromSubLevel(const std::string& objCo
 {
     std::vector<Object*> meshObjects;
 
+    std::string assetPath = i_node["AssetPath"].as<std::string>();
+    std::vector<Mesh> loadedMeshes = AssetLoader::LoadSubLevelAsMultipleMeshes(assetPath, meshObjects);
+    /*
+    meshObjects.resize(loadedMeshes.size());
+    for (int i = 0; i < loadedMeshes.size(); ++i)
+    {
+        std::string name = objCommonName + "_" + std::to_string(i);
+        MeshObject* mesh = new MeshObject();
+        mesh->m_objectName = name;
+        mesh->m_mesh = loadedMeshes[i];
+        
+        GenModelMat(mesh->m_position,
+                    mesh->m_rotation[2], mesh->m_rotation[0], mesh->m_rotation[1],
+                    mesh->m_scale, mesh->m_modelMat);
 
-
+        mesh->GenAndInitRuntimeGpuBufferRsrc();
+    }
+    */
     return meshObjects;
 }
 
@@ -313,4 +329,26 @@ void Mesh::InitAsObjectDataSource(const Mesh& otherMesh)
 {
     *this = otherMesh;
     m_isMeshObjectDataSource = true;
+}
+
+void MeshObject::Init(const Mesh& mesh, const std::string& name, const float position[3], const float rotation[3], const float scale[3])
+{
+    memcpy(m_position, position, sizeof(m_position));
+    memcpy(m_rotation, rotation, sizeof(m_rotation));
+    memcpy(m_scale, scale, sizeof(m_scale));
+
+    m_mesh.InitAsObjectDataSource(mesh);
+
+    /*
+    assert((m_scale[0] == m_scale[1]) &&
+           (m_scale[1] == m_scale[2]) && "Assume scale are equal.");
+    */
+
+    GenModelMat(m_position,
+                m_rotation[2], m_rotation[0], m_rotation[1],
+                m_scale, m_modelMat);
+
+    GenAndInitRuntimeGpuBufferRsrc();
+
+    m_objectName = name;
 }
