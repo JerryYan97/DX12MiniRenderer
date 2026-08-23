@@ -358,6 +358,9 @@ inline D3D12_STATIC_SAMPLER_DESC StaticWrapSampler(uint32_t regIdx)
 
 ID3D12Resource* MakeAccelerationStructure(ID3D12Device5* pDevice, const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize);
 
+// https://github.com/microsoft/Windows-Machine-Learning/blob/638cd40abc408e7049219e5d7b4fe164c304f2a2/Samples/WinMLSamplesGallery/WinMLSamplesGalleryNative/D3D12Quad.cpp#L307
+int Tex2DUploadBufferSize(int width, int height, int bytesPerPixel);
+
 // Pipeline descriptions
 // D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateVsPsPipelineDesc();
 

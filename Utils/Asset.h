@@ -14,7 +14,7 @@ struct ImgInfo
 {
     uint32_t              pixWidth;
     uint32_t              pixHeight;
-    std::vector<uint8_t>  dataVec;
+    std::vector<uint8_t>  dataVec; // The data directly sent to GPU, which means the RowPatch padding needs to be done beforehand.
     DXGI_FORMAT           textureFormat;
     ID3D12Resource*       gpuResource;
     bool                  isSentToGpu;

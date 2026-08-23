@@ -1,4 +1,5 @@
 #include "DX12Utils.h"
+#include "MathUtils.h"
 #include <cassert>
 
 class RAIIGPUQueueAndAllocator
@@ -381,6 +382,7 @@ void SendDataToCubemapSlice(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture,
     UINT numRows;
     UINT64 requiredSize;
     pDevice->GetCopyableFootprints(&SrcDesc, 0, 1, 0, &layout, &numRows, &rowSizesInBytes, &requiredSize);
+    assert(requiredSize == dataSizeBytes, "Assume that the size of the texture is the same as the size of the data.");
 
     ID3D12Resource* pUploadBuffer = CreateUploadBufferAndInit(pDevice, dataSizeBytes, pSrcData);
     pUploadBuffer->SetName(L"Upload Buffer");
@@ -450,4 +452,12 @@ ID3D12Resource* MakeAccelerationStructure(ID3D12Device5* pDevice, const D3D12_BU
 
     scratch->Release();
     return as;
+}
+
+int Tex2DUploadBufferSize(int width, int height, int bytesPerPixel)
+{
+    // Total Bytes = (Height - 1) * AlignedRowPitch + ActualRowSizeInBytes
+    int AlignedRowPitch = alignup(width * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+    int ActualRowSizeInBytes = width * bytesPerPixel;
+    return (height - 1) * AlignedRowPitch + ActualRowSizeInBytes;
 }

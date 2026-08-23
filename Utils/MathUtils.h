@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #define M_PI 3.1415926535897932384626433832795
+#define alignup(value, alignment) ((value + (alignment - 1)) & ~(alignment - 1))
 
 // TODO: Dim can be put into template for optimization.
 struct HFVec2

@@ -16,4 +16,6 @@ void GetAllFileNames(const std::string& dir, std::vector<std::string>& outputVec
 
 bool GetFilePostfix(const std::string& pathName, std::string& postfix);
 
+uint32_t GetFileCountByExtension(const std::string& dir, const std::string& extension, bool recursive = false);
+
 std::string GetRootPath();

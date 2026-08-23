@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "yaml-cpp/yaml.h"
 #include "../Utils/MathUtils.h"
+#include "../Utils/DX12Utils.h"
 #include "../Utils/StrPathUtils.h"
 #include "../Utils/GltfUtils.h"
 #include "../Utils/AssetManager.h"
@@ -80,17 +81,139 @@ TextureAsset* AssetLoader::LoadEnvMapBackgroundTextureAsset(const std::string& f
 
 TextureAsset* AssetLoader::LoadEnvMapDiffIrradianceTextureAsset(const std::string& fileNamePath)
 {
-    return nullptr;
+    assert(fileNamePath.size() > 4);
+    const std::string extLower = fileNamePath.substr(fileNamePath.size() - 4);
+    assert(extLower == ".hdr" && "LoadAsEnvMap expects a .hdr file");
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    float* pData = stbi_loadf(fileNamePath.c_str(), &width, &height, &channels, 0);
+    if (pData == nullptr)
+    {
+        return nullptr;
+    }
+
+    TextureAsset* pDiffIrradianceTexture = new TextureAsset();
+    pDiffIrradianceTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
+    pDiffIrradianceTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
+    pDiffIrradianceTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
+    pDiffIrradianceTexture->imgInfo.gpuResource = nullptr;
+    pDiffIrradianceTexture->imgInfo.isSentToGpu = false;
+    pDiffIrradianceTexture->imgInfo.texDescHeap = nullptr;
+    pDiffIrradianceTexture->imgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+    pDiffIrradianceTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+    pDiffIrradianceTexture->imgInfo.arrayLayerCnt = 6;
+    pDiffIrradianceTexture->imgInfo.mipLevelCnt = 1;
+
+    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels);
+    const size_t dataSizeByte = pixelCount * sizeof(float);
+    pDiffIrradianceTexture->imgInfo.dataVec.resize(dataSizeByte);
+    memcpy(pDiffIrradianceTexture->imgInfo.dataVec.data(), pData, dataSizeByte);
+
+    stbi_image_free(pData);
+
+    g_pAssetManager->StoreTextureAsset(fileNamePath, pDiffIrradianceTexture);
+
+    return pDiffIrradianceTexture;
 }
 
 TextureAsset* AssetLoader::LoadEnvMapBrdfTextureAsset(const std::string& fileNamePath)
 {
-    return nullptr;
+    assert(fileNamePath.size() > 4);
+    const std::string extLower = fileNamePath.substr(fileNamePath.size() - 4);
+    assert(extLower == ".hdr" && "LoadAsEnvMap expects a .hdr file");
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    float* pData = stbi_loadf(fileNamePath.c_str(), &width, &height, &channels, 0);
+    if (pData == nullptr)
+    {
+        return nullptr;
+    }
+
+    TextureAsset* pEnvMapBrdfTexture = new TextureAsset();
+    pEnvMapBrdfTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
+    pEnvMapBrdfTexture->imgInfo.pixHeight = static_cast<uint32_t>(height);
+    pEnvMapBrdfTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
+    pEnvMapBrdfTexture->imgInfo.gpuResource = nullptr;
+    pEnvMapBrdfTexture->imgInfo.isSentToGpu = false;
+    pEnvMapBrdfTexture->imgInfo.texDescHeap = nullptr;
+    pEnvMapBrdfTexture->imgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+    pEnvMapBrdfTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+    pEnvMapBrdfTexture->imgInfo.arrayLayerCnt = 1;
+    pEnvMapBrdfTexture->imgInfo.mipLevelCnt = 1;
+
+    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels);
+    const size_t dataSizeByte = pixelCount * sizeof(float);
+    pEnvMapBrdfTexture->imgInfo.dataVec.resize(dataSizeByte);
+    memcpy(pEnvMapBrdfTexture->imgInfo.dataVec.data(), pData, dataSizeByte);
+
+    stbi_image_free(pData);
+
+    g_pAssetManager->StoreTextureAsset(fileNamePath, pEnvMapBrdfTexture);
+
+    return pEnvMapBrdfTexture;
 }
 
+// TODO: I want to abstract the code of loading texture data to buffer with auto-RowPatch-padding.
 TextureAsset* AssetLoader::LoadEnvMapPrefilteredEnvTextureAsset(const std::string& fileNamePath)
 {
-    return nullptr;
+    uint32_t mipCnt = GetFileCountByExtension(fileNamePath, ".hdr");
+
+    TextureAsset* pPrefilteredEnvTexture = new TextureAsset();
+    
+    // Load all data to RAM
+    int    loadedBytes = 0;
+    for (int i = 0; i < mipCnt; i++)
+    {
+        int width = 0;
+        int height = 0;
+        int channels = 0;
+
+        std::string mipFileName = fileNamePath + "/prefilterMip" + std::to_string(i) + ".hdr";
+
+        float* pData = stbi_loadf(mipFileName.c_str(), &width, &height, &channels, 0);
+        if (pData == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (i == 0)
+        {
+            // Setup Tex Asset Info when it's mip0, at which time we know the width, height, and channels of the texture.
+            int totalBytesCount = 0;
+            for (int mipIdx = 0; mipIdx < mipCnt; mipIdx++)
+            {
+                totalBytesCount += Tex2DUploadBufferSize(width >> mipIdx, height >> mipIdx, channels * sizeof(float));
+            }
+
+            pPrefilteredEnvTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
+            pPrefilteredEnvTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
+            pPrefilteredEnvTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
+            pPrefilteredEnvTexture->imgInfo.gpuResource = nullptr;
+            pPrefilteredEnvTexture->imgInfo.isSentToGpu = false;
+            pPrefilteredEnvTexture->imgInfo.texDescHeap = nullptr;
+            pPrefilteredEnvTexture->imgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+            pPrefilteredEnvTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+            pPrefilteredEnvTexture->imgInfo.arrayLayerCnt = 6;
+            pPrefilteredEnvTexture->imgInfo.mipLevelCnt = mipCnt;
+
+            pPrefilteredEnvTexture->imgInfo.dataVec.resize(totalBytesCount);
+            std::fill(pPrefilteredEnvTexture->imgInfo.dataVec.begin(), pPrefilteredEnvTexture->imgInfo.dataVec.end(), 0);
+        }
+
+        memcpy(pPrefilteredEnvTexture->imgInfo.dataVec.data() + loadedBytes, pData, width * height * channels * sizeof(float));
+
+        loadedBytes += Tex2DUploadBufferSize(width, height, channels * sizeof(float));
+
+        stbi_image_free(pData);
+    }
+
+    g_pAssetManager->StoreTextureAsset(fileNamePath, pPrefilteredEnvTexture);
+
+    return pPrefilteredEnvTexture;
 }
 
 EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
