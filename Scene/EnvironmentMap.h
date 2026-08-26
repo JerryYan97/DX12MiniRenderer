@@ -13,6 +13,7 @@ public:
     void InitEnvironmentMap(TextureAsset* pEnvMapTextureAsset, TextureAsset* pDiffIrradianceTextureAsset, TextureAsset* pEnvBrdfTextureAsset, TextureAsset* pPrefilterEnvMapTextureAsset);
     bool IsLoaded() const { return m_isLoaded; }
     void AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
+    void AttachEnvMapIBLGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE diffIrradianceDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE envBrdfDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE prefilterEnvMapDescHeapHandle);
 
 private:
     bool m_isLoaded = false;
