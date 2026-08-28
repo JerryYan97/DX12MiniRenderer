@@ -333,10 +333,11 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
     const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // const uint32_t materialTexCnt = iPrim.material.TextureCnt();
-    const uint32_t materialTexCnt = 4;
+    const uint32_t materialTexCnt = 5;
+    const uint32_t iblTexCnt = 3;
 
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-    cbvHeapDesc.NumDescriptors = 4 + materialTexCnt;
+    cbvHeapDesc.NumDescriptors = 4 + materialTexCnt + iblTexCnt;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
@@ -454,6 +455,24 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
+    texHeapOffset++;
+
+    // IBL
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstDiffuseIrradianceHandle = shaderCbvDescHeapCpuHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE dstEnvBrdfHandle           = shaderCbvDescHeapCpuHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE dstPrefilterEnvMapHandle   = shaderCbvDescHeapCpuHandle;
+
+        dstDiffuseIrradianceHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+        dstEnvBrdfHandle.ptr           += cbvDescHandleOffset * (texHeapOffset + 1);
+        dstPrefilterEnvMapHandle.ptr   += cbvDescHandleOffset * (texHeapOffset + 2);
+
+        m_pLevel->AttachEnvMapIBLGPUResource(m_pD3dDevice,
+                                             dstDiffuseIrradianceHandle,
+                                             dstEnvBrdfHandle,
+                                             dstPrefilterEnvMapHandle);
+    }
+    //
 
     return res;
 }

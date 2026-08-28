@@ -74,6 +74,14 @@ void Level::AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR
     m_envMap.AttachEnvMapGPUResource(pDevice, envMapBkGrdDescriptorHeapHandle);
 }
 
+void Level::AttachEnvMapIBLGPUResource(ID3D12Device5*              pDevice,
+                                       D3D12_CPU_DESCRIPTOR_HANDLE diffIrradianceDescHeapHandle,
+                                       D3D12_CPU_DESCRIPTOR_HANDLE envBrdfDescHeapHandle,
+                                       D3D12_CPU_DESCRIPTOR_HANDLE prefilterEnvMapDescHeapHandle)
+{
+    m_envMap.AttachEnvMapIBLGPUResource(pDevice, diffIrradianceDescHeapHandle, envBrdfDescHeapHandle, prefilterEnvMapDescHeapHandle);
+}
+
 void Level::Tick(float DeltaTime)
 {
     for (Object* pObj : m_objects)

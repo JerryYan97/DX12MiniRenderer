@@ -57,6 +57,7 @@ public:
 
     void SetEnvMapAndIBL(EnvironmentMap envMap) { m_envMap = envMap; }
     void AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
+    void AttachEnvMapIBLGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE diffIrradianceDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE envBrdfDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE prefilterEnvMapDescHeapHandle);
 
     std::string m_sceneName;
     float m_backgroundColor[3];
