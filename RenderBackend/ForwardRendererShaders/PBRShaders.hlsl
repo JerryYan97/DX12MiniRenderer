@@ -157,6 +157,7 @@ cbuffer PsMaterialBuffer : register(b2)
     uint   materialMask;
 }
 
+// Match Lights.h
 static const uint IBL_MASK = 1;
 
 cbuffer PsSceneBuffer : register(b3)
@@ -183,14 +184,17 @@ SamplerState i_roughnessMetallicSamplerState : register(s2);
 Texture2D    i_occlusionTexture      : register(t3);
 SamplerState i_occlusionSamplerState : register(s3);
 
-TextureCube  i_diffuseCubeMapTexture      : register(t4);
-SamplerState i_diffuseCubemapSamplerState : register(s4);
+Texture2D    i_emissiveTexture      : register(t4);
+SamplerState i_emissiveSamplerState : register(s4);
 
-TextureCube  i_prefilterEnvCubeMapTexture      : register(t5);
-SamplerState i_prefilterEnvCubeMapSamplerState : register(s5);
+TextureCube  i_diffuseCubeMapTexture      : register(t5);
+SamplerState i_diffuseCubemapSamplerState : register(s5);
 
-Texture2D    i_envBrdfTexture      : register(t6);
-SamplerState i_envBrdfSamplerState : register(s6);
+TextureCube  i_prefilterEnvCubeMapTexture      : register(t6);
+SamplerState i_prefilterEnvCubeMapSamplerState : register(s6);
+
+Texture2D    i_envBrdfTexture      : register(t7);
+SamplerState i_envBrdfSamplerState : register(s7);
 
 float4 PSMain(PSInput input) : SV_TARGET
 {

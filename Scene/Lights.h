@@ -3,6 +3,8 @@
 #include "../Utils/crc32.h"
 #include <cstring>
 
+static const int IBL_MASK = 1;
+
 namespace YAML
 {
     class Node;

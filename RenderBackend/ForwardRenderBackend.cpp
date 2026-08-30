@@ -50,7 +50,7 @@ void ForwardRenderer::CreateRootSignature()
     D3D12_DESCRIPTOR_RANGE psSrvRange = {};
     {
         psSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        psSrvRange.NumDescriptors = 7;
+        psSrvRange.NumDescriptors = 8;
         psSrvRange.BaseShaderRegister = 0;
         psSrvRange.RegisterSpace = 0;
         psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -71,13 +71,13 @@ void ForwardRenderer::CreateRootSignature()
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[7] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6) };
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[8] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6), StaticWrapSampler(7) };
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
         rootSignatureDesc.NumParameters = 2;
         rootSignatureDesc.pParameters = rootParameters;
-        rootSignatureDesc.NumStaticSamplers = 7;
+        rootSignatureDesc.NumStaticSamplers = 8;
         rootSignatureDesc.pStaticSamplers = staticSamplers;
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     }
@@ -304,6 +304,7 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
 
     memcpy(psConstantBuffer.cameraPos.val, pCamera->m_pos, sizeof(float) * 3);
     psConstantBuffer.extraIntData.val[0] = pointLightCnt;
+    psConstantBuffer.extraIntData.val[1] = m_pLevel->HasActiveIBL() ? IBL_MASK : 0; // Light Condition Masks.
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
@@ -460,12 +461,12 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
     // IBL
     {
         D3D12_CPU_DESCRIPTOR_HANDLE dstDiffuseIrradianceHandle = shaderCbvDescHeapCpuHandle;
-        D3D12_CPU_DESCRIPTOR_HANDLE dstEnvBrdfHandle           = shaderCbvDescHeapCpuHandle;
         D3D12_CPU_DESCRIPTOR_HANDLE dstPrefilterEnvMapHandle   = shaderCbvDescHeapCpuHandle;
-
+        D3D12_CPU_DESCRIPTOR_HANDLE dstEnvBrdfHandle           = shaderCbvDescHeapCpuHandle;
+        
         dstDiffuseIrradianceHandle.ptr += cbvDescHandleOffset * texHeapOffset;
-        dstEnvBrdfHandle.ptr           += cbvDescHandleOffset * (texHeapOffset + 1);
-        dstPrefilterEnvMapHandle.ptr   += cbvDescHandleOffset * (texHeapOffset + 2);
+        dstPrefilterEnvMapHandle.ptr   += cbvDescHandleOffset * (texHeapOffset + 1);
+        dstEnvBrdfHandle.ptr           += cbvDescHandleOffset * (texHeapOffset + 2);
 
         m_pLevel->AttachEnvMapIBLGPUResource(m_pD3dDevice,
                                              dstDiffuseIrradianceHandle,
