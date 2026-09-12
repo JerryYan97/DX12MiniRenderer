@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
 #include <d3d12.h>
 #include "EventSystem/EventManager.h"
 #include "Scene/SceneAssetLoader.h"
@@ -118,10 +120,9 @@ private:
     };
     ID3D12RootSignature* m_pEnvMapRootSignature = nullptr;
     ID3D12PipelineState* m_pEnvMapPipelineState = nullptr;
-    // ID3D12DescriptorHeap* m_pEnvMapCBVHeap = nullptr;
     ID3D12DescriptorHeap* m_pEnvMapSRVCBVHeap = nullptr;
-    ID3D12Resource* m_pEnvMapCnstBuffer = nullptr; // Camera info for rendering environment map, which is updated every frame.
-    //
+    std::vector<ID3D12Resource*> m_pEnvMapCnstBuffers; // Camera info for rendering environment map, one upload buffer per back buffer.
+    std::vector<std::uint8_t*> m_pMappedEnvMapCnstBuffers;
 };
 
 class InputInfoManager {

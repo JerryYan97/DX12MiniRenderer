@@ -297,7 +297,7 @@ inline UINT Align(UINT size, UINT alignment)
 }
 
 ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device5* pDevice, uint32_t sizeBytes, void* pSrcData);
-void SendDataToGPUBuffer(ID3D12Device5* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes);
+void SendDataToGPUBuffer(ID3D12Device5* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes); // Note: It's very CPU heavy. Don't do it every frame!
 void SendDataToUploadBuffer(ID3D12Resource* pUploadBuffer, void* pSrcData, uint32_t dataSizeBytes, uint32_t dstOffsetBytes = 0);
 
 inline void GpuQueueWaitIdle(ID3D12Device5* pDevice, ID3D12CommandQueue* pCmdQueue)
