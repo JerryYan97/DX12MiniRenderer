@@ -165,8 +165,8 @@ TextureAsset* AssetLoader::LoadEnvMapPrefilteredEnvTextureAsset(const std::strin
     TextureAsset* pPrefilteredEnvTexture = new TextureAsset();
     
     // Load all data to RAM
-    int    loadedBytes = 0;
-    for (int i = 0; i < mipCnt; i++)
+    size_t loadedBytes = 0;
+    for (uint32_t i = 0; i < mipCnt; i++)
     {
         int width = 0;
         int height = 0;
@@ -183,12 +183,6 @@ TextureAsset* AssetLoader::LoadEnvMapPrefilteredEnvTextureAsset(const std::strin
         if (i == 0)
         {
             // Setup Tex Asset Info when it's mip0, at which time we know the width, height, and channels of the texture.
-            int totalBytesCount = 0;
-            for (int mipIdx = 0; mipIdx < mipCnt; mipIdx++)
-            {
-                totalBytesCount += Tex2DUploadBufferSize(width >> mipIdx, height >> mipIdx, channels * sizeof(float));
-            }
-
             pPrefilteredEnvTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
             pPrefilteredEnvTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
             pPrefilteredEnvTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -199,14 +193,13 @@ TextureAsset* AssetLoader::LoadEnvMapPrefilteredEnvTextureAsset(const std::strin
             pPrefilteredEnvTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
             pPrefilteredEnvTexture->imgInfo.arrayLayerCnt = 6;
             pPrefilteredEnvTexture->imgInfo.mipLevelCnt = mipCnt;
-
-            pPrefilteredEnvTexture->imgInfo.dataVec.resize(totalBytesCount);
-            std::fill(pPrefilteredEnvTexture->imgInfo.dataVec.begin(), pPrefilteredEnvTexture->imgInfo.dataVec.end(), 0);
         }
 
-        memcpy(pPrefilteredEnvTexture->imgInfo.dataVec.data() + loadedBytes, pData, width * height * channels * sizeof(float));
+        const size_t dataSizeBytes = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels) * sizeof(float);
+        pPrefilteredEnvTexture->imgInfo.dataVec.resize(loadedBytes + dataSizeBytes);
+        memcpy(pPrefilteredEnvTexture->imgInfo.dataVec.data() + loadedBytes, pData, dataSizeBytes);
 
-        loadedBytes += Tex2DUploadBufferSize(width, height, channels * sizeof(float));
+        loadedBytes += dataSizeBytes;
 
         stbi_image_free(pData);
     }

@@ -238,18 +238,26 @@ void AssetManager::SendTextureAssetToGpu(TextureAsset* pTexAsset)
         const uint32_t sliceCnt = 6;
         const uint32_t mipLevelCnt = pTexAsset->imgInfo.mipLevelCnt;
         size_t dataOffsetByte = 0;
+        uint32_t bytesPerPixel = 0;
+
+        switch (pTexAsset->imgInfo.textureFormat)
+        {
+        case DXGI_FORMAT_R32G32B32_FLOAT:
+            bytesPerPixel = sizeof(float) * 3;
+            break;
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:
+            bytesPerPixel = sizeof(float) * 4;
+            break;
+        default:
+            assert(false && "Unsupported cubemap texture format.");
+            return;
+        }
 
         for (uint32_t mipIdx = 0; mipIdx < mipLevelCnt; ++mipIdx)
         {
-            uint32_t channelCnt = 4;
-            if (pTexAsset->imgInfo.textureFormat == DXGI_FORMAT_R32G32B32_FLOAT)
-            {
-                channelCnt = 3;
-            }
-
             const uint32_t mipWidthPixel = max(1u, pTexAsset->imgInfo.pixWidth >> mipIdx);
-
-            const uint32_t bytesPerSlice = Tex2DUploadBufferSize(mipWidthPixel, mipWidthPixel, channelCnt * sizeof(float)); // Each slice's height is same as the width for cubemap texture.
+            const uint32_t mipHeightPixel = max(1u, pTexAsset->imgInfo.pixHeight >> mipIdx);
+            const uint32_t bytesPerSlice = mipWidthPixel * mipHeightPixel * bytesPerPixel;
 
             for (uint32_t sliceIdx = 0; sliceIdx < sliceCnt; ++sliceIdx)
             {
@@ -263,6 +271,8 @@ void AssetManager::SendTextureAssetToGpu(TextureAsset* pTexAsset)
                 dataOffsetByte += bytesPerSlice;
             }
         }
+
+        ThrowIfFalse(dataOffsetByte == pTexAsset->imgInfo.dataVec.size());
 
         ChangeResourceState(g_pD3dDevice,
                             pTexAsset->imgInfo.gpuResource,

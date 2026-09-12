@@ -126,8 +126,6 @@ ID3D12Resource* CreateGPUBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, D3D1
 ID3D12Resource* CreateUploadBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes)
 {
     ID3D12Resource* pUploadBuffer;
-    // NOTE: Constant buffer needs to be padded to 256 bytes.
-    assert(sizeBytes % 256 == 0);
     D3D12_HEAP_PROPERTIES heapProperties{};
     {
         heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -312,10 +310,24 @@ void SendDataToTexture2D(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture, vo
     UINT numRows;
     UINT64 requiredSize;
     pDevice->GetCopyableFootprints(&Desc, 0, 1, 0, &layout, &numRows, &rowSizesInBytes, &requiredSize);
-    assert(requiredSize == dataSizeBytes, "Assume that the size of the texture is the same as the size of the data.");
+    ThrowIfFalse(static_cast<UINT64>(dataSizeBytes) == rowSizesInBytes * numRows);
 
-    ID3D12Resource* pUploadBuffer = CreateUploadBufferAndInit(pDevice, dataSizeBytes, pSrcData);
+    ID3D12Resource* pUploadBuffer = CreateUploadBuffer(pDevice, static_cast<uint32_t>(requiredSize));
     pUploadBuffer->SetName(L"Upload Buffer");
+
+    void* pMappedData = nullptr;
+    D3D12_RANGE readRange{ 0, 0 };
+    ThrowIfFailed(pUploadBuffer->Map(0, &readRange, &pMappedData));
+
+    const uint8_t* pSrcBytes = static_cast<const uint8_t*>(pSrcData);
+    uint8_t* pDstBytes = static_cast<uint8_t*>(pMappedData);
+    for (UINT row = 0; row < numRows; ++row)
+    {
+        memcpy(pDstBytes + static_cast<size_t>(row) * layout.Footprint.RowPitch,
+               pSrcBytes + static_cast<size_t>(row) * rowSizesInBytes,
+               static_cast<size_t>(rowSizesInBytes));
+    }
+    pUploadBuffer->Unmap(0, nullptr);
 
     // Copy the data from the upload buffer to the texture.
     
@@ -364,10 +376,12 @@ void SendDataToCubemapSlice(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture,
     // For the hardware to understand how to treat a section of a buffer resource as a multi-dimensional texture.
     D3D12_RESOURCE_DESC SrcDesc = {};
     {
+        const UINT64 mipWidth = (DestDesc.Width >> mipIndex) > 0 ? (DestDesc.Width >> mipIndex) : 1;
+        const UINT mipHeight = (DestDesc.Height >> mipIndex) > 0 ? (DestDesc.Height >> mipIndex) : 1;
         SrcDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         SrcDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-        SrcDesc.Width = DestDesc.Width >> mipIndex;
-        SrcDesc.Height = DestDesc.Height >> mipIndex;
+        SrcDesc.Width = mipWidth;
+        SrcDesc.Height = mipHeight;
         SrcDesc.DepthOrArraySize = 1;
         SrcDesc.MipLevels = 1;
         SrcDesc.Format = DestDesc.Format;
@@ -382,10 +396,24 @@ void SendDataToCubemapSlice(ID3D12Device5* pDevice, ID3D12Resource* pDstTexture,
     UINT numRows;
     UINT64 requiredSize;
     pDevice->GetCopyableFootprints(&SrcDesc, 0, 1, 0, &layout, &numRows, &rowSizesInBytes, &requiredSize);
-    assert(requiredSize == dataSizeBytes, "Assume that the size of the texture is the same as the size of the data.");
+    ThrowIfFalse(static_cast<UINT64>(dataSizeBytes) == rowSizesInBytes * numRows);
 
-    ID3D12Resource* pUploadBuffer = CreateUploadBufferAndInit(pDevice, dataSizeBytes, pSrcData);
+    ID3D12Resource* pUploadBuffer = CreateUploadBuffer(pDevice, static_cast<uint32_t>(requiredSize));
     pUploadBuffer->SetName(L"Upload Buffer");
+
+    void* pMappedData = nullptr;
+    D3D12_RANGE readRange{ 0, 0 };
+    ThrowIfFailed(pUploadBuffer->Map(0, &readRange, &pMappedData));
+
+    const uint8_t* pSrcBytes = static_cast<const uint8_t*>(pSrcData);
+    uint8_t* pDstBytes = static_cast<uint8_t*>(pMappedData);
+    for (UINT row = 0; row < numRows; ++row)
+    {
+        memcpy(pDstBytes + static_cast<size_t>(row) * layout.Footprint.RowPitch,
+               pSrcBytes + static_cast<size_t>(row) * rowSizesInBytes,
+               static_cast<size_t>(rowSizesInBytes));
+    }
+    pUploadBuffer->Unmap(0, nullptr);
 
     // Copy the data from the upload buffer to the cubemap texture slice.
     
