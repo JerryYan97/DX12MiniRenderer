@@ -71,7 +71,16 @@ void ForwardRenderer::CreateRootSignature()
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[8] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6), StaticWrapSampler(7) };
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[8] = {
+        StaticWrapSampler(0), // i_baseColorSamplerState
+        StaticWrapSampler(1), // i_normalSamplerState
+        StaticWrapSampler(2), // i_roughnessMetallicSamplerState
+        StaticWrapSampler(3), // i_occlusionSamplerState
+        StaticWrapSampler(4), // i_emissiveSamplerState
+        StaticWrapSampler(5), // i_diffuseCubemapSamplerState
+        StaticWrapSampler(6), // i_prefilterEnvCubeMapSamplerState
+        StaticSampler(7, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_FILTER_MIN_MAG_MIP_POINT) // i_envBrdfSamplerState
+    };
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {

@@ -325,11 +325,10 @@ D3D12_RESOURCE_BARRIER UAVBarrier(ID3D12Resource* pResource);
 ID3D12Resource* AllocateGpuBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
 inline int SubresourceIdx(uint32_t mipLevel, uint32_t arrayLayer, uint32_t mipLevelsPerLayer) { return mipLevel + arrayLayer * mipLevelsPerLayer; }
 
-inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode)
+inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode, D3D12_FILTER filterMode = D3D12_FILTER_MIN_MAG_MIP_LINEAR)
 {
     D3D12_STATIC_SAMPLER_DESC sampler = {};
-    // sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    sampler.Filter = filterMode;
     sampler.AddressU = addressMode;
     sampler.AddressV = addressMode;
     sampler.AddressW = addressMode;
