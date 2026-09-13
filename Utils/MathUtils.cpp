@@ -8,6 +8,9 @@
 //
 // In DX12:
 // The pView is equivalent to camera space's z+.
+//
+// In GLTF:
+// The pView is equivalent to camera space's z-.
 void GenViewMat(
     float* const pView,
     float* const pPos,
@@ -16,15 +19,14 @@ void GenViewMat(
 {
     float z[3] = {};
     memcpy(z, pView, 3 * sizeof(float));
-    // ScalarMul(-1.f, z, 3);
+    ScalarMul(-1.f, z, 3);
 
     float pUp[3] = {};
     memcpy(pUp, pWorldUp, 3 * sizeof(float));
 
     float right[3] = {};
-    CrossProductVec3(z, pUp, right);
+    CrossProductVec3(pUp, z, right);
     NormalizeVec(right, 3);
-    ScalarMul(-1.f, right, 3);
 
     CrossProductVec3(z, right, pUp);
     NormalizeVec(pUp, 3);
@@ -77,6 +79,7 @@ void GenPerspectiveProjMat(
     /* The aspect and fov can have different meaning for different implemetation. E.g. FOV-Horiz/Vert, Aspect = W/H or H/W */
     /* No matter what's the difference. Remember the viewspace to NDC mapping */
     // E.g. To make the x equal to -1 when it's at the left edge of the screen, the transformed abs(x) needs to be z. Thus pResMat[0] = 1 / (Near Plane half width).
+    /*
     float c = 1.f / tanf(fov * 0.5f);
 
     pResMat[0] = c / aspect; 
@@ -84,7 +87,7 @@ void GenPerspectiveProjMat(
     pResMat[10] = farPlane / (farPlane - nearPlane);
     pResMat[11] = nearPlane * farPlane / (nearPlane - farPlane);
     pResMat[14] = 1.f;
-    
+    */
     /*
     float Y = 1.f / tanf(fov * 0.5f);
     float X = Y * aspect;
@@ -98,6 +101,14 @@ void GenPerspectiveProjMat(
     pResMat[11] = -1.f;
     pResMat[14] = Q2;
     */
+
+    // Gltf 2.0
+    float c = 1.f / tanf(fov * 0.5f);
+    pResMat[0] = c / aspect;
+    pResMat[5] = c;
+    pResMat[10] = (farPlane + nearPlane) / (nearPlane - farPlane);
+    pResMat[11] = 2.f * farPlane * nearPlane / (nearPlane - farPlane);
+    pResMat[14] = -1.f;
 }
 
 void GenRotationMat(
