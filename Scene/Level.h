@@ -57,6 +57,7 @@ public:
 
     bool HasActiveIBL() const { return m_envMap.IsLoaded(); }
     void SetEnvMapAndIBL(EnvironmentMap envMap) { m_envMap = envMap; }
+    int  GetIBLMaxMipLevels() const { return m_envMap.GetIBLMaxMipLevels(); }
     void AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
     void AttachEnvMapIBLGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE diffIrradianceDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE envBrdfDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE prefilterEnvMapDescHeapHandle);
 

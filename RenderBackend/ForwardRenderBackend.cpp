@@ -305,6 +305,7 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
     memcpy(psConstantBuffer.cameraPos.val, pCamera->m_pos, sizeof(float) * 3);
     psConstantBuffer.extraIntData.val[0] = pointLightCnt;
     psConstantBuffer.extraIntData.val[1] = m_pLevel->HasActiveIBL() ? IBL_MASK : 0; // Light Condition Masks.
+    psConstantBuffer.extraIntData.val[2] = m_pLevel->HasActiveIBL() ? m_pLevel->GetIBLMaxMipLevels() - 1 : 0;
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
