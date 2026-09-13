@@ -96,7 +96,7 @@ public:
     // The upper level AssetLoader calls this func after it loads the model file and arrage the data to a 'Primitive' vector.
     // It will also send assets' resources to GPU according to the rendering backend.
     void StoreModelAssets(const std::string& assetPath, const std::vector<Primitive>& iPrimitives);
-    void StoreTextureAsset(const std::string& assetPath, TextureAsset* iTexAsset);
+    void StoreTextureAsset(const std::string& assetPath, TextureAsset* iTexAsset); // Maybe I should rename it to RegisterTextureAsset since its lifetime is managed by the AssetManager after this.
     // EnvMapAsset* StoreEnvMapAsset(const std::string& filepath);
 
     void RetriveAllMeshAssetsNames(std::vector<std::string>& o_meshNames) const

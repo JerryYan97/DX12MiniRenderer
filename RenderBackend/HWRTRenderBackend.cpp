@@ -353,7 +353,7 @@ void HWRTRenderBackend::InitRootSignature()
          .Descriptor = {.ShaderRegister = 4, .RegisterSpace = 0}},
     };
 
-    D3D12_ROOT_SIGNATURE_DESC desc = {.NumParameters = std::size(params),
+    D3D12_ROOT_SIGNATURE_DESC desc = {.NumParameters = static_cast<UINT>(std::size(params)),
                                       .pParameters = params};
 
     ID3DBlob* blob;
@@ -394,7 +394,7 @@ void HWRTRenderBackend::InitPipeline()
         {.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, .pDesc = &globalSig},
         {.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, .pDesc = &pipelineCfg}};
     D3D12_STATE_OBJECT_DESC desc = {.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE,
-                                    .NumSubobjects = std::size(subobjects),
+                                    .NumSubobjects = static_cast<UINT>(std::size(subobjects)),
                                     .pSubobjects = subobjects};
     m_pD3dDevice->CreateStateObject(&desc, IID_PPV_ARGS(&m_pso));
 

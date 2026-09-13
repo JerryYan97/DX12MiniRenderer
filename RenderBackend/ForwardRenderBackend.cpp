@@ -50,7 +50,7 @@ void ForwardRenderer::CreateRootSignature()
     D3D12_DESCRIPTOR_RANGE psSrvRange = {};
     {
         psSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        psSrvRange.NumDescriptors = 7;
+        psSrvRange.NumDescriptors = 8;
         psSrvRange.BaseShaderRegister = 0;
         psSrvRange.RegisterSpace = 0;
         psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -71,13 +71,22 @@ void ForwardRenderer::CreateRootSignature()
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
-    D3D12_STATIC_SAMPLER_DESC staticSamplers[7] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6) };
+    D3D12_STATIC_SAMPLER_DESC staticSamplers[8] = {
+        StaticWrapSampler(0), // i_baseColorSamplerState
+        StaticWrapSampler(1), // i_normalSamplerState
+        StaticWrapSampler(2), // i_roughnessMetallicSamplerState
+        StaticWrapSampler(3), // i_occlusionSamplerState
+        StaticWrapSampler(4), // i_emissiveSamplerState
+        StaticWrapSampler(5), // i_diffuseCubemapSamplerState
+        StaticWrapSampler(6), // i_prefilterEnvCubeMapSamplerState
+        StaticSampler(7, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_FILTER_MIN_MAG_MIP_POINT) // i_envBrdfSamplerState
+    };
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
         rootSignatureDesc.NumParameters = 2;
         rootSignatureDesc.pParameters = rootParameters;
-        rootSignatureDesc.NumStaticSamplers = 7;
+        rootSignatureDesc.NumStaticSamplers = 8;
         rootSignatureDesc.pStaticSamplers = staticSamplers;
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     }
@@ -304,6 +313,8 @@ void ForwardRenderer::UpdatePerFrameGpuResources()
 
     memcpy(psConstantBuffer.cameraPos.val, pCamera->m_pos, sizeof(float) * 3);
     psConstantBuffer.extraIntData.val[0] = pointLightCnt;
+    psConstantBuffer.extraIntData.val[1] = m_pLevel->HasActiveIBL() ? IBL_MASK : 0; // Light Condition Masks.
+    psConstantBuffer.extraIntData.val[2] = m_pLevel->HasActiveIBL() ? m_pLevel->GetIBLMaxMipLevels() - 1 : 0;
     // Current No Ambient Light.
 
     ThrowIfFailed(m_pPsSceneBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pPsSceneBufferBegin)));
@@ -332,10 +343,12 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
 
     const uint32_t cbvDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    const uint32_t materialTexCnt = iPrim.material.TextureCnt();
+    // const uint32_t materialTexCnt = iPrim.material.TextureCnt();
+    const uint32_t materialTexCnt = 5;
+    const uint32_t iblTexCnt = 3;
 
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-    cbvHeapDesc.NumDescriptors = 4 + materialTexCnt;
+    cbvHeapDesc.NumDescriptors = 4 + materialTexCnt + iblTexCnt;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
@@ -404,8 +417,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pBaseColorTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pNormalTex != nullptr && pNormalTex->imgInfo.texDescHeap != nullptr)
     {
@@ -416,8 +429,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pNormalTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pMetallicRoughnessTex != nullptr && pMetallicRoughnessTex->imgInfo.texDescHeap != nullptr)
     {
@@ -428,8 +441,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pMetallicRoughnessTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pOcclusionTex != nullptr && pOcclusionTex->imgInfo.texDescHeap != nullptr)
     {
@@ -440,8 +453,8 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pOcclusionTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
 
     if (pEmissiveTex != nullptr && pEmissiveTex->imgInfo.texDescHeap != nullptr)
     {
@@ -452,8 +465,25 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
             pEmissiveTex->imgInfo.texDescHeap->GetCPUDescriptorHandleForHeapStart();
 
         m_pD3dDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        texHeapOffset++;
     }
+    texHeapOffset++;
+
+    // IBL
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE dstDiffuseIrradianceHandle = shaderCbvDescHeapCpuHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE dstPrefilterEnvMapHandle   = shaderCbvDescHeapCpuHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE dstEnvBrdfHandle           = shaderCbvDescHeapCpuHandle;
+        
+        dstDiffuseIrradianceHandle.ptr += cbvDescHandleOffset * texHeapOffset;
+        dstPrefilterEnvMapHandle.ptr   += cbvDescHandleOffset * (texHeapOffset + 1);
+        dstEnvBrdfHandle.ptr           += cbvDescHandleOffset * (texHeapOffset + 2);
+
+        m_pLevel->AttachEnvMapIBLGPUResource(m_pD3dDevice,
+                                             dstDiffuseIrradianceHandle,
+                                             dstEnvBrdfHandle,
+                                             dstPrefilterEnvMapHandle);
+    }
+    //
 
     return res;
 }

@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "yaml-cpp/yaml.h"
 #include "../Utils/MathUtils.h"
+#include "../Utils/DX12Utils.h"
 #include "../Utils/StrPathUtils.h"
 #include "../Utils/GltfUtils.h"
 #include "../Utils/AssetManager.h"
@@ -39,10 +40,8 @@ AssetLoader::~AssetLoader()
 {
 }
 
-EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
+TextureAsset* AssetLoader::LoadEnvMapBackgroundTextureAsset(const std::string& fileNamePath)
 {
-    EnvironmentMap envMap = {};
-
     assert(fileNamePath.size() > 4);
     const std::string extLower = fileNamePath.substr(fileNamePath.size() - 4);
     assert(extLower == ".hdr" && "LoadAsEnvMap expects a .hdr file");
@@ -53,13 +52,13 @@ EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
     float* pData = stbi_loadf(fileNamePath.c_str(), &width, &height, &channels, 0);
     if (pData == nullptr)
     {
-        return envMap;
+        return nullptr;
     }
 
     TextureAsset* pEnvMapTexture = new TextureAsset();
     pEnvMapTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
     pEnvMapTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
-    pEnvMapTexture->imgInfo.textureFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+    pEnvMapTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
     pEnvMapTexture->imgInfo.gpuResource = nullptr;
     pEnvMapTexture->imgInfo.isSentToGpu = false;
     pEnvMapTexture->imgInfo.texDescHeap = nullptr;
@@ -76,8 +75,149 @@ EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
     stbi_image_free(pData);
 
     g_pAssetManager->StoreTextureAsset(fileNamePath, pEnvMapTexture);
-    envMap.InitEnvironmentMap(pEnvMapTexture);
 
+    return pEnvMapTexture;
+}
+
+TextureAsset* AssetLoader::LoadEnvMapDiffIrradianceTextureAsset(const std::string& fileNamePath)
+{
+    assert(fileNamePath.size() > 4);
+    const std::string extLower = fileNamePath.substr(fileNamePath.size() - 4);
+    assert(extLower == ".hdr" && "LoadAsEnvMap expects a .hdr file");
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    float* pData = stbi_loadf(fileNamePath.c_str(), &width, &height, &channels, 0);
+    if (pData == nullptr)
+    {
+        return nullptr;
+    }
+
+    TextureAsset* pDiffIrradianceTexture = new TextureAsset();
+    pDiffIrradianceTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
+    pDiffIrradianceTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
+    pDiffIrradianceTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
+    pDiffIrradianceTexture->imgInfo.gpuResource = nullptr;
+    pDiffIrradianceTexture->imgInfo.isSentToGpu = false;
+    pDiffIrradianceTexture->imgInfo.texDescHeap = nullptr;
+    pDiffIrradianceTexture->imgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+    pDiffIrradianceTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+    pDiffIrradianceTexture->imgInfo.arrayLayerCnt = 6;
+    pDiffIrradianceTexture->imgInfo.mipLevelCnt = 1;
+
+    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels);
+    const size_t dataSizeByte = pixelCount * sizeof(float);
+    pDiffIrradianceTexture->imgInfo.dataVec.resize(dataSizeByte);
+    memcpy(pDiffIrradianceTexture->imgInfo.dataVec.data(), pData, dataSizeByte);
+
+    stbi_image_free(pData);
+
+    g_pAssetManager->StoreTextureAsset(fileNamePath, pDiffIrradianceTexture);
+
+    return pDiffIrradianceTexture;
+}
+
+TextureAsset* AssetLoader::LoadEnvMapBrdfTextureAsset(const std::string& fileNamePath)
+{
+    assert(fileNamePath.size() > 4);
+    const std::string extLower = fileNamePath.substr(fileNamePath.size() - 4);
+    assert(extLower == ".hdr" && "LoadAsEnvMap expects a .hdr file");
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    float* pData = stbi_loadf(fileNamePath.c_str(), &width, &height, &channels, 0);
+    if (pData == nullptr)
+    {
+        return nullptr;
+    }
+
+    TextureAsset* pEnvMapBrdfTexture = new TextureAsset();
+    pEnvMapBrdfTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
+    pEnvMapBrdfTexture->imgInfo.pixHeight = static_cast<uint32_t>(height);
+    pEnvMapBrdfTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
+    pEnvMapBrdfTexture->imgInfo.gpuResource = nullptr;
+    pEnvMapBrdfTexture->imgInfo.isSentToGpu = false;
+    pEnvMapBrdfTexture->imgInfo.texDescHeap = nullptr;
+    pEnvMapBrdfTexture->imgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+    pEnvMapBrdfTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+    pEnvMapBrdfTexture->imgInfo.arrayLayerCnt = 1;
+    pEnvMapBrdfTexture->imgInfo.mipLevelCnt = 1;
+
+    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels);
+    const size_t dataSizeByte = pixelCount * sizeof(float);
+    pEnvMapBrdfTexture->imgInfo.dataVec.resize(dataSizeByte);
+    memcpy(pEnvMapBrdfTexture->imgInfo.dataVec.data(), pData, dataSizeByte);
+
+    stbi_image_free(pData);
+
+    g_pAssetManager->StoreTextureAsset(fileNamePath, pEnvMapBrdfTexture);
+
+    return pEnvMapBrdfTexture;
+}
+
+// TODO: I want to abstract the code of loading texture data to buffer with auto-RowPatch-padding.
+TextureAsset* AssetLoader::LoadEnvMapPrefilteredEnvTextureAsset(const std::string& fileNamePath)
+{
+    uint32_t mipCnt = GetFileCountByExtension(fileNamePath, ".hdr");
+
+    TextureAsset* pPrefilteredEnvTexture = new TextureAsset();
+    
+    // Load all data to RAM
+    size_t loadedBytes = 0;
+    for (uint32_t i = 0; i < mipCnt; i++)
+    {
+        int width = 0;
+        int height = 0;
+        int channels = 0;
+
+        std::string mipFileName = fileNamePath + "/prefilterMip" + std::to_string(i) + ".hdr";
+
+        float* pData = stbi_loadf(mipFileName.c_str(), &width, &height, &channels, 0);
+        if (pData == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (i == 0)
+        {
+            // Setup Tex Asset Info when it's mip0, at which time we know the width, height, and channels of the texture.
+            pPrefilteredEnvTexture->imgInfo.pixWidth = static_cast<uint32_t>(width);
+            pPrefilteredEnvTexture->imgInfo.pixHeight = static_cast<uint32_t>(width);
+            pPrefilteredEnvTexture->imgInfo.textureFormat = channels == 3 ? DXGI_FORMAT_R32G32B32_FLOAT : DXGI_FORMAT_R32G32B32A32_FLOAT;
+            pPrefilteredEnvTexture->imgInfo.gpuResource = nullptr;
+            pPrefilteredEnvTexture->imgInfo.isSentToGpu = false;
+            pPrefilteredEnvTexture->imgInfo.texDescHeap = nullptr;
+            pPrefilteredEnvTexture->imgInfo.wrapModeHorizontal = TexWrapMode::CLAMP_TO_EDGE;
+            pPrefilteredEnvTexture->imgInfo.wrapModeVertical = TexWrapMode::CLAMP_TO_EDGE;
+            pPrefilteredEnvTexture->imgInfo.arrayLayerCnt = 6;
+            pPrefilteredEnvTexture->imgInfo.mipLevelCnt = mipCnt;
+        }
+
+        const size_t dataSizeBytes = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels) * sizeof(float);
+        pPrefilteredEnvTexture->imgInfo.dataVec.resize(loadedBytes + dataSizeBytes);
+        memcpy(pPrefilteredEnvTexture->imgInfo.dataVec.data() + loadedBytes, pData, dataSizeBytes);
+
+        loadedBytes += dataSizeBytes;
+
+        stbi_image_free(pData);
+    }
+
+    g_pAssetManager->StoreTextureAsset(fileNamePath, pPrefilteredEnvTexture);
+
+    return pPrefilteredEnvTexture;
+}
+
+EnvironmentMap AssetLoader::LoadAsEnvMap(const std::string& fileNamePath)
+{
+    EnvironmentMap envMap = {};
+
+    TextureAsset* pEnvMapBackgroundTextureAsset = LoadEnvMapBackgroundTextureAsset(fileNamePath + "/background_cubemap.hdr");
+    TextureAsset* pEnvMapDiffIrradianceTextureAsset = LoadEnvMapDiffIrradianceTextureAsset(fileNamePath + "/diffuse_irradiance_cubemap.hdr");
+    TextureAsset* pEnvMapBrdfTextureAsset = LoadEnvMapBrdfTextureAsset(fileNamePath + "/envBrdf.hdr");
+    TextureAsset* pEnvMapPrefilteredTextureAsset = LoadEnvMapPrefilteredEnvTextureAsset(fileNamePath + "/prefilterEnvMaps");
+    envMap.InitEnvironmentMap(pEnvMapBackgroundTextureAsset, pEnvMapDiffIrradianceTextureAsset, pEnvMapBrdfTextureAsset, pEnvMapPrefilteredTextureAsset);
     return envMap;
 }
 
@@ -160,7 +300,7 @@ void SceneLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLevel)
         }
         else if (type.compare("AmbientLight") == 0)
         {
-            assert(ambientLightCnt <= 1, "Ambient Light Count shouldn't be larger than 1.");
+            assert(ambientLightCnt <= 1 && "Ambient Light Count shouldn't be larger than 1.");
             ambientLightCnt++;
             o_pLevel->LoadObject(objName, itr.second, AmbientLight::Deseralize);
         }
@@ -171,6 +311,10 @@ void SceneLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLevel)
         else if (type.compare("Camera") == 0)
         {
             o_pLevel->LoadObject(objName, itr.second, Camera::Deseralize);
+        }
+        else if (type.compare("SubLevel") == 0)
+        {
+            o_pLevel->LoadMultipleObjects(objName, itr.second, MeshObject::DeseralizeFromSubLevel);
         }
     }
 
@@ -204,46 +348,65 @@ void SceneLoader::LoadAsLevel(const std::string& fileNamePath, Level* o_pLevel)
     o_pLevel->SetBoundingBox(bbxMin, bbxMax);
 }
 
-Mesh AssetLoader::LoadAsOneMesh(const std::string& fileNamePath)
+void AssetLoader::LoadGltfNodesToMeshObjects(const std::string& fileName, const tinygltf::Model& model, const std::vector<Mesh>& meshes, int thisNodeId, float parentWorldMat[16], std::vector<Object*>& meshObjects)
 {
-    //#TODO: Check the file extension and call the appropriate loader. E.g. OpenUSD
-    //#TODO: We may want to use FastGltf instead of TinyGltf.
+    float trsMat[16] = { 0.f };
 
-    Mesh mesh = {};
+    tinygltf::Node node = model.nodes[thisNodeId];
 
-    if (m_pThis->IsAssetLoaded(fileNamePath))
+    float localMat[16] = { 0.f };
+    if (node.matrix.size() > 0)
     {
-        mesh = m_pThis->m_AssetsMeshes[fileNamePath];
+        MatTypeCast(node.matrix.data(), localMat, 4);
     }
     else
     {
-        mesh = LoadTinyGltfOneModelAsOneMesh(fileNamePath);
-        m_pThis->m_AssetsMeshes[fileNamePath] = mesh;
-        g_pAssetManager->StoreModelAssets(fileNamePath, mesh.GetPrimitives());
+        double dLocalMat[16] = { 0.0 };
+
+        //
+        double translation[3] = { 0.0, 0.0, 0.0 };
+        if (node.translation.size() > 0) { memcpy(translation, node.translation.data(), sizeof(translation)); }
+
+        //
+        double rotation[4] = { 0.0, 0.0, 0.0, 1.0 };
+        if (node.rotation.size() > 0) { memcpy(rotation, node.rotation.data(), sizeof(rotation)); }
+
+        //
+        double scale[3] = { 1.0, 1.0, 1.0 };
+        if (node.scale.size() > 0) { memcpy(scale, node.scale.data(), sizeof(scale)); }
+
+        GenTRSModelMat(translation, rotation, scale, dLocalMat);
+        MatTypeCast(dLocalMat, localMat, 4);
     }
 
-    return mesh;
-}
+    MatrixMul4x4(parentWorldMat, localMat, trsMat);
 
-TexWrapMode GltfSamplerWrapToInternalWrapMode(int wrapMode)
-{
-    switch (wrapMode)
+    if (node.mesh >= 0)
     {
-    case TINYGLTF_TEXTURE_WRAP_REPEAT:
-        return TexWrapMode::REPEAT;
-    case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:
-        return TexWrapMode::CLAMP_TO_EDGE;
-    case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT:
-        return TexWrapMode::MIRRORED_REPEAT;
-    default:
-        return TexWrapMode::REPEAT;
+        MeshObject* meshObj = new MeshObject();
+        std::string meshName = fileName + "_node_" + std::to_string(thisNodeId) + "_mesh_" + std::to_string(node.mesh);
+
+        float translation[3] = { 0.f, 0.f, 0.f };
+        float rotation[3] = { 0.f, 0.f, 0.f };
+        float scale[3] = { 1.f, 1.f, 1.f };
+        ExtractEulerZXYFromTRSMatrix(trsMat, rotation, scale, translation);
+
+        meshObj->Init(meshes[node.mesh], meshName, translation, rotation, scale);
+
+        meshObjects.push_back(meshObj);
+    }
+
+    for (int i = 0; i < node.children.size(); i++)
+    {
+        int childIdx = node.children[i];
+        
+        LoadGltfNodesToMeshObjects(fileName, model, meshes, childIdx, trsMat, meshObjects);
     }
 }
 
-// This func assumes the gltf file only contains one 'mesh'. This 'mesh' will be laoded as a 'Mesh' in the engine.
-Mesh AssetLoader::LoadTinyGltfOneModelAsOneMesh(const std::string& fileNamePath)
+std::vector<Mesh> AssetLoader::LoadSubLevelAsMultipleMeshes(const std::string& fileNamePath, std::vector<Object*>& meshObjects)
 {
-    Mesh LoadedMesh = {};
+    std::vector<Mesh> meshes;
 
     std::string absPath = GetFileDir(m_pThis->m_currentScenePath);
     const std::string fullGltfPathName = absPath + "\\" + fileNamePath;
@@ -269,6 +432,95 @@ Mesh AssetLoader::LoadTinyGltfOneModelAsOneMesh(const std::string& fileNamePath)
         exit(1);
     }
 
+    // Load all meshes from file to memory.
+    for (int i = 0; i < model.meshes.size(); i++)
+    {
+        Mesh mesh = LoadTinyGltfOneMesh(fileNamePath, model, i);
+        meshes.push_back(mesh);
+
+        m_pThis->m_AssetsMeshes[fileNamePath].push_back(mesh);
+        g_pAssetManager->StoreModelAssets(fileNamePath, mesh.GetPrimitives());
+    }
+
+    for (int sceneId = 0; sceneId < model.scenes.size(); sceneId++)
+    {
+        for (int i = 0; i < model.scenes[sceneId].nodes.size(); i++)
+        {
+            int nodeIdx = model.scenes[sceneId].nodes[i];
+            float matrix[16] = { 0.f };
+            SetIdentityMat4x4(matrix);
+            LoadGltfNodesToMeshObjects(fileNamePath, model, meshes, nodeIdx, matrix, meshObjects);
+        }
+    }
+
+    return meshes;
+}
+
+Mesh AssetLoader::LoadAsOneMesh(const std::string& fileNamePath)
+{
+    //#TODO: Check the file extension and call the appropriate loader. E.g. OpenUSD
+    //#TODO: We may want to use FastGltf instead of TinyGltf.
+
+    Mesh mesh = {};
+
+    if (m_pThis->IsAssetLoaded(fileNamePath))
+    {
+        mesh = m_pThis->m_AssetsMeshes[fileNamePath][0];
+    }
+    else
+    {
+        std::string absPath = GetFileDir(m_pThis->m_currentScenePath);
+        const std::string fullGltfPathName = absPath + "\\" + fileNamePath;
+        std::cout << "Loading gltf file: " << fullGltfPathName << std::endl;
+
+        tinygltf::Model model;
+        tinygltf::TinyGLTF loader;
+        std::string err;
+        std::string warn;
+
+        bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, fullGltfPathName);
+
+        if (!warn.empty()) {
+            printf("Warn: %s\n", warn.c_str());
+        }
+
+        if (!err.empty()) {
+            printf("Err: %s\n", err.c_str());
+        }
+
+        if (!ret) {
+            printf("Failed to parse glTF\n");
+            exit(1);
+        }
+
+        mesh = LoadTinyGltfOneMesh(fileNamePath, model, 0);
+        m_pThis->m_AssetsMeshes[fileNamePath].push_back(mesh);
+        g_pAssetManager->StoreModelAssets(fileNamePath, mesh.GetPrimitives());
+    }
+
+    return mesh;
+}
+
+TexWrapMode GltfSamplerWrapToInternalWrapMode(int wrapMode)
+{
+    switch (wrapMode)
+    {
+    case TINYGLTF_TEXTURE_WRAP_REPEAT:
+        return TexWrapMode::REPEAT;
+    case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:
+        return TexWrapMode::CLAMP_TO_EDGE;
+    case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT:
+        return TexWrapMode::MIRRORED_REPEAT;
+    default:
+        return TexWrapMode::REPEAT;
+    }
+}
+
+// This func assumes the gltf file only contains one 'mesh'. This 'mesh' will be laoded as a 'Mesh' in the engine.
+Mesh AssetLoader::LoadTinyGltfOneMesh(const std::string& fileNamePath, tinygltf::Model& model, int idx)
+{
+    Mesh LoadedMesh = {};
+
     // NOTE: TinyGltf loader has already loaded the binary buffer data and the images data.
     const auto& binaryBuffer = model.buffers[0].data;
     const unsigned char* pBufferData = binaryBuffer.data();
@@ -278,15 +530,13 @@ Mesh AssetLoader::LoadTinyGltfOneModelAsOneMesh(const std::string& fileNamePath)
     //       (3): Be aware of the byte stride: https://github.com/KhronosGroup/glTF-Tutorials/blob/main/gltfTutorial/gltfTutorial_005_BuffersBufferViewsAccessors.md#data-interleaving
     //       (4): Be aware of the base color factor: https://github.com/KhronosGroup/glTF-Tutorials/blob/main/gltfTutorial/gltfTutorial_011_SimpleMaterial.md#material-definition
     // This example only supports gltf that only has one mesh and one skin.
-    assert(model.meshes.size() == 1, "This SharedLib Gltf Loader currently only supports one mesh.");
-    assert(model.skins.size() == 0, "This SharedLib Gltf Loader currently doesn't support the skinning."); // TODO: Support skinning and animation.
-    assert(model.scenes.size() == 1, "This SharedLib Gltf Loader currently only supports one scene.");
-    assert(model.scenes[0].nodes.size() == 1, "This SharedLib Gltf Loader currently only supports one node in the scene.");
+    assert(model.skins.size() == 0 && "This SharedLib Gltf Loader currently doesn't support the skinning."); // TODO: Support skinning and animation.
+    assert(model.scenes.size() == 1 && "This SharedLib Gltf Loader currently only supports one scene.");
     
     // Load mesh and relevant info
     // Any node MAY contain one mesh, defined in its mesh property. The mesh MAY be skinned using information provided in a referenced skin object.
     // TODO: We should support multiple meshes in the future.
-    const auto& mesh = model.meshes[0];
+    const auto& mesh = model.meshes[idx];
     
     std::vector<Primitive> primitives;
 
@@ -296,8 +546,8 @@ Mesh AssetLoader::LoadTinyGltfOneModelAsOneMesh(const std::string& fileNamePath)
     {
         const auto& primitive = mesh.primitives[i];
         Primitive meshPrim = {};
-        meshPrim.geometry = LoadOneGltfPrimGeometryAsset(primitive, model, 0, i);
-        meshPrim.material = LoadOneGltfPrimMaterial(primitive, model, 0, i);
+        meshPrim.geometry = LoadOneGltfPrimGeometryAsset(primitive, model, idx, i);
+        meshPrim.material = LoadOneGltfPrimMaterial(primitive, model, idx, i);
 
         primitives.push_back(meshPrim);
     }
@@ -318,8 +568,8 @@ GeometryAsset* AssetLoader::LoadOneGltfPrimGeometryAsset(const tinygltf::Primiti
     int posIdx = primitive.attributes.at("POSITION");
     const auto& posAccessor = model.accessors[posIdx];
 
-    assert(posAccessor.componentType == TINYGLTF_PARAMETER_TYPE_FLOAT, "The pos accessor data type should be float.");
-    assert(posAccessor.type == TINYGLTF_TYPE_VEC3, "The pos accessor type should be vec3.");
+    assert(posAccessor.componentType == TINYGLTF_PARAMETER_TYPE_FLOAT && "The pos accessor data type should be float.");
+    assert(posAccessor.type == TINYGLTF_TYPE_VEC3 && "The pos accessor type should be vec3.");
 
     const auto& posBufferView = model.bufferViews[posAccessor.bufferView];
     // Assmue the data and element type of the position is float3
@@ -330,9 +580,9 @@ GeometryAsset* AssetLoader::LoadOneGltfPrimGeometryAsset(const tinygltf::Primiti
     int indicesIdx = mesh.primitives[primIdx].indices;
     const auto& idxAccessor = model.accessors[indicesIdx];
 
-    assert(idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT ||
-        idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT, "The idx accessor data type should be uint16/32.");
-    assert(idxAccessor.type == TINYGLTF_TYPE_SCALAR, "The idx accessor type should be scalar.");
+    assert((idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT ||
+        idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT) && "The idx accessor data type should be uint16/32.");
+    assert(idxAccessor.type == TINYGLTF_TYPE_SCALAR && "The idx accessor type should be scalar.");
 
     if (idxAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
     {
@@ -355,8 +605,8 @@ GeometryAsset* AssetLoader::LoadOneGltfPrimGeometryAsset(const tinygltf::Primiti
         normalIdx = mesh.primitives[primIdx].attributes.at("NORMAL");
         const auto& normalAccessor = model.accessors[normalIdx];
 
-        assert(normalAccessor.componentType == TINYGLTF_PARAMETER_TYPE_FLOAT, "The normal accessor data type should be float.");
-        assert(normalAccessor.type == TINYGLTF_TYPE_VEC3, "The normal accessor type should be vec3.");
+        assert(normalAccessor.componentType == TINYGLTF_PARAMETER_TYPE_FLOAT && "The normal accessor data type should be float.");
+        assert(normalAccessor.type == TINYGLTF_TYPE_VEC3 && "The normal accessor type should be vec3.");
 
         pGeoAsset->m_normalData.resize(3 * normalAccessor.count);
         ReadOutAccessorData(pGeoAsset->m_normalData.data(), normalAccessor, model.bufferViews, model.buffers);
@@ -398,8 +648,8 @@ GeometryAsset* AssetLoader::LoadOneGltfPrimGeometryAsset(const tinygltf::Primiti
         uvIdx = mesh.primitives[primIdx].attributes.at("TEXCOORD_0");
         const auto& uvAccessor = model.accessors[uvIdx];
 
-        assert(uvAccessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT, "The uv accessor data type should be float.");
-        assert(uvAccessor.type == TINYGLTF_TYPE_VEC2, "The uv accessor type should be vec2.");
+        assert(uvAccessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT && "The uv accessor data type should be float.");
+        assert(uvAccessor.type == TINYGLTF_TYPE_VEC2 && "The uv accessor type should be vec2.");
 
         pGeoAsset->m_texCoordData.resize(2 * uvAccessor.count);
         ReadOutAccessorData(pGeoAsset->m_texCoordData.data(), uvAccessor, model.bufferViews, model.buffers);
@@ -417,9 +667,9 @@ GeometryAsset* AssetLoader::LoadOneGltfPrimGeometryAsset(const tinygltf::Primiti
         tangentIdx = mesh.primitives[primIdx].attributes.at("TANGENT");
         const auto& tangentAccessor = model.accessors[tangentIdx];
 
-        assert(tangentAccessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT, "The tangent accessor data type should be float.");
-        assert(tangentAccessor.type == TINYGLTF_TYPE_VEC4, "The tangent accessor type should be vec4.");
-        assert(tangentAccessor.count == posAccessor.count, "The tangent data count should be the same as the pos data count.");
+        assert(tangentAccessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT && "The tangent accessor data type should be float.");
+        assert(tangentAccessor.type == TINYGLTF_TYPE_VEC4 && "The tangent accessor type should be vec4.");
+        assert(tangentAccessor.count == posAccessor.count && "The tangent data count should be the same as the pos data count.");
 
         pGeoAsset->m_tangentData.resize(4 * tangentAccessor.count);
         ReadOutAccessorData(pGeoAsset->m_tangentData.data(), tangentAccessor, model.bufferViews, model.buffers);
@@ -496,8 +746,8 @@ Material AssetLoader::LoadOneGltfPrimMaterial(const tinygltf::Primitive& primiti
                 pBaseColorTex->imgInfo.wrapModeVertical = TexWrapMode::REPEAT;
             }
 
-            assert(baseColorImg.component == 4, "All textures should have 4 components.");
-            assert(baseColorImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
+            assert(baseColorImg.component == 4 && "All textures should have 4 components.");
+            assert(baseColorImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && "All textures' each component should be a byte.");
         }
 
         // The textures for metalness and roughness properties are packed together in a single texture called metallicRoughnessTexture.Its green
@@ -536,8 +786,8 @@ Material AssetLoader::LoadOneGltfPrimMaterial(const tinygltf::Primitive& primiti
                 pMetallicRoughnessTex->imgInfo.wrapModeVertical = TexWrapMode::REPEAT;
             }
 
-            assert(metallicRoughnessImg.component == 4, "All textures should have 4 components.");
-            assert(metallicRoughnessImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
+            assert(metallicRoughnessImg.component == 4 && "All textures should have 4 components.");
+            assert(metallicRoughnessImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && "All textures' each component should be a byte.");
         }
 
         // No fallback for normal texture. If we don't have normal texture, then we will just use the normal data from the geometry asset.
@@ -569,8 +819,8 @@ Material AssetLoader::LoadOneGltfPrimMaterial(const tinygltf::Primitive& primiti
                 pNormalTex->imgInfo.wrapModeVertical = TexWrapMode::REPEAT;
             }
 
-            assert(normalImg.component == 4, "All textures should have 4 components.");
-            assert(normalImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
+            assert(normalImg.component == 4 && "All textures should have 4 components.");
+            assert(normalImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && "All textures' each component should be a byte.");
         }
 
         // The occlusion texture; it indicates areas that receive less indirect lighting from ambient sources.
@@ -604,8 +854,8 @@ Material AssetLoader::LoadOneGltfPrimMaterial(const tinygltf::Primitive& primiti
                 pOcclusionTex->imgInfo.wrapModeVertical = TexWrapMode::REPEAT;
             }
 
-            assert(occlusionImg.component == 4, "All textures should have 4 components.");
-            assert(occlusionImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE, "All textures' each component should be a byte.");
+            assert(occlusionImg.component == 4 && "All textures should have 4 components.");
+            assert(occlusionImg.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && "All textures' each component should be a byte.");
         }
     }
 

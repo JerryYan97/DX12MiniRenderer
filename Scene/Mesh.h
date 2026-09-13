@@ -83,6 +83,7 @@ public:
     ~MeshObject();
 
     static Object* Deseralize(const std::string& objName, const YAML::Node& i_node);
+    static std::vector<Object*> DeseralizeFromSubLevel(const std::string& objCommonName, const YAML::Node& i_node);
 
     // void SendModelMatrixToGpuBuffer();
 
@@ -90,6 +91,8 @@ public:
     std::vector<float> GetMeshBBX() const { return m_mesh.GetMeshBBX(); }
     std::vector<Primitive> GetMeshPrimitives() const { return m_mesh.GetPrimitives(); }
     float* GetModelMat() { return m_modelMat; }
+
+    void Init(const Mesh& mesh, const std::string& name, const float position[3], const float rotation[3], const float scale[3]);
 
     ID3D12DescriptorHeap* GetMeshObjCbvDescHeap() const { return m_pMeshObjCbvDescHeap; }
 

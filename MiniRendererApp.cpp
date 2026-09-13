@@ -304,38 +304,18 @@ void DX12MiniRenderer::InitEnvMapDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC srvCbvHeapDesc = {};
     {
-        srvCbvHeapDesc.NumDescriptors = 2;
+        srvCbvHeapDesc.NumDescriptors = 1;
         srvCbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvCbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     }
     ThrowIfFailed(m_pD3dDevice->CreateDescriptorHeap(&srvCbvHeapDesc, IID_PPV_ARGS(&m_pEnvMapSRVCBVHeap)));
 
     D3D12_CPU_DESCRIPTOR_HANDLE descriptorHeapHandle = m_pEnvMapSRVCBVHeap->GetCPUDescriptorHandleForHeapStart();
-
-    // Buffer hookup
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-    {
-        cbvDesc.BufferLocation = m_pEnvMapCnstBuffer->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = ALIGN_UP_256(sizeof(EnvMapCnstBuffer));
-    }
-    m_pD3dDevice->CreateConstantBufferView(&cbvDesc, descriptorHeapHandle);
-
-    // Images hookup
-    descriptorHeapHandle.ptr += m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_pLevel->AttachEnvMapGPUResource(m_pD3dDevice, descriptorHeapHandle);
 }
 
 void DX12MiniRenderer::InitEnvMapRootSignature()
 {
-    D3D12_DESCRIPTOR_RANGE psCbvRange = {};
-    {
-        psCbvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        psCbvRange.NumDescriptors = 1;
-        psCbvRange.BaseShaderRegister = 0;
-        psCbvRange.RegisterSpace = 0;
-        psCbvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    }
-
     D3D12_DESCRIPTOR_RANGE psSrvRange = {};
     {
         psSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -345,22 +325,25 @@ void DX12MiniRenderer::InitEnvMapRootSignature()
         psSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     }
 
-    D3D12_DESCRIPTOR_RANGE psRanges[] = { psCbvRange, psSrvRange };
-
-    D3D12_ROOT_PARAMETER rootParameters = {};
+    D3D12_ROOT_PARAMETER rootParameters[2] = {};
     {
-        rootParameters.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters.DescriptorTable.NumDescriptorRanges = 2;
-        rootParameters.DescriptorTable.pDescriptorRanges = psRanges;
-        rootParameters.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameters[0].Descriptor.ShaderRegister = 0;
+        rootParameters[0].Descriptor.RegisterSpace = 0;
+        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
+        rootParameters[1].DescriptorTable.pDescriptorRanges = &psSrvRange;
+        rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     }
 
     D3D12_STATIC_SAMPLER_DESC staticSamplers[7] = { StaticWrapSampler(0), StaticWrapSampler(1), StaticWrapSampler(2), StaticWrapSampler(3), StaticWrapSampler(4), StaticWrapSampler(5), StaticWrapSampler(6) };
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     {
-        rootSignatureDesc.NumParameters = 1;
-        rootSignatureDesc.pParameters = &rootParameters;
+        rootSignatureDesc.NumParameters = 2;
+        rootSignatureDesc.pParameters = rootParameters;
         rootSignatureDesc.NumStaticSamplers = 7;
         rootSignatureDesc.pStaticSamplers = staticSamplers;
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -469,7 +452,21 @@ void DX12MiniRenderer::InitEnvMapPSO()
 
 void DX12MiniRenderer::InitEnvMapCnstBuffer()
 {
-    m_pEnvMapCnstBuffer = CreateGPUBuffer(m_pD3dDevice, sizeof(EnvMapCnstBuffer));
+    constexpr UINT envMapCnstBufferSize = ALIGN_UP_256(sizeof(EnvMapCnstBuffer));
+    m_pEnvMapCnstBuffers.resize(UIManager::NUM_BACK_BUFFERS, nullptr);
+    m_pMappedEnvMapCnstBuffers.resize(UIManager::NUM_BACK_BUFFERS, nullptr);
+
+    for (UINT frameIdx = 0; frameIdx < UIManager::NUM_BACK_BUFFERS; ++frameIdx)
+    {
+        m_pEnvMapCnstBuffers[frameIdx] = CreateUploadBuffer(m_pD3dDevice, envMapCnstBufferSize);
+        SetNameIndexed(m_pEnvMapCnstBuffers[frameIdx], L"EnvMapConstantBuffer", frameIdx);
+
+        void* pMappedData = nullptr;
+        D3D12_RANGE readRange{ 0, 0 };
+        ThrowIfFailed(m_pEnvMapCnstBuffers[frameIdx]->Map(0, &readRange, &pMappedData));
+        m_pMappedEnvMapCnstBuffers[frameIdx] = static_cast<std::uint8_t*>(pMappedData);
+        memset(m_pMappedEnvMapCnstBuffers[frameIdx], 0, envMapCnstBufferSize);
+    }
 }
 
 void DX12MiniRenderer::InitEnvMapPipeline()
@@ -494,10 +491,18 @@ void DX12MiniRenderer::FinalizeEnvMapPipeline()
         m_pEnvMapPipelineState->Release();
         m_pEnvMapPipelineState = nullptr;
     }
-    if (m_pEnvMapCnstBuffer) {
-        m_pEnvMapCnstBuffer->Release();
-        m_pEnvMapCnstBuffer = nullptr;
+
+    for (size_t frameIdx = 0; frameIdx < m_pEnvMapCnstBuffers.size(); ++frameIdx)
+    {
+        if (m_pEnvMapCnstBuffers[frameIdx])
+        {
+            m_pEnvMapCnstBuffers[frameIdx]->Unmap(0, nullptr);
+            m_pEnvMapCnstBuffers[frameIdx]->Release();
+            m_pEnvMapCnstBuffers[frameIdx] = nullptr;
+        }
     }
+    m_pMappedEnvMapCnstBuffers.clear();
+    m_pEnvMapCnstBuffers.clear();
 }
 
 void DX12MiniRenderer::Run()
@@ -661,7 +666,8 @@ void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_
         envMapCB.camNearWidthHeight[1] = nearHeight;
         envMapCB.vpWidthHeight[0] = viewport.Width;
         envMapCB.vpWidthHeight[1] = viewport.Height;
-        SendDataToGPUBuffer(m_pD3dDevice, m_pEnvMapCnstBuffer, &envMapCB, sizeof(EnvMapCnstBuffer));
+        const UINT frameIdx = m_pUIManager->GetCurrentBackBufferIndex();
+        memcpy(m_pMappedEnvMapCnstBuffers[frameIdx], &envMapCB, sizeof(EnvMapCnstBuffer));
 
         pCmdList->SetDescriptorHeaps(1, &m_pEnvMapSRVCBVHeap);
         pCmdList->SetPipelineState(m_pEnvMapPipelineState);
@@ -670,7 +676,8 @@ void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_
         pCmdList->RSSetScissorRects(1, &scissorRect);
         pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
         pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        pCmdList->SetGraphicsRootDescriptorTable(0, m_pEnvMapSRVCBVHeap->GetGPUDescriptorHandleForHeapStart());
+        pCmdList->SetGraphicsRootConstantBufferView(0, m_pEnvMapCnstBuffers[frameIdx]->GetGPUVirtualAddress());
+        pCmdList->SetGraphicsRootDescriptorTable(1, m_pEnvMapSRVCBVHeap->GetGPUDescriptorHandleForHeapStart());
         pCmdList->DrawInstanced(6, 1, 0, 0);
     }
 }

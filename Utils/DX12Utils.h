@@ -297,7 +297,7 @@ inline UINT Align(UINT size, UINT alignment)
 }
 
 ID3D12Resource* CreateUploadBufferAndInit(ID3D12Device5* pDevice, uint32_t sizeBytes, void* pSrcData);
-void SendDataToGPUBuffer(ID3D12Device5* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes);
+void SendDataToGPUBuffer(ID3D12Device5* pDevice, ID3D12Resource* pDstBuffer, void* pSrcData, uint32_t dataSizeBytes); // Note: It's very CPU heavy. Don't do it every frame!
 void SendDataToUploadBuffer(ID3D12Resource* pUploadBuffer, void* pSrcData, uint32_t dataSizeBytes, uint32_t dstOffsetBytes = 0);
 
 inline void GpuQueueWaitIdle(ID3D12Device5* pDevice, ID3D12CommandQueue* pCmdQueue)
@@ -325,11 +325,10 @@ D3D12_RESOURCE_BARRIER UAVBarrier(ID3D12Resource* pResource);
 ID3D12Resource* AllocateGpuBuffer(ID3D12Device5* pDevice, uint32_t sizeBytes, DX12_GPU_CPU_ACCESS_ENUM accessType, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON);
 inline int SubresourceIdx(uint32_t mipLevel, uint32_t arrayLayer, uint32_t mipLevelsPerLayer) { return mipLevel + arrayLayer * mipLevelsPerLayer; }
 
-inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode)
+inline D3D12_STATIC_SAMPLER_DESC StaticSampler(uint32_t regIdx, D3D12_TEXTURE_ADDRESS_MODE addressMode, D3D12_FILTER filterMode = D3D12_FILTER_MIN_MAG_MIP_LINEAR)
 {
     D3D12_STATIC_SAMPLER_DESC sampler = {};
-    // sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    sampler.Filter = filterMode;
     sampler.AddressU = addressMode;
     sampler.AddressV = addressMode;
     sampler.AddressW = addressMode;
@@ -357,6 +356,9 @@ inline D3D12_STATIC_SAMPLER_DESC StaticWrapSampler(uint32_t regIdx)
 }
 
 ID3D12Resource* MakeAccelerationStructure(ID3D12Device5* pDevice, const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize);
+
+// https://github.com/microsoft/Windows-Machine-Learning/blob/638cd40abc408e7049219e5d7b4fe164c304f2a2/Samples/WinMLSamplesGallery/WinMLSamplesGalleryNative/D3D12Quad.cpp#L307
+int Tex2DUploadBufferSize(int width, int height, int bytesPerPixel);
 
 // Pipeline descriptions
 // D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateVsPsPipelineDesc();

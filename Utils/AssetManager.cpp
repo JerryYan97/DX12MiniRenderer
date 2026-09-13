@@ -2,6 +2,7 @@
 #include "DX12Utils.h"
 #include "../Scene/Mesh.h"
 #include "../Scene/Level.h"
+#include "../Utils/MathUtils.h"
 #include <unordered_set>
 #include <cassert>
 #include "../ThirdParty/TinyGltf/stb_image.h"
@@ -191,6 +192,7 @@ void AssetManager::SendGeoAssetToGpu(GeometryAsset* pGeoAsset)
     }
 }
 
+// TODO: Have a helper func for bytes per pixel and don't assume texture format when calculating the bytes per pixel.
 void AssetManager::SendTextureAssetToGpu(TextureAsset* pTexAsset)
 {
     if (pTexAsset == nullptr || pTexAsset->imgInfo.dataVec.empty())
@@ -235,18 +237,42 @@ void AssetManager::SendTextureAssetToGpu(TextureAsset* pTexAsset)
     {
         const uint32_t sliceCnt = 6;
         const uint32_t mipLevelCnt = pTexAsset->imgInfo.mipLevelCnt;
-        const uint32_t bytesPerSlice = static_cast<uint32_t>(pTexAsset->imgInfo.dataVec.size() / sliceCnt);
+        size_t dataOffsetByte = 0;
+        uint32_t bytesPerPixel = 0;
 
-        for (uint32_t sliceIdx = 0; sliceIdx < sliceCnt; ++sliceIdx)
+        switch (pTexAsset->imgInfo.textureFormat)
         {
-            void* pSliceData = pTexAsset->imgInfo.dataVec.data() + static_cast<size_t>(sliceIdx) * bytesPerSlice;
-            SendDataToCubemapSlice(g_pD3dDevice,
-                                   pTexAsset->imgInfo.gpuResource,
-                                   pSliceData,
-                                   bytesPerSlice,
-                                   sliceIdx,
-                                   0);
+        case DXGI_FORMAT_R32G32B32_FLOAT:
+            bytesPerPixel = sizeof(float) * 3;
+            break;
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:
+            bytesPerPixel = sizeof(float) * 4;
+            break;
+        default:
+            assert(false && "Unsupported cubemap texture format.");
+            return;
         }
+
+        for (uint32_t mipIdx = 0; mipIdx < mipLevelCnt; ++mipIdx)
+        {
+            const uint32_t mipWidthPixel = max(1u, pTexAsset->imgInfo.pixWidth >> mipIdx);
+            const uint32_t mipHeightPixel = max(1u, pTexAsset->imgInfo.pixHeight >> mipIdx);
+            const uint32_t bytesPerSlice = mipWidthPixel * mipHeightPixel * bytesPerPixel;
+
+            for (uint32_t sliceIdx = 0; sliceIdx < sliceCnt; ++sliceIdx)
+            {
+                void* pSliceData = pTexAsset->imgInfo.dataVec.data() + dataOffsetByte;
+                SendDataToCubemapSlice(g_pD3dDevice,
+                                       pTexAsset->imgInfo.gpuResource,
+                                       pSliceData,
+                                       bytesPerSlice,
+                                       sliceIdx,
+                                       mipIdx);
+                dataOffsetByte += bytesPerSlice;
+            }
+        }
+
+        ThrowIfFalse(dataOffsetByte == pTexAsset->imgInfo.dataVec.size());
 
         ChangeResourceState(g_pD3dDevice,
                             pTexAsset->imgInfo.gpuResource,

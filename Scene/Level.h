@@ -15,6 +15,7 @@ namespace YAML
 }
 
 typedef Object* (*PFN_CustomSerlizeObject)(const std::string& objName, const YAML::Node& i_node);
+typedef std::vector<Object*> (*PFN_CustomDeserializeMultipleObjects)(const std::string& objCommonName, const YAML::Node& i_node);
 
 enum BackgroundType : uint32_t
 {
@@ -33,6 +34,7 @@ public:
     void Tick(float DeltaTime);
 
     void LoadObject(const std::string& objName, const YAML::Node& i_node, PFN_CustomSerlizeObject i_func);
+    void LoadMultipleObjects(const std::string& objCommonName, const YAML::Node& i_node, PFN_CustomDeserializeMultipleObjects i_func);
 
     void RetriveMeshObjects(std::vector<MeshObject*>& o_meshObjects);
     void RetriveActiveCamera(Camera** o_camera);
@@ -53,8 +55,11 @@ public:
         memcpy(outBbxMax, m_bbxMax, sizeof(float) * 3);
     }
 
+    bool HasActiveIBL() const { return m_envMap.IsLoaded(); }
     void SetEnvMapAndIBL(EnvironmentMap envMap) { m_envMap = envMap; }
+    int  GetIBLMaxMipLevels() const { return m_envMap.GetIBLMaxMipLevels(); }
     void AttachEnvMapGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE envMapBkGrdDescriptorHeapHandle); // Multiple Heaps in Future.
+    void AttachEnvMapIBLGPUResource(ID3D12Device5* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE diffIrradianceDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE envBrdfDescHeapHandle, D3D12_CPU_DESCRIPTOR_HANDLE prefilterEnvMapDescHeapHandle);
 
     std::string m_sceneName;
     float m_backgroundColor[3];
