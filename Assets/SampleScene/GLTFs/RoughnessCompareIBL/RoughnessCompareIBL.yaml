@@ -5,8 +5,8 @@ SceneId: 8
 SceneGraph:
   CameraInst:
     Type: Camera
-    Position: [0.0, 0.0, -8.0]
-    View: [0.0, 0.0, 1.0]
+    Position: [0.0, 0.0, 8.0]
+    View: [0.0, 0.0, -1.0]
     Up: [0.0, 1.0, 0.0]
     fov: 0.820304751
     far: 100
