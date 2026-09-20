@@ -114,7 +114,7 @@ void Camera::MoveRight(HEventArguments args)
         NormalizeVec(right, 3);
 
         float fVals = std::any_cast<float>(args[crc32("delta")]);
-        ScalarMul(-fVals, right, 3);
+        ScalarMul(fVals, right, 3);
         VecAdd(m_pActiveCamera->m_pos, right, 3, m_pActiveCamera->m_pos);
     }
 }
