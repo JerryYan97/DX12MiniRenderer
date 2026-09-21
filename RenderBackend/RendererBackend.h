@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include "../EventSystem/EventManager.h"
 #include "../Utils/crc32.h"
+#include "UpscalingMethod.h"
 
 class UIManager;
 class HEventManager;
@@ -32,6 +33,7 @@ struct RendererBackendInitStruct
     ID3D12CommandQueue* pMainCmdQueue = nullptr;
     FrameContext*  pInitFrameContext = nullptr;
     ID3D12GraphicsCommandList4* pCommandList = nullptr;
+    UpscalingMethod upscalingMethod = UpscalingMethod::None;
 };
 
 class RendererBackend
@@ -74,6 +76,7 @@ protected:
     Level*         m_pLevel = nullptr;
     FrameContext*  m_pInitFrameContext = nullptr;
     ID3D12GraphicsCommandList4* m_pCommandList = nullptr;
+    UpscalingMethod m_upscalingMethod = UpscalingMethod::None;
 
 private:
     RendererBackendType m_type;

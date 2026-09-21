@@ -13,6 +13,7 @@ void RendererBackend::Init(RendererBackendInitStruct initStruct)
     m_pMainCommandQueue = initStruct.pMainCmdQueue;
     m_pInitFrameContext = initStruct.pInitFrameContext;
     m_pCommandList = initStruct.pCommandList;
+    m_upscalingMethod = initStruct.upscalingMethod;
 
     CustomInit();
 }

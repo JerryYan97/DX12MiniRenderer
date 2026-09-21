@@ -5,6 +5,7 @@
 #include <d3d12.h>
 #include "EventSystem/EventManager.h"
 #include "Scene/SceneAssetLoader.h"
+#include "RenderBackend/UpscalingMethod.h"
 
 class UIManager;
 class Level;
@@ -60,6 +61,7 @@ private:
 
     ID3D12Device5*   m_pD3dDevice = nullptr;
     ID3D12Debug*     m_pDx12Debug = nullptr;
+    UpscalingMethod  m_upscalingMethod = UpscalingMethod::None;
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;
     SceneLoader      m_sceneLoader;

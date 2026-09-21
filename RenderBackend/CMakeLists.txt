@@ -1,6 +1,7 @@
 set(RENDERBACKEND_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/RendererBackend.h
     ${CMAKE_CURRENT_SOURCE_DIR}/RendererBackend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/UpscalingMethod.h
     ${CMAKE_CURRENT_SOURCE_DIR}/HWRTRenderBackend.h
     ${CMAKE_CURRENT_SOURCE_DIR}/HWRTRenderBackend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ForwardRenderBackend.h

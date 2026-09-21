@@ -13,6 +13,7 @@
 #include "yaml-cpp/yaml.h"
 #include <d3dcompiler.h>
 #include <dxgidebug.h>
+#include <dxgi1_6.h>
 #include <filesystem>
 #include <chrono>
 #pragma comment(lib, "dxguid.lib")
@@ -48,9 +49,93 @@ void DX12MiniRenderer::InitDevice()
         m_pDx12Debug->EnableDebugLayer();
     }
 
-    // Create device
     D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
-    D3D12CreateDevice(nullptr, featureLevel, IID_PPV_ARGS(&m_pD3dDevice));
+    IDXGIFactory6* pDxgiFactory = nullptr;
+    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&pDxgiFactory)));
+
+    IDXGIAdapter1* pSelectedAdapter = nullptr;
+    for (UINT adapterIndex = 0; ; ++adapterIndex)
+    {
+        IDXGIAdapter1* pAdapter = nullptr;
+        HRESULT enumResult = pDxgiFactory->EnumAdapterByGpuPreference(
+            adapterIndex,
+            DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+            IID_PPV_ARGS(&pAdapter));
+
+        if (enumResult == DXGI_ERROR_NOT_FOUND)
+        {
+            break;
+        }
+        if (FAILED(enumResult))
+        {
+            pDxgiFactory->Release();
+            ThrowIfFailed(enumResult);
+        }
+
+        DXGI_ADAPTER_DESC1 adapterDesc = {};
+        HRESULT descResult = pAdapter->GetDesc1(&adapterDesc);
+        if (FAILED(descResult))
+        {
+            pAdapter->Release();
+            pDxgiFactory->Release();
+            ThrowIfFailed(descResult);
+        }
+
+        const bool isHardwareAdapter = (adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0;
+        const bool supportsDevice = SUCCEEDED(D3D12CreateDevice(
+            pAdapter,
+            featureLevel,
+            __uuidof(ID3D12Device5),
+            nullptr));
+
+        if (isHardwareAdapter && supportsDevice)
+        {
+            pSelectedAdapter = pAdapter;
+            break;
+        }
+
+        pAdapter->Release();
+    }
+
+    if (pSelectedAdapter == nullptr)
+    {
+        pDxgiFactory->Release();
+        ThrowIfFailed(E_FAIL);
+    }
+
+    DXGI_ADAPTER_DESC1 selectedAdapterDesc = {};
+    HRESULT descResult = pSelectedAdapter->GetDesc1(&selectedAdapterDesc);
+    if (FAILED(descResult))
+    {
+        pSelectedAdapter->Release();
+        pDxgiFactory->Release();
+        ThrowIfFailed(descResult);
+    }
+
+    constexpr UINT NVIDIA_VENDOR_ID = 0x10DE;
+    constexpr UINT AMD_VENDOR_ID = 0x1002;
+    switch (selectedAdapterDesc.VendorId)
+    {
+    case NVIDIA_VENDOR_ID:
+        m_upscalingMethod = UpscalingMethod::DLSS;
+        break;
+
+    case AMD_VENDOR_ID:
+        m_upscalingMethod = UpscalingMethod::FSR;
+        break;
+
+    default:
+        m_upscalingMethod = UpscalingMethod::None;
+        break;
+    }
+
+    HRESULT deviceResult = D3D12CreateDevice(
+        pSelectedAdapter,
+        featureLevel,
+        IID_PPV_ARGS(&m_pD3dDevice));
+    pSelectedAdapter->Release();
+    pDxgiFactory->Release();
+    ThrowIfFailed(deviceResult);
 
     if (m_pDx12Debug != nullptr)
     {
@@ -293,6 +378,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     initStruct.pLevel = m_pLevel;
     initStruct.pInitFrameContext = &m_frameContexts[0];
     initStruct.pCommandList = m_pD3dCommandList;
+    initStruct.upscalingMethod = m_upscalingMethod;
     m_pRendererBackend->Init(initStruct);
     
     m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);
