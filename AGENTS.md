@@ -52,6 +52,7 @@ affected shader with the repository shader workflow after setting
   refactors or formatting churn.
 - Match the existing local style. Use `m_` for members and retain existing
   pointer-prefix conventions.
+- Indent declarations and definitions inside anonymous namespace blocks.
 - Prefer explicit initialization for GPU and resource structures.
 - Keep functions practical and compact. Do not introduce template-heavy
   abstractions without a clear need.

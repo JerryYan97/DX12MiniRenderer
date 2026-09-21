@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 #include <d3d12.h>
 #include "EventSystem/EventManager.h"
@@ -62,6 +63,7 @@ private:
     ID3D12Device5*   m_pD3dDevice = nullptr;
     ID3D12Debug*     m_pDx12Debug = nullptr;
     UpscalingMethod  m_upscalingMethod = UpscalingMethod::None;
+    std::string      m_gpuAdapterName;
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;
     SceneLoader      m_sceneLoader;

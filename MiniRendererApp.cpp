@@ -30,6 +30,49 @@ AssetManager* g_pAssetManager = nullptr;
 TimePerfManager* g_pTimePerfManager = nullptr;
 HEventManager* g_pEventManager = nullptr;
 
+namespace // Internal Linkage
+{
+    std::string WideStringToUtf8(const std::wstring& wideString)
+    {
+        if (wideString.empty())
+        {
+            return {};
+        }
+
+        int utf8Length = WideCharToMultiByte(
+            CP_UTF8,
+            WC_ERR_INVALID_CHARS,
+            wideString.data(),
+            static_cast<int>(wideString.size()),
+            nullptr,
+            0,
+            nullptr,
+            nullptr);
+        if (utf8Length == 0)
+        {
+            HRESULT conversionError = HRESULT_FROM_WIN32(GetLastError());
+            ThrowIfFailed(FAILED(conversionError) ? conversionError : E_FAIL);
+        }
+
+        std::string utf8String(utf8Length, '\0');
+        if (WideCharToMultiByte(
+            CP_UTF8,
+            WC_ERR_INVALID_CHARS,
+            wideString.data(),
+            static_cast<int>(wideString.size()),
+            utf8String.data(),
+            utf8Length,
+            nullptr,
+            nullptr) == 0)
+        {
+            HRESULT conversionError = HRESULT_FROM_WIN32(GetLastError());
+            ThrowIfFailed(FAILED(conversionError) ? conversionError : E_FAIL);
+        }
+
+        return utf8String;
+    }
+}
+
 DX12MiniRenderer::DX12MiniRenderer()
     : m_pD3dDevice(nullptr),
       m_pUIManager(nullptr),
@@ -111,6 +154,8 @@ void DX12MiniRenderer::InitDevice()
         pDxgiFactory->Release();
         ThrowIfFailed(descResult);
     }
+
+    m_gpuAdapterName = WideStringToUtf8(selectedAdapterDesc.Description);
 
     constexpr UINT NVIDIA_VENDOR_ID = 0x10DE;
     constexpr UINT AMD_VENDOR_ID = 0x1002;
@@ -234,6 +279,7 @@ void DX12MiniRenderer::GenerateImGUIStates()
         ImGui::Begin("Debug Menu", &show_another_window, ImGuiWindowFlags_AlwaysAutoResize);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         ImGui::Text("FPS: %d, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);
         ImGui::Text("Display res: %d x %d, Render Res: %d x %d", displayWidth, displayHeight, renderWidth, renderHeight);
+        ImGui::Text("GPU: %s", DX12MiniRenderer::m_pThis->m_gpuAdapterName.c_str());
         if (ImGui::Button("Center Camera"))
         {
             HEventManager* pEventManager = HEventManager::HEventManagerInstance();
