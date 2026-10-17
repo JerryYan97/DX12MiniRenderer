@@ -7,6 +7,7 @@
 #include "TimePerfManager/TimePerfManager.h"
 #include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
+#include "RenderBackend/PostProcessing.h"
 #include "Utils/StrPathUtils.h"
 #include "Utils/DX12Utils.h"
 #include "Utils/MathUtils.h"
@@ -385,6 +386,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     m_pUIManager->Init(m_pD3dCommandQueue);
     m_pUIManager->SetCustomImGUIFunc(GenerateImGUIStates);
     g_pUIManager = m_pUIManager;
+    m_pPostProcessing = new PostProcessing(m_pD3dDevice);
 
     m_pTimePerfManager = new TimePerfManager();
     g_pTimePerfManager = m_pTimePerfManager;
@@ -398,6 +400,9 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     m_pAssetManager->SetLevel(m_pLevel);
     m_assetLoader.Init(sceneYaml); // Init eariler since the 'LoadAsLevel' function needs to load assets through the m_assetLoader.
     m_sceneLoader.LoadAsLevel(sceneYaml, m_pLevel);
+
+    float clearColor[4] = { m_pLevel->m_backgroundColor[0], m_pLevel->m_backgroundColor[1], m_pLevel->m_backgroundColor[2], 1.00f };
+    m_pPostProcessing->InitializeSceneRenderTargets(m_pUIManager->GetCurrentRTResourceDesc(), clearColor);
     
     if (m_pLevel->m_rendererBackendType == RendererBackendType::PathTracing)
     {
@@ -573,7 +578,7 @@ void DX12MiniRenderer::InitEnvMapPSO()
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     psoDesc.NumRenderTargets = 1;
-    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     psoDesc.SampleDesc.Count = 1;
     ThrowIfFailed(m_pD3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pEnvMapPipelineState)));
@@ -695,14 +700,17 @@ void DX12MiniRenderer::Run()
                                     m_pLevel->m_backgroundColor[1],
                                     m_pLevel->m_backgroundColor[2], 1.00f);
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        m_pD3dCommandList->ClearRenderTargetView(frameCRTDescriptor, clear_color_with_alpha, 0, nullptr);
+        RenderTargetInfo outputTarget{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
+        const UINT frameIndex = m_pUIManager->GetCurrentBackBufferIndex();
+        RenderTargetInfo sceneTarget = m_pPostProcessing->GetSceneRenderTarget(frameIndex, outputTarget.rtDesc);
+        m_pD3dCommandList->ClearRenderTargetView(sceneTarget.rtvHandle, clear_color_with_alpha, 0, nullptr);
         m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
-        if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, frameCRTDescriptor); }
+        if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, sceneTarget.rtvHandle); }
 
         // Render Scene
-        RenderTargetInfo rtInfo{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
-        m_pRendererBackend->RenderTick(m_pD3dCommandList, rtInfo);
+        m_pRendererBackend->RenderTick(m_pD3dCommandList, sceneTarget);
+        m_pPostProcessing->RenderToneMapping(m_pD3dCommandList, frameIndex, outputTarget);
 
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
@@ -743,6 +751,7 @@ void DX12MiniRenderer::Finalize()
     delete m_pLevel;
 
     FinalizeEnvMapPipeline();
+    if (m_pPostProcessing) { delete m_pPostProcessing; m_pPostProcessing = nullptr; }
 
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
     if (m_pAssetManager) { m_pAssetManager->Deinit(); delete m_pAssetManager; m_pAssetManager = nullptr; }

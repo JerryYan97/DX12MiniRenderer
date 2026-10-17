@@ -235,10 +235,7 @@ void RayGeneration()
 
     uavRTRadiance[idx] = thisRes;
 
-    // Gamma Correction
-    float3 colorPresent = thisRes.xyz / (thisRes.xyz + float3(1.0, 1.0, 1.0));
-    colorPresent = pow(colorPresent, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
-    uavRTPresent[idx] = float4(colorPresent, 1.0);
+    uavRTPresent[idx] = thisRes;
 }
 
 [shader("miss")]

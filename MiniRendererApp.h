@@ -11,6 +11,7 @@
 class UIManager;
 class Level;
 class RendererBackend;
+class PostProcessing;
 class AssetManager;
 class TimePerfManager;
 enum class RendererBackendType;
@@ -86,6 +87,7 @@ private:
     std::vector<FrameContext>  m_frameContexts;
 
     RendererBackend* m_pRendererBackend = nullptr;
+    PostProcessing* m_pPostProcessing = nullptr;
 
     // Temp Root Level
     Level* m_pLevel = nullptr;

@@ -42,7 +42,7 @@ class HWRTRenderBackend : public RendererBackend
     private:
         ID3D12DescriptorHeap* m_uavHeap;
         ID3D12DescriptorHeap* m_uavCleanHeap;
-        ID3D12Resource* m_renderTarget; // With Gamma Correction.
+        ID3D12Resource* m_renderTarget; // Linear HDR output.
         ID3D12Resource* m_renderTargetRadiance;
 
         ID3D12Fence* m_fence;

@@ -607,8 +607,8 @@ void HWRTRenderBackend::CustomResize(uint32_t width, uint32_t height)
 {
     std::cout << "Resizing to " << width << "x" << height << std::endl;
 
-    if (m_renderTarget) [[likely]]
-        m_renderTarget->Release();
+    if (m_renderTarget) { m_renderTarget->Release(); m_renderTarget = nullptr; }
+    if (m_renderTargetRadiance) { m_renderTargetRadiance->Release(); m_renderTargetRadiance = nullptr; }
 
     D3D12_RESOURCE_DESC rtDesc = {
         .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
@@ -616,7 +616,7 @@ void HWRTRenderBackend::CustomResize(uint32_t width, uint32_t height)
         .Height = height,
         .DepthOrArraySize = 1,
         .MipLevels = 1,
-        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+        .Format = DXGI_FORMAT_R16G16B16A16_FLOAT,
         .SampleDesc = NO_AA,
         .Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS};
 
@@ -629,7 +629,7 @@ void HWRTRenderBackend::CustomResize(uint32_t width, uint32_t height)
                                     nullptr, IID_PPV_ARGS(&m_renderTargetRadiance));
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {
-        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+        .Format = DXGI_FORMAT_R16G16B16A16_FLOAT,
         .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D};
 
     const uint32_t uavDescHandleOffset = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
