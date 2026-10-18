@@ -16,6 +16,12 @@ class AssetManager;
 class TimePerfManager;
 enum class RendererBackendType;
 
+enum class RenderResolutionMode
+{
+    Native,
+    Upscale
+};
+
 // It's possible to just use one fence like the ImGUI example but I prefer to use multiple fences for readability, which is more similar to Vulkan Fence.
 // The custom rule for sync is that the fence value = 0 means the fence is not signaled and is waiting for something or is ready to be used.
 // The fence value = 1 means the fence is signaled and is not waiting for something.
@@ -64,6 +70,7 @@ private:
     ID3D12Device5*   m_pD3dDevice = nullptr;
     ID3D12Debug*     m_pDx12Debug = nullptr;
     UpscalingMethod  m_upscalingMethod = UpscalingMethod::None;
+    RenderResolutionMode m_renderResolutionMode = RenderResolutionMode::Native;
     std::string      m_gpuAdapterName;
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;

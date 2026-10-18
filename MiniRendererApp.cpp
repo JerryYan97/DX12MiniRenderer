@@ -281,6 +281,44 @@ void DX12MiniRenderer::GenerateImGUIStates()
         ImGui::Text("FPS: %d, CPU time: %.1f ms, GPU time: %.1f ms", fps, cpuTime, gpuTime);
         ImGui::Text("Display res: %d x %d, Render Res: %d x %d", displayWidth, displayHeight, renderWidth, renderHeight);
         ImGui::Text("GPU: %s", DX12MiniRenderer::m_pThis->m_gpuAdapterName.c_str());
+
+        const char* upscaleModeName = nullptr;
+        switch (DX12MiniRenderer::m_pThis->m_upscalingMethod)
+        {
+        case UpscalingMethod::DLSS:
+            upscaleModeName = "DLSS Upscale";
+            break;
+
+        case UpscalingMethod::FSR:
+            upscaleModeName = "FSR Upscale";
+            break;
+
+        case UpscalingMethod::None:
+            break;
+        }
+
+        if (upscaleModeName != nullptr)
+        {
+            const char* renderResolutionModeNames[] = {
+                "Native (High Resolution)",
+                upscaleModeName
+            };
+            int renderResolutionMode = static_cast<int>(DX12MiniRenderer::m_pThis->m_renderResolutionMode);
+            if (ImGui::Combo(
+                    "Render Resolution Mode",
+                    &renderResolutionMode,
+                    renderResolutionModeNames,
+                    IM_ARRAYSIZE(renderResolutionModeNames)))
+            {
+                DX12MiniRenderer::m_pThis->m_renderResolutionMode =
+                    static_cast<RenderResolutionMode>(renderResolutionMode);
+            }
+        }
+        else
+        {
+            ImGui::Text("Render Resolution Mode: Native (High Resolution)");
+        }
+
         if (ImGui::Button("Center Camera"))
         {
             HEventManager* pEventManager = HEventManager::HEventManagerInstance();
