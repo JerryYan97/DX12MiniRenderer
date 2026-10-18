@@ -29,48 +29,6 @@ void HWRTRenderBackend::Flush()
     m_fence->SetEventOnCompletion(value++, nullptr);
 }
 
-/*
-ID3D12Resource* HWRTRenderBackend::MakeAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs, UINT64* updateScratchSize)
-{
-    auto makeBuffer = [=](UINT64 size, auto initialState) {
-        auto desc = BASIC_BUFFER_DESC;
-        desc.Width = size;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        ID3D12Resource* buffer;
-        m_pD3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE,
-                                              &desc, initialState, nullptr,
-                                              IID_PPV_ARGS(&buffer));
-        return buffer;
-    };
-
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo;
-    m_pD3dDevice->GetRaytracingAccelerationStructurePrebuildInfo(&inputs,
-                                                           &prebuildInfo);
-    if (updateScratchSize)
-        *updateScratchSize = prebuildInfo.UpdateScratchDataSizeInBytes;
-
-    auto* scratch = makeBuffer(prebuildInfo.ScratchDataSizeInBytes,
-                               D3D12_RESOURCE_STATE_COMMON);
-    auto* as = makeBuffer(prebuildInfo.ResultDataMaxSizeInBytes,
-                          D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
-
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {
-        .DestAccelerationStructureData = as->GetGPUVirtualAddress(),
-        .Inputs = inputs,
-        .ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress()};
-
-    m_pInitFrameContext->CommandAllocator->Reset();
-    m_pCommandList->Reset(m_pInitFrameContext->CommandAllocator, nullptr);
-    m_pCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
-    m_pCommandList->Close();
-    m_pMainCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&m_pCommandList));
-
-    Flush();
-    scratch->Release();
-    return as;
-}
-*/
-
 void HWRTRenderBackend::InitScene()
 {
     struct GeometryOffsets
@@ -262,34 +220,7 @@ void HWRTRenderBackend::InitTopLevel()
                                           D3D12_RESOURCE_STATE_COMMON, nullptr,
                                           IID_PPV_ARGS(&m_tlasUpdateScratch));
 }
-/*
-ID3D12Resource* HWRTRenderBackend::MakeBLAS(ID3D12Resource* vertexBuffer, UINT vertexFloats, ID3D12Resource* indexBuffer, UINT indices)
-{
-    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {
-        .Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
-        .Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE,
 
-        .Triangles = {
-            .Transform3x4 = 0, // NOTE: We need model matrix for each mesh primitives.
-
-            .IndexFormat = indexBuffer ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_UNKNOWN,
-            .VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT,
-            .IndexCount = indices,
-            .VertexCount = vertexFloats / VERT_SIZE_FLOAT,
-            .IndexBuffer = indexBuffer ? indexBuffer->GetGPUVirtualAddress() : 0,
-            .VertexBuffer = {.StartAddress = vertexBuffer->GetGPUVirtualAddress(),
-                             .StrideInBytes = sizeof(float) * VERT_SIZE_FLOAT}}};
-
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = {
-        .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
-        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
-        .NumDescs = 1,
-        .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-        .pGeometryDescs = &geometryDesc};
-
-    return MakeAccelerationStructure(inputs);
-}
-*/
 ID3D12Resource* HWRTRenderBackend::MakeTLAS(ID3D12Resource* instances, UINT numInstances,
                          UINT64* updateScratchSize)
 {
@@ -302,26 +233,6 @@ ID3D12Resource* HWRTRenderBackend::MakeTLAS(ID3D12Resource* instances, UINT numI
 
     return MakeAccelerationStructure(m_pD3dDevice, inputs, updateScratchSize);
 }
-
-/*
-void HWRTRenderBackend::InitBottomLevel()
-{
-    std::vector<std::string> staticMeshNames;
-    g_pAssetManager->RetriveAllStaticMeshesNames(staticMeshNames);
-
-    for (auto& modelName : staticMeshNames)
-    {
-        std::vector<PrimitiveAsset*> primAssets;
-        g_pAssetManager->RetriveStaticMeshAssets(modelName, primAssets);
-        for (auto primPtr : primAssets)
-        {
-            auto* vertexBuffer = primPtr->m_gpuVertBuffer;
-            auto* indexBuffer = primPtr->m_gpuIndexBuffer;
-            primPtr->m_blas = MakeBLAS(vertexBuffer, primPtr->m_vertData.size(), indexBuffer, primPtr->m_idxCnt);
-        }
-    }
-}
-*/
 
 void HWRTRenderBackend::InitRootSignature()
 {
@@ -524,27 +435,6 @@ void HWRTRenderBackend::UpdateScene(ID3D12GraphicsCommandList4* cmdList)
     }
 
     UpdateFrameConstBuffer();
-
-    /*
-    UpdateTransforms();
-
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {
-        .DestAccelerationStructureData = m_tlas->GetGPUVirtualAddress(),
-        .Inputs = {
-            .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
-            .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE,
-            .NumDescs = NUM_INSTANCES,
-            .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-            .InstanceDescs = m_instances->GetGPUVirtualAddress()},
-        .SourceAccelerationStructureData = m_tlas->GetGPUVirtualAddress(),
-        .ScratchAccelerationStructureData = m_tlasUpdateScratch->GetGPUVirtualAddress(),
-    };
-    cmdList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
-
-    D3D12_RESOURCE_BARRIER barrier = {.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV,
-                                      .UAV = {.pResource = m_tlas}};
-    cmdList->ResourceBarrier(1, &barrier);
-    */
 }
 
 
