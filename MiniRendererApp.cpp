@@ -242,7 +242,8 @@ void DX12MiniRenderer::ApplyRenderResolutionMode()
 
 void DX12MiniRenderer::RecreateSceneRenderTargets(uint32_t displayWidth, uint32_t displayHeight)
 {
-    const bool isUpscaleMode = m_renderResolutionMode == RenderResolutionMode::Upscale;
+    const bool isUpscaleMode = (m_renderResolutionMode == RenderResolutionMode::PostProcessUpscale) ||
+                               (m_renderResolutionMode == RenderResolutionMode::Upscale);
     const uint32_t internalWidth = isUpscaleMode && displayWidth > 1 ? displayWidth / 2 : displayWidth;
     const uint32_t internalHeight = isUpscaleMode && displayHeight > 1 ? displayHeight / 2 : displayHeight;
     const float clearColor[4] = {
@@ -325,37 +326,29 @@ void DX12MiniRenderer::GenerateImGUIStates()
         switch (DX12MiniRenderer::m_pThis->m_upscalingMethod)
         {
         case UpscalingMethod::DLSS:
-            upscaleModeName = "DLSS Upscale";
+            upscaleModeName = "DLSS";
             break;
-
         case UpscalingMethod::FSR:
-            upscaleModeName = "FSR Upscale";
+            upscaleModeName = "FSR";
             break;
-
-        case UpscalingMethod::None:
+        default:
             break;
         }
 
-        if (upscaleModeName != nullptr)
-        {
-            const char* renderResolutionModeNames[] = {
+        const char* renderResolutionModeNames[] = {
                 "Native (High Resolution)",
+                "Post-process Upscale",
                 upscaleModeName
-            };
-            int renderResolutionMode = static_cast<int>(DX12MiniRenderer::m_pThis->m_renderResolutionMode);
-            if (ImGui::Combo(
-                    "Render Resolution Mode",
-                    &renderResolutionMode,
-                    renderResolutionModeNames,
-                    IM_ARRAYSIZE(renderResolutionModeNames)))
-            {
-                DX12MiniRenderer::m_pThis->m_renderResolutionMode =
-                    static_cast<RenderResolutionMode>(renderResolutionMode);
-            }
-        }
-        else
+        };
+        int renderResolutionMode = static_cast<int>(DX12MiniRenderer::m_pThis->m_renderResolutionMode);
+        if (ImGui::Combo(
+            "Render Resolution Mode",
+            &renderResolutionMode,
+            renderResolutionModeNames,
+            IM_ARRAYSIZE(renderResolutionModeNames)))
         {
-            ImGui::Text("Render Resolution Mode: Native (High Resolution)");
+            DX12MiniRenderer::m_pThis->m_renderResolutionMode =
+                static_cast<RenderResolutionMode>(renderResolutionMode);
         }
 
         if (ImGui::Button("Center Camera"))

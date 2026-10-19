@@ -21,6 +21,7 @@ struct RenderTargetInfo;
 enum class RenderResolutionMode
 {
     Native,
+    PostProcessUpscale,
     Upscale
 };
 
