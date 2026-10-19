@@ -90,14 +90,14 @@ void UIManager::Init(ID3D12CommandQueue* iCmdQueue)
     // but ::AdjustWindowRect() needs WS_CAPTION to calculate the correct window size.
     // Use content area size to calculate the desired window size.
     const auto WS_NO_RESIZE = WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION | WS_MAXIMIZEBOX | WS_SYSMENU;
-    RECT rc = { 100, 100, 100 + 1280, 100 + 800 };
+    RECT rc = { 100, 100, 100 + 1920, 100 + 1080 };
     BOOL bAdjWind = ::AdjustWindowRect(&rc, WS_NO_RESIZE, FALSE);
     LONG windowWidth = rc.right - rc.left;
     LONG windowHeight = rc.bottom - rc.top;
 
     m_hWnd = ::CreateWindowW(m_wc.lpszClassName, m_windowTitle.c_str(), WS_NO_RESIZE, rc.left, rc.top, windowWidth, windowHeight, nullptr, nullptr, m_wc.hInstance, nullptr);
-    m_windowWidth = 1280;
-    m_windowHeight = 800;
+    m_windowWidth = 1920;
+    m_windowHeight = 1080;
 
     // Setup swap chain
     DXGI_SWAP_CHAIN_DESC1 sd;
