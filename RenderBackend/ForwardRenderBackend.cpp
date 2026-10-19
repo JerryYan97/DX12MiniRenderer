@@ -490,12 +490,18 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
 
 void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
-    uint32_t winWidth, winHeight;
-    m_pUIManager->GetWindowSize(winWidth, winHeight);
-    m_viewport = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
-    m_scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
-
-    D3D12_CPU_DESCRIPTOR_HANDLE frameDSVDescriptor = m_pUIManager->GetCurrentMainDSVDescriptor();
+    m_viewport = {
+        0.0f,
+        0.0f,
+        static_cast<float>(rtInfo.rtDesc.Width),
+        static_cast<float>(rtInfo.rtDesc.Height),
+        D3D12_MIN_DEPTH,
+        D3D12_MAX_DEPTH};
+    m_scissorRect = {
+        0,
+        0,
+        static_cast<LONG>(rtInfo.rtDesc.Width),
+        static_cast<LONG>(rtInfo.rtDesc.Height)};
 
     // Padding to 256 bytes for constant buffer
     float vsConstantBuffer[64] = {};
@@ -530,7 +536,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Rende
             pCommandList->SetGraphicsRootSignature(m_pRootSignature);
             pCommandList->RSSetViewports(1, &m_viewport);
             pCommandList->RSSetScissorRects(1, &m_scissorRect);
-            pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &frameDSVDescriptor);
+            pCommandList->OMSetRenderTargets(1, &rtInfo.rtvHandle, FALSE, &rtInfo.dsvHandle);
             pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             pCommandList->IASetIndexBuffer(&meshPrimitives[primIdx].geometry->m_idxBufferView);
             pCommandList->IASetVertexBuffers(0, 1, &meshPrimitives[primIdx].geometry->m_vertexBufferView);

@@ -8,6 +8,7 @@
 #include "RenderBackend/HWRTRenderBackend.h"
 #include "RenderBackend/ForwardRenderBackend.h"
 #include "RenderBackend/PostProcessing.h"
+#include "RenderBackend/RenderTargetManager.h"
 #include "Utils/StrPathUtils.h"
 #include "Utils/DX12Utils.h"
 #include "Utils/MathUtils.h"
@@ -217,6 +218,44 @@ void DX12MiniRenderer::WaitGpuIdle(HEventArguments args)
     TempRendererWaitGpuIdle();
 }
 
+void DX12MiniRenderer::OnResizeSwapchain(HEventArguments args)
+{
+    const uint32_t width = std::any_cast<uint32_t>(args[crc32("Width")]);
+    const uint32_t height = std::any_cast<uint32_t>(args[crc32("Height")]);
+    m_pThis->RecreateSceneRenderTargets(width, height);
+}
+
+void DX12MiniRenderer::ApplyRenderResolutionMode()
+{
+    if (m_renderResolutionMode == m_activeRenderResolutionMode)
+    {
+        return;
+    }
+
+    TempRendererWaitGpuIdle();
+
+    uint32_t displayWidth = 0;
+    uint32_t displayHeight = 0;
+    m_pUIManager->GetSwapchainRenderTargetSize(displayWidth, displayHeight);
+    RecreateSceneRenderTargets(displayWidth, displayHeight);
+}
+
+void DX12MiniRenderer::RecreateSceneRenderTargets(uint32_t displayWidth, uint32_t displayHeight)
+{
+    const bool isUpscaleMode = m_renderResolutionMode == RenderResolutionMode::Upscale;
+    const uint32_t internalWidth = isUpscaleMode && displayWidth > 1 ? displayWidth / 2 : displayWidth;
+    const uint32_t internalHeight = isUpscaleMode && displayHeight > 1 ? displayHeight / 2 : displayHeight;
+    const float clearColor[4] = {
+        m_pLevel->m_backgroundColor[0],
+        m_pLevel->m_backgroundColor[1],
+        m_pLevel->m_backgroundColor[2],
+        1.0f};
+
+    m_pRenderTargetManager->Recreate(internalWidth, internalHeight, clearColor);
+    m_pRendererBackend->Resize(internalWidth, internalHeight);
+    m_activeRenderResolutionMode = m_renderResolutionMode;
+}
+
 void DX12MiniRenderer::GenerateImGUIStates()
 {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -264,9 +303,9 @@ void DX12MiniRenderer::GenerateImGUIStates()
         g_pUIManager->GetSwapchainRenderTargetSize(displayWidth, displayHeight);
     }
 
-    if (DX12MiniRenderer::m_pThis != nullptr && DX12MiniRenderer::m_pThis->m_pRendererBackend)
+    if (DX12MiniRenderer::m_pThis != nullptr && DX12MiniRenderer::m_pThis->m_pRenderTargetManager)
     {
-        DX12MiniRenderer::m_pThis->m_pRendererBackend->GetMainRenderTargetSize(renderWidth, renderHeight);
+        DX12MiniRenderer::m_pThis->m_pRenderTargetManager->GetSceneRenderTargetSize(renderWidth, renderHeight);
     }
 
     if (TimePerfManager::GetInstance())
@@ -425,6 +464,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     m_pUIManager->SetCustomImGUIFunc(GenerateImGUIStates);
     g_pUIManager = m_pUIManager;
     m_pPostProcessing = new PostProcessing(m_pD3dDevice);
+    m_pRenderTargetManager = new RenderTargetManager(m_pD3dDevice);
 
     m_pTimePerfManager = new TimePerfManager();
     g_pTimePerfManager = m_pTimePerfManager;
@@ -440,7 +480,11 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     m_sceneLoader.LoadAsLevel(sceneYaml, m_pLevel);
 
     float clearColor[4] = { m_pLevel->m_backgroundColor[0], m_pLevel->m_backgroundColor[1], m_pLevel->m_backgroundColor[2], 1.00f };
-    m_pPostProcessing->InitializeSceneRenderTargets(m_pUIManager->GetCurrentRTResourceDesc(), clearColor);
+    const D3D12_RESOURCE_DESC outputDesc = m_pUIManager->GetCurrentRTResourceDesc();
+    m_pRenderTargetManager->Initialize(
+        static_cast<uint32_t>(outputDesc.Width),
+        outputDesc.Height,
+        clearColor);
     
     if (m_pLevel->m_rendererBackendType == RendererBackendType::PathTracing)
     {
@@ -470,7 +514,7 @@ void DX12MiniRenderer::Init(std::string sceneYaml)
     initStruct.upscalingMethod = m_upscalingMethod;
     m_pRendererBackend->Init(initStruct);
     
-    m_eventManager.RegisterListener("ResizeSwapchain", RendererBackend::OnResizeCallback);
+    m_eventManager.RegisterListener("ResizeSwapchain", DX12MiniRenderer::OnResizeSwapchain);
 
     if (m_pLevel->HasEnvMap()) { InitEnvMapPipeline(); }
 }
@@ -709,11 +753,9 @@ void DX12MiniRenderer::Run()
         m_pLevel->Tick(deltaSec);
 
         FrameContext* frameCtx = WaitForCurrentFrameResources();
+        ApplyRenderResolutionMode();
         ID3D12Resource* frameCRT = m_pUIManager->GetCurrentMainRTResource();
         D3D12_CPU_DESCRIPTOR_HANDLE frameCRTDescriptor = m_pUIManager->GetCurrentMainRTDescriptor();
-
-        ID3D12Resource* frameDSV = m_pUIManager->GetCurrentMainDSVResource();
-        D3D12_CPU_DESCRIPTOR_HANDLE frameDSVDescriptor = m_pUIManager->GetCurrentMainDSVDescriptor();
 
         ID3D12DescriptorHeap* imGUIDescriptorHeap = m_pUIManager->GetImGUISrvDescHeap();
         frameCtx->CommandAllocator->Reset();
@@ -740,15 +782,19 @@ void DX12MiniRenderer::Run()
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
         RenderTargetInfo outputTarget{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
         const UINT frameIndex = m_pUIManager->GetCurrentBackBufferIndex();
-        RenderTargetInfo sceneTarget = m_pPostProcessing->GetSceneRenderTarget(frameIndex, outputTarget.rtDesc);
+        RenderTargetInfo sceneTarget = m_pRenderTargetManager->GetSceneRenderTarget(frameIndex);
         m_pD3dCommandList->ClearRenderTargetView(sceneTarget.rtvHandle, clear_color_with_alpha, 0, nullptr);
-        m_pD3dCommandList->ClearDepthStencilView(frameDSVDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+        m_pD3dCommandList->ClearDepthStencilView(sceneTarget.dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
-        if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, sceneTarget.rtvHandle); }
+        if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, sceneTarget); }
 
         // Render Scene
         m_pRendererBackend->RenderTick(m_pD3dCommandList, sceneTarget);
-        m_pPostProcessing->RenderToneMapping(m_pD3dCommandList, frameIndex, outputTarget);
+        m_pPostProcessing->RenderToneMapping(
+            m_pD3dCommandList,
+            sceneTarget,
+            m_pRenderTargetManager->GetSceneColorSrvHeap(),
+            outputTarget);
 
         // Render Dear ImGui graphics
         m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
@@ -789,6 +835,7 @@ void DX12MiniRenderer::Finalize()
     delete m_pLevel;
 
     FinalizeEnvMapPipeline();
+    if (m_pRenderTargetManager) { delete m_pRenderTargetManager; m_pRenderTargetManager = nullptr; }
     if (m_pPostProcessing) { delete m_pPostProcessing; m_pPostProcessing = nullptr; }
 
     if (m_pUIManager) { m_pUIManager->Finalize(); delete m_pUIManager; m_pUIManager = nullptr; }
@@ -817,15 +864,23 @@ void DX12MiniRenderer::Finalize()
     }
 }
 
-void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle)
+void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, const RenderTargetInfo& sceneTarget)
 {
     if (m_pLevel->HasEnvMap())
     {
         // Populating the rendering commands
-        uint32_t winWidth, winHeight;
-        m_pUIManager->GetWindowSize(winWidth, winHeight);
-        D3D12_VIEWPORT viewport    = { 0.0f, 0.0f, static_cast<float>(winWidth), static_cast<float>(winHeight), D3D12_MIN_DEPTH, D3D12_MAX_DEPTH };
-        D3D12_RECT     scissorRect = { 0, 0, static_cast<LONG>(winWidth), static_cast<LONG>(winHeight) };
+        D3D12_VIEWPORT viewport = {
+            0.0f,
+            0.0f,
+            static_cast<float>(sceneTarget.rtDesc.Width),
+            static_cast<float>(sceneTarget.rtDesc.Height),
+            D3D12_MIN_DEPTH,
+            D3D12_MAX_DEPTH};
+        D3D12_RECT scissorRect = {
+            0,
+            0,
+            static_cast<LONG>(sceneTarget.rtDesc.Width),
+            static_cast<LONG>(sceneTarget.rtDesc.Height)};
 
         EnvMapCnstBuffer envMapCB{};
         Camera* pCamera = nullptr;
@@ -853,7 +908,7 @@ void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_
         pCmdList->SetGraphicsRootSignature(m_pEnvMapRootSignature);
         pCmdList->RSSetViewports(1, &viewport);
         pCmdList->RSSetScissorRects(1, &scissorRect);
-        pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+        pCmdList->OMSetRenderTargets(1, &sceneTarget.rtvHandle, FALSE, nullptr);
         pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         pCmdList->SetGraphicsRootConstantBufferView(0, m_pEnvMapCnstBuffers[frameIdx]->GetGPUVirtualAddress());
         pCmdList->SetGraphicsRootDescriptorTable(1, m_pEnvMapSRVCBVHeap->GetGPUDescriptorHandleForHeapStart());

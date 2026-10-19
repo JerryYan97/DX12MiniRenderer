@@ -12,9 +12,11 @@ class UIManager;
 class Level;
 class RendererBackend;
 class PostProcessing;
+class RenderTargetManager;
 class AssetManager;
 class TimePerfManager;
 enum class RendererBackendType;
+struct RenderTargetInfo;
 
 enum class RenderResolutionMode
 {
@@ -59,7 +61,10 @@ private:
     void InitDevice();
     static void WaitGpuIdle(HEventArguments args);
     static void GenerateImGUIStates();
-    void RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle);
+    static void OnResizeSwapchain(HEventArguments args);
+    void ApplyRenderResolutionMode();
+    void RecreateSceneRenderTargets(uint32_t displayWidth, uint32_t displayHeight);
+    void RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, const RenderTargetInfo& sceneTarget);
     void InitEnvMapDescriptorHeaps();
     void InitEnvMapRootSignature();
     void InitEnvMapPSO();
@@ -71,6 +76,7 @@ private:
     ID3D12Debug*     m_pDx12Debug = nullptr;
     UpscalingMethod  m_upscalingMethod = UpscalingMethod::None;
     RenderResolutionMode m_renderResolutionMode = RenderResolutionMode::Native;
+    RenderResolutionMode m_activeRenderResolutionMode = RenderResolutionMode::Native;
     std::string      m_gpuAdapterName;
     UIManager*       m_pUIManager = nullptr;
     HEventManager    m_eventManager;
@@ -95,6 +101,7 @@ private:
 
     RendererBackend* m_pRendererBackend = nullptr;
     PostProcessing* m_pPostProcessing = nullptr;
+    RenderTargetManager* m_pRenderTargetManager = nullptr;
 
     // Temp Root Level
     Level* m_pLevel = nullptr;

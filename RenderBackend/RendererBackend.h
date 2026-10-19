@@ -19,8 +19,11 @@ enum class RendererBackendType
 struct RenderTargetInfo
 {
     ID3D12Resource* pResource = nullptr;
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
-    D3D12_RESOURCE_DESC rtDesc;
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = {};
+    D3D12_RESOURCE_DESC rtDesc = {};
+    ID3D12Resource* pDepthResource = nullptr;
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = {};
+    D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = {};
 };
 
 struct RendererBackendInitStruct
@@ -59,7 +62,7 @@ public:
 
     RendererBackendType GetType() { return m_type; }
 
-    virtual void Resize(uint32_t width, uint32_t height) {}
+    virtual void Resize(uint32_t width, uint32_t height) { CustomResize(width, height); }
     virtual void GetMainRenderTargetSize(uint32_t& oWidth, uint32_t& oHeight) = 0;
 
 protected:
