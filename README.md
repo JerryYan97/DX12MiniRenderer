@@ -21,10 +21,18 @@ git clone --recurse-submodules https://github.com/JerryYan97/DX12MiniRenderer.gi
 ```
 
 ## Build It
-Just execute the following cmd under the project folder
+GPU debug events use the [WinPixEventRuntime](https://www.nuget.org/packages/WinPixEventRuntime/) package. Download the pinned version before configuring:
+```
+SetupWinPixEventRuntime.bat
+```
+
+Then configure and build from a Visual Studio developer command prompt:
 ```
 cmake -S . -B build
+cmake --build build --config Debug
 ```
+
+The setup script downloads the package into `Dependencies/WinPixEventRuntime/`, which is ignored by Git. CMake reports a clear error if the package has not been installed.
 
 ## Use it
 

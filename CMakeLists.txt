@@ -63,7 +63,24 @@ set_target_properties(yaml-cpp-sandbox PROPERTIES FOLDER "YamlCpp")
 
 target_compile_features(DX12MiniRenderer PRIVATE cxx_std_20)
 
-target_link_libraries(DX12MiniRenderer d3d12 dxgi d3dcompiler yaml-cpp)
+set(PIX_EVENT_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/WinPixEventRuntime")
+set(PIX_EVENT_RUNTIME_INCLUDE_DIR "${PIX_EVENT_RUNTIME_ROOT}/Include/WinPixEventRuntime")
+set(PIX_EVENT_RUNTIME_LIBRARY "${PIX_EVENT_RUNTIME_ROOT}/bin/x64/WinPixEventRuntime.lib")
+set(PIX_EVENT_RUNTIME_DLL "${PIX_EVENT_RUNTIME_ROOT}/bin/x64/WinPixEventRuntime.dll")
+
+if (NOT EXISTS "${PIX_EVENT_RUNTIME_INCLUDE_DIR}/pix3.h" OR
+    NOT EXISTS "${PIX_EVENT_RUNTIME_LIBRARY}" OR
+    NOT EXISTS "${PIX_EVENT_RUNTIME_DLL}")
+    message(FATAL_ERROR
+        "WinPixEventRuntime is required. Run SetupWinPixEventRuntime.bat from the repository root.")
+endif()
+
+target_include_directories(DX12MiniRenderer PRIVATE "${PIX_EVENT_RUNTIME_INCLUDE_DIR}")
+target_link_libraries(DX12MiniRenderer d3d12 dxgi d3dcompiler yaml-cpp "${PIX_EVENT_RUNTIME_LIBRARY}")
+add_custom_command(TARGET DX12MiniRenderer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PIX_EVENT_RUNTIME_DLL}"
+        "$<TARGET_FILE_DIR:DX12MiniRenderer>")
 
 
 # DXC command:

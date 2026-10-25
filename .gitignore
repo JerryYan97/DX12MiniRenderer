@@ -58,6 +58,9 @@ docs/build
 vs/
 build/
 
+# Downloaded by SetupWinPixEventRuntime.bat.
+/Dependencies/WinPixEventRuntime/
+
 # Ninja folder
 ninja/
 

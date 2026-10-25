@@ -136,6 +136,7 @@ void PostProcessing::RenderToneMapping(
     ID3D12DescriptorHeap* pSceneColorSrvHeap,
     const RenderTargetInfo& outputTarget)
 {
+    GpuDebugEvent toneMappingEvent(pCommandList, "Tone Mapping");
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Transition.pResource = sceneTarget.pResource;

@@ -765,41 +765,50 @@ void DX12MiniRenderer::Run()
         }
 
         m_pD3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
-        m_pD3dCommandList->ResourceBarrier(1, &barrier);
+        {
+            GpuDebugEvent frameEvent(m_pD3dCommandList, "Frame");
+            m_pD3dCommandList->ResourceBarrier(1, &barrier);
 
-        m_pTimePerfManager->GPUTimeStampStart(m_pD3dCommandList);
+            m_pTimePerfManager->GPUTimeStampStart(m_pD3dCommandList);
 
-        ImVec4 clear_color = ImVec4(m_pLevel->m_backgroundColor[0],
-                                    m_pLevel->m_backgroundColor[1],
-                                    m_pLevel->m_backgroundColor[2], 1.00f);
-        const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        RenderTargetInfo outputTarget{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
-        const UINT frameIndex = m_pUIManager->GetCurrentBackBufferIndex();
-        RenderTargetInfo sceneTarget = m_pRenderTargetManager->GetSceneRenderTarget(frameIndex);
-        m_pD3dCommandList->ClearRenderTargetView(sceneTarget.rtvHandle, clear_color_with_alpha, 0, nullptr);
-        m_pD3dCommandList->ClearDepthStencilView(sceneTarget.dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+            ImVec4 clear_color = ImVec4(m_pLevel->m_backgroundColor[0],
+                                        m_pLevel->m_backgroundColor[1],
+                                        m_pLevel->m_backgroundColor[2], 1.00f);
+            const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+            RenderTargetInfo outputTarget{frameCRT, frameCRTDescriptor, m_pUIManager->GetCurrentRTResourceDesc()};
+            const UINT frameIndex = m_pUIManager->GetCurrentBackBufferIndex();
+            RenderTargetInfo sceneTarget = m_pRenderTargetManager->GetSceneRenderTarget(frameIndex);
+            {
+                GpuDebugEvent clearEvent(m_pD3dCommandList, "Clear Scene Targets");
+                m_pD3dCommandList->ClearRenderTargetView(sceneTarget.rtvHandle, clear_color_with_alpha, 0, nullptr);
+                m_pD3dCommandList->ClearDepthStencilView(sceneTarget.dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+            }
 
-        if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, sceneTarget); }
+            if (m_pLevel->HasEnvMap()) { RenderEnvMap(m_pD3dCommandList, sceneTarget); }
 
-        // Render Scene
-        m_pRendererBackend->RenderTick(m_pD3dCommandList, sceneTarget);
-        m_pPostProcessing->RenderToneMapping(
-            m_pD3dCommandList,
-            sceneTarget,
-            m_pRenderTargetManager->GetSceneColorSrvHeap(),
-            outputTarget);
+            // Render Scene
+            m_pRendererBackend->RenderTick(m_pD3dCommandList, sceneTarget);
+            m_pPostProcessing->RenderToneMapping(
+                m_pD3dCommandList,
+                sceneTarget,
+                m_pRenderTargetManager->GetSceneColorSrvHeap(),
+                outputTarget);
 
-        // Render Dear ImGui graphics
-        m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
-        m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);
+            // Render Dear ImGui graphics
+            {
+                GpuDebugEvent uiEvent(m_pD3dCommandList, "ImGui");
+                m_pD3dCommandList->OMSetRenderTargets(1, &frameCRTDescriptor, FALSE, nullptr); // Bind the render target.
+                m_pD3dCommandList->SetDescriptorHeaps(1, &imGUIDescriptorHeap);
 
-        m_pUIManager->RecordDrawData(m_pD3dCommandList);
-        
-        m_pTimePerfManager->GPUTimeStampEnd(m_pD3dCommandList);
+                m_pUIManager->RecordDrawData(m_pD3dCommandList);
+            }
 
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-        m_pD3dCommandList->ResourceBarrier(1, &barrier);
+            m_pTimePerfManager->GPUTimeStampEnd(m_pD3dCommandList);
+
+            barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+            m_pD3dCommandList->ResourceBarrier(1, &barrier);
+        }
         m_pD3dCommandList->Close();
 
         m_pD3dCommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&m_pD3dCommandList);
@@ -861,6 +870,7 @@ void DX12MiniRenderer::RenderEnvMap(ID3D12GraphicsCommandList4* pCmdList, const 
 {
     if (m_pLevel->HasEnvMap())
     {
+        GpuDebugEvent envMapEvent(pCmdList, "Environment Map");
         // Populating the rendering commands
         D3D12_VIEWPORT viewport = {
             0.0f,

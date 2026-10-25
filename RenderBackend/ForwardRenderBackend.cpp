@@ -490,6 +490,7 @@ ForwardRenderer::DescriptorHeapData ForwardRenderer::GenerateOnFlightDescriptorH
 
 void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, RenderTargetInfo rtInfo)
 {
+    GpuDebugEvent forwardRendererEvent(pCommandList, "Forward Renderer");
     m_viewport = {
         0.0f,
         0.0f,
@@ -522,6 +523,7 @@ void ForwardRenderer::RenderTick(ID3D12GraphicsCommandList4* pCommandList, Rende
     // Render Logic
 
     // Meshes
+    GpuDebugEvent meshDrawsEvent(pCommandList, "Mesh Draws");
     for (uint32_t mshIdx = 0; mshIdx < meshObjs.size(); mshIdx++)
     {
         std::vector<Primitive> meshPrimitives = meshObjs[mshIdx]->GetMeshPrimitives();

@@ -4,6 +4,8 @@
 #include <debugapi.h>
 #include <sstream>
 #include <iomanip>
+#include <string_view>
+#include <pix3.h>
 
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 
@@ -53,6 +55,27 @@ inline void SetNameIndexed(ID3D12Object*, LPCWSTR, UINT)
 {
 }
 #endif
+
+class GpuDebugEvent
+{
+public:
+    GpuDebugEvent(ID3D12GraphicsCommandList* pCommandList, std::string_view name)
+        : m_pCommandList(pCommandList)
+    {
+        PIXBeginEvent(m_pCommandList, 0, name.data());
+    }
+
+    ~GpuDebugEvent()
+    {
+        PIXEndEvent(m_pCommandList);
+    }
+
+    GpuDebugEvent(const GpuDebugEvent&) = delete;
+    GpuDebugEvent& operator=(const GpuDebugEvent&) = delete;
+
+private:
+    ID3D12GraphicsCommandList* m_pCommandList;
+};
 
 #define SizeOfInUint32(obj) ((sizeof(obj) - 1) / sizeof(UINT32) + 1)
 #define NAME_D3D12_OBJECT(x) SetName(x, L#x)
